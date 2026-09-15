@@ -8,44 +8,44 @@
              =================================================================== -->
 
         <!-- =================== צבעי רקע ומשטחים (Surfaces) =================== -->
-        <!-- צבע רקע ראשי של האפליקציה (Deep Charcoal Obsidian) -->
-        <Color x:Key="ColorBackground">#0B0F17</Color>
+        <!-- צבע רקע ראשי של האפליקציה: פחם נייטרלי אלגנטי Windows 11 Fluent Dark (ללא גווני כחול בוציים) -->
+        <Color x:Key="ColorBackground">#1F1F1F</Color>
         <!-- צבע משטחי ביניים וסרגלים -->
-        <Color x:Key="ColorSurface">#101623</Color>
-        <!-- צבע משטח כרטיס יוקרתי (Elevated Card) -->
-        <Color x:Key="ColorCard">#131B2B</Color>
+        <Color x:Key="ColorSurface">#252525</Color>
+        <!-- צבע משטח כרטיס יוקרתי (Elevated Card - Titanium) -->
+        <Color x:Key="ColorCard">#2B2B2B</Color>
         <!-- צבע כרטיס במצב ריחוף (Card Hover) -->
-        <Color x:Key="ColorCardHover">#1C263B</Color>
-        <!-- גבול עדין מפריד משטחים -->
-        <Color x:Key="ColorBorder">#243247</Color>
+        <Color x:Key="ColorCardHover">#323232</Color>
+        <!-- גבול עדין מפריד משטחים (Neutral Subtle Border) -->
+        <Color x:Key="ColorBorder">#383838</Color>
         <!-- גבול מודגש עם שקיפות (Active / Focused Border) -->
-        <Color x:Key="ColorBorderHighlight">#3B82F6</Color>
+        <Color x:Key="ColorBorderHighlight">#0078D4</Color>
 
         <!-- =================== צבעי דגש (Accents) =================== -->
-        <!-- צבע מותג כחול ראשי -->
-        <Color x:Key="ColorPrimary">#2563EB</Color>
+        <!-- צבע מותג כחול מערכת מעודן Windows 11 -->
+        <Color x:Key="ColorPrimary">#0078D4</Color>
         <!-- צבע מותג ראשי במצב ריחוף / לחיצה -->
-        <Color x:Key="ColorPrimaryHover">#1D4ED8</Color>
-        <!-- דגש ציאן ניאון מודרני -->
-        <Color x:Key="ColorAccentCyan">#38BDF8</Color>
-        <!-- דגש אינדיגו אלגנטי -->
-        <Color x:Key="ColorAccentIndigo">#6366F1</Color>
+        <Color x:Key="ColorPrimaryHover">#0067C0</Color>
+        <!-- דגש כחול רך אלגנטי ומאופק -->
+        <Color x:Key="ColorAccentCyan">#388BE8</Color>
+        <!-- דגש אינדיגו אלגנטי מעודן -->
+        <Color x:Key="ColorAccentIndigo">#5B64E6</Color>
 
         <!-- =================== צבעי מערכת סמנטיים (WCAG AAA) =================== -->
         <!-- הצלחה / מחובר / פעיל -->
-        <Color x:Key="ColorSuccess">#10B981</Color>
+        <Color x:Key="ColorSuccess">#22C55E</Color>
         <!-- אזהרה / בתהליך -->
         <Color x:Key="ColorWarning">#F59E0B</Color>
         <!-- שגיאה / סכנה / מנותק -->
-        <Color x:Key="ColorDanger">#EF4444</Color>
+        <Color x:Key="ColorDanger">#E11D48</Color>
 
         <!-- =================== טיפוגרפיה (Typography) =================== -->
         <!-- טקסט ראשי קריא ובוהק -->
-        <Color x:Key="ColorText">#F8FAFC</Color>
-        <!-- טקסט משני בניגודיות גבוהה מעל 7:1 -->
-        <Color x:Key="ColorTextMuted">#CBD5E1</Color>
+        <Color x:Key="ColorText">#FFFFFF</Color>
+        <!-- טקסט משני בניגודיות גבוהה מעל 7:1 (אפור רך ונעים) -->
+        <Color x:Key="ColorTextMuted">#B0B0B0</Color>
         <!-- טקסט עמום / רמזים / פלייסהולדרים -->
-        <Color x:Key="ColorTextSubtle">#64748B</Color>
+        <Color x:Key="ColorTextSubtle">#737373</Color>
 
         <!-- =================== מברשות צבע אחיד (SolidColorBrushes) =================== -->
         <SolidColorBrush x:Key="BrushBackground" Color="{StaticResource ColorBackground}" />
@@ -53,7 +53,7 @@
         <SolidColorBrush x:Key="BrushCard" Color="{StaticResource ColorCard}" />
         <SolidColorBrush x:Key="BrushCardHover" Color="{StaticResource ColorCardHover}" />
         <SolidColorBrush x:Key="BrushBorder" Color="{StaticResource ColorBorder}" />
-        <SolidColorBrush x:Key="BrushBorderHighlight" Color="{StaticResource ColorBorderHighlight}" Opacity="0.35" />
+        <SolidColorBrush x:Key="BrushBorderHighlight" Color="{StaticResource ColorBorderHighlight}" Opacity="0.5" />
         <SolidColorBrush x:Key="BrushPrimary" Color="{StaticResource ColorPrimary}" />
         <SolidColorBrush x:Key="BrushPrimaryHover" Color="{StaticResource ColorPrimaryHover}" />
         <SolidColorBrush x:Key="BrushAccentCyan" Color="{StaticResource ColorAccentCyan}" />
@@ -68,43 +68,43 @@
         <!-- =================== מברשות גרדיאנט פרימיום (Gradients) =================== -->
         <!-- קו שפה עליון פנימי זוהר (Inner Top Hairline) להענקת עומק זכוכית יוקרתי -->
         <LinearGradientBrush x:Key="BrushInnerTopHairline" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#14FFFFFF" Offset="0.0" />
+            <GradientStop Color="#10FFFFFF" Offset="0.0" />
             <GradientStop Color="#00FFFFFF" Offset="1.0" />
         </LinearGradientBrush>
 
-        <!-- גרדיאנט רקע אלגנטי לכרטיסים (Card Gradient) -->
+        <!-- גרדיאנט רקע אלגנטי לכרטיסים (Card Gradient) פחם וטיטניום נייטרליים -->
         <LinearGradientBrush x:Key="BrushCardGradient" StartPoint="0,0" EndPoint="0,1">
-            <GradientStop Color="#162033" Offset="0.0" />
-            <GradientStop Color="#101623" Offset="1.0" />
+            <GradientStop Color="#2D2D2D" Offset="0.0" />
+            <GradientStop Color="#282828" Offset="1.0" />
         </LinearGradientBrush>
 
-        <!-- גרדיאנט מותג כפתורים ראשיים (Primary Gradient) -->
+        <!-- גרדיאנט מותג כפתורים ראשיים (Primary Gradient) כחול מערכת Fluent -->
         <LinearGradientBrush x:Key="BrushPrimaryGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#2563EB" Offset="0.0" />
-            <GradientStop Color="#1D4ED8" Offset="1.0" />
+            <GradientStop Color="#0078D4" Offset="0.0" />
+            <GradientStop Color="#0067C0" Offset="1.0" />
         </LinearGradientBrush>
 
         <!-- גרדיאנט הדגשה מודרני מציאן לאינדיגו (Accent Gradient) -->
         <LinearGradientBrush x:Key="BrushAccentGradient" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#38BDF8" Offset="0.0" />
-            <GradientStop Color="#6366F1" Offset="1.0" />
+            <GradientStop Color="#388BE8" Offset="0.0" />
+            <GradientStop Color="#5B64E6" Offset="1.0" />
         </LinearGradientBrush>
 
         <!-- שכבת הדגשת זכוכית (Glass Highlight) -->
         <LinearGradientBrush x:Key="BrushGlassHighlight" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#1AFFFFFF" Offset="0.0" />
-            <GradientStop Color="#05FFFFFF" Offset="1.0" />
+            <GradientStop Color="#14FFFFFF" Offset="0.0" />
+            <GradientStop Color="#04FFFFFF" Offset="1.0" />
         </LinearGradientBrush>
 
         <!-- =================== אפקטי צל והילה (Shadow & Glow Effects) =================== -->
         <!-- צל כרטיסים עדין ואלגנטי -->
-        <DropShadowEffect x:Key="EffectCardShadow" BlurRadius="16" Direction="270" ShadowDepth="4" Opacity="0.45" Color="#000000" />
+        <DropShadowEffect x:Key="EffectCardShadow" BlurRadius="16" Direction="270" ShadowDepth="3" Opacity="0.35" Color="#000000" />
         <!-- צל שכבות מוגבהות וחלונות מודאליים -->
-        <DropShadowEffect x:Key="EffectElevatedShadow" BlurRadius="24" Direction="270" ShadowDepth="8" Opacity="0.6" Color="#000000" />
+        <DropShadowEffect x:Key="EffectElevatedShadow" BlurRadius="24" Direction="270" ShadowDepth="6" Opacity="0.5" Color="#000000" />
         <!-- הילת אור כחולה סביב אלמנטים נבחרים -->
-        <DropShadowEffect x:Key="EffectGlowPrimary" BlurRadius="14" Direction="0" ShadowDepth="0" Opacity="0.4" Color="#2563EB" />
+        <DropShadowEffect x:Key="EffectGlowPrimary" BlurRadius="12" Direction="0" ShadowDepth="0" Opacity="0.3" Color="#0078D4" />
         <!-- הילת ציאן חיה לאינדיקטורים ודגשים -->
-        <DropShadowEffect x:Key="EffectGlowCyan" BlurRadius="14" Direction="0" ShadowDepth="0" Opacity="0.4" Color="#38BDF8" />
+        <DropShadowEffect x:Key="EffectGlowCyan" BlurRadius="12" Direction="0" ShadowDepth="0" Opacity="0.3" Color="#388BE8" />
 
         <!-- =================== סגנונות גלובליים (Global Styles) =================== -->
 

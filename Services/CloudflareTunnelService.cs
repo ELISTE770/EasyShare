@@ -33,34 +33,8 @@ public sealed class CloudflareTunnelService : IDisposable
         string localExe = Path.Combine(AppContext.BaseDirectory, "cloudflared.exe");
         if (File.Exists(localExe)) return localExe;
 
-        string curDirExe = Path.Combine(Directory.GetCurrentDirectory(), "cloudflared.exe");
-        if (File.Exists(curDirExe)) return curDirExe;
-
         string appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "EasyShare", "cloudflared.exe");
         if (File.Exists(appDataPath)) return appDataPath;
-
-        string fmTools = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FileManagerPlus", "tools", "cloudflared.exe");
-        if (File.Exists(fmTools)) return fmTools;
-
-        // בדיקה ב-PATH של המערכת
-        string? pathEnv = Environment.GetEnvironmentVariable("PATH");
-        if (pathEnv != null)
-        {
-            foreach (var path in pathEnv.Split(Path.PathSeparator))
-            {
-                if (string.IsNullOrWhiteSpace(path)) continue;
-                string candidate = Path.Combine(path.Trim(), "cloudflared.exe");
-                if (File.Exists(candidate)) return candidate;
-            }
-        }
-
-        // בדיקה בתיקיית הפרויקט
-        string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        string projCandidate1 = Path.Combine(userProfile, "OneDrive - PCMASTER", "Desktop", "פרוייקטים", "שיתוף קל", "cloudflared.exe");
-        if (File.Exists(projCandidate1)) return projCandidate1;
-
-        string projCandidate2 = Path.Combine(userProfile, "OneDrive - PCMASTER", "Desktop", "פרוייקטים", "1", "שיתוף קל", "cloudflared.exe");
-        if (File.Exists(projCandidate2)) return projCandidate2;
 
         return appDataPath;
     }
@@ -80,10 +54,7 @@ public sealed class CloudflareTunnelService : IDisposable
         string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         string[] candidates =
         [
-            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FileManagerPlus", "tools", "cloudflared.exe"),
-            Path.Combine(userProfile, "OneDrive - PCMASTER", "Desktop", "פרוייקטים", "שיתוף קל", "cloudflared.exe"),
-            Path.Combine(userProfile, "OneDrive - PCMASTER", "Desktop", "פרוייקטים", "1", "שיתוף קל", "cloudflared.exe"),
-            Path.Combine(Directory.GetCurrentDirectory(), "cloudflared.exe")
+            Path.Combine(AppContext.BaseDirectory, "cloudflared.exe")
         ];
 
         foreach (var cand in candidates)

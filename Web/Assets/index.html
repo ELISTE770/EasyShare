@@ -10,7 +10,7 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
-  <meta name="theme-color" content="#0B0F17">
+  <meta name="theme-color" content="#1F1F1F">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -18,22 +18,22 @@
 
   <style>
     :root {
-      --bg-main: #0B0F17;
-      --bg-card: #131B2B;
-      --bg-card-hover: #1C263B;
-      --bg-card-selected: rgba(59, 130, 246, 0.15);
-      --border: #243247;
-      --text-main: #F8FAFC;
-      --text-muted: #CBD5E1;
-      --accent: #2563EB;
-      --accent-hover: #1D4ED8;
-      --accent-light: #38BDF8;
-      --accent-indigo: #6366F1;
-      --success: #10B981;
+      --bg-main: #1F1F1F;
+      --bg-card: #2B2B2B;
+      --bg-card-hover: #323232;
+      --bg-card-selected: rgba(0, 120, 212, 0.18);
+      --border: #383838;
+      --text-main: #FFFFFF;
+      --text-muted: #B0B0B0;
+      --accent: #0078D4;
+      --accent-hover: #0067C0;
+      --accent-light: #388BE8;
+      --accent-indigo: #5B64E6;
+      --success: #22C55E;
       --warning: #F59E0B;
-      --danger: #EF4444;
+      --danger: #E11D48;
       --radius: 12px;
-      --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
     }
 
     [data-theme="light"] {
@@ -68,9 +68,9 @@
 
     /* מחוון פוקוס נגיש WCAG AAA לכל הכפתורים, השדות והרכיבים האינטראקטיביים */
     :focus-visible {
-      outline: 2px solid var(--accent-light);
+      outline: 2px solid var(--accent);
       outline-offset: 2px;
-      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.3) !important;
+      box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.28) !important;
     }
 
     button:focus:not(:focus-visible),
@@ -93,7 +93,7 @@
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: #334663;
+      background: #4A4A4A;
     }
 
     body {
@@ -1073,7 +1073,13 @@
 
   <!-- שכבת גרירה והעלאה -->
   <div class="dropzone-overlay" id="dropzoneOverlay">
-    <div style="font-size: 3.5rem;">📥</div>
+    <div style="margin-bottom: 1rem; color: var(--accent-light);">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="17 8 12 3 7 8"></polyline>
+        <line x1="12" y1="3" x2="12" y2="15"></line>
+      </svg>
+    </div>
     <h2>שחרר קבצים בכל מקום להעלאה מיידית</h2>
   </div>
 
@@ -1098,38 +1104,39 @@
         <span id="pinBadge" class="badge badge-pin" style="display:none;">מאובטח ב-PIN</span>
 
         <button class="btn btn-primary" id="btnUpload" onclick="document.getElementById('fileUploadInput').click()">
-          <span>📤</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-left:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
           <span>העלאה</span>
         </button>
         <input type="file" id="fileUploadInput" multiple style="display:none" onchange="uploadFiles(this.files)">
 
         <button class="btn" id="btnNewFolder" onclick="openNewFolderPrompt()">
-          <span>📁+</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-left:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
           <span class="hide-sm">תיקייה חדשה</span>
         </button>
 
         <button class="btn btn-icon" id="btnSettings" onclick="openSettingsModal()" title="הגדרות מתקדמות">
-          ⚙️
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </button>
 
         <button class="btn btn-icon" id="btnQr" onclick="openQrModal()" title="קוד QR ושיתוף">
-          📱
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         </button>
 
         <button class="btn btn-icon" id="btnClipboard" onclick="openClipboardModal()" title="לוח שיתוף מהיר (Quick Drop)">
-          📋
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
         </button>
 
         <button class="btn btn-icon" id="btnInstallPwa" onclick="installPwaApp()" title="התקן אפליקציה למכשיר (PWA)" style="display:none;">
-          📲
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>
         </button>
 
-        <button class="btn btn-icon" id="btnLangToggle" onclick="toggleLanguage()" title="החלף שפה / Switch Language" style="font-weight:bold; font-size:0.8rem; width:auto; padding:0 8px;">
-          🌐 EN
+        <button class="btn btn-icon" id="btnLangToggle" onclick="toggleLanguage()" title="החלף שפה / Switch Language" style="font-weight:600; font-size:0.8rem; width:auto; padding:0 10px; display:inline-flex; align-items:center; gap:5px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          <span id="btnLangText">EN</span>
         </button>
 
         <button class="btn btn-icon" id="btnTheme" onclick="toggleTheme()" title="החלף עיצוב">
-          🌓
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
       </div>
     </div>
@@ -1143,12 +1150,12 @@
   <main>
     <!-- מסך סקירת כוננים ותיקיות מחשב (מוצג כברירת מחדל בשורש) -->
     <div class="overview-section" id="overviewSection">
-      <div class="section-title" id="drivesTitle">💻 כונני אחסון מחוברים</div>
+      <div class="section-title" id="drivesTitle">כונני אחסון מחוברים</div>
       <div class="grid-drives" id="drivesGrid">
         <!-- נטען דינמית -->
       </div>
 
-      <div class="section-title" id="quickFoldersTitle">⚡ תיקיות מהירות במחשב</div>
+      <div class="section-title" id="quickFoldersTitle">תיקיות מהירות במחשב</div>
       <div class="grid-quick" id="quickFoldersGrid">
         <!-- נטען דינמית -->
       </div>
@@ -1174,7 +1181,7 @@
           </select>
 
           <button class="btn btn-icon" id="btnToggleView" onclick="toggleViewMode()" title="החלף תצוגה (רשת/רשימה)">
-            🔲
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           </button>
         </div>
       </div>
@@ -1182,11 +1189,11 @@
       <!-- לשוניות סינון מהיר לפי קטגוריה -->
       <div class="category-chips" id="categoryChips">
         <button class="chip active" id="chipAll" onclick="setCategoryFilter('all', this)">הכל</button>
-        <button class="chip" id="chipImages" onclick="setCategoryFilter('images', this)">🖼️ תמונות</button>
-        <button class="chip" id="chipVideo" onclick="setCategoryFilter('video', this)">🎬 וידאו</button>
-        <button class="chip" id="chipAudio" onclick="setCategoryFilter('audio', this)">🎵 אודיו</button>
-        <button class="chip" id="chipDocs" onclick="setCategoryFilter('docs', this)">📄 מסמכים</button>
-        <button class="chip" id="chipArchives" onclick="setCategoryFilter('archives', this)">📦 ארכיונים</button>
+        <button class="chip" id="chipImages" onclick="setCategoryFilter('images', this)">תמונות</button>
+        <button class="chip" id="chipVideo" onclick="setCategoryFilter('video', this)">וידאו</button>
+        <button class="chip" id="chipAudio" onclick="setCategoryFilter('audio', this)">אודיו</button>
+        <button class="chip" id="chipDocs" onclick="setCategoryFilter('docs', this)">מסמכים</button>
+        <button class="chip" id="chipArchives" onclick="setCategoryFilter('archives', this)">ארכיונים</button>
       </div>
 
       <!-- תצוגת רשת (Grid) -->
@@ -1209,7 +1216,9 @@
       </div>
 
       <div id="emptyFolderMessage" style="display:none; text-align:center; padding:3.5rem 1rem; color:var(--text-muted);">
-        <div style="font-size:3rem; margin-bottom:0.5rem;">📂</div>
+        <div style="margin-bottom:0.75rem; color:var(--text-subtle);">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        </div>
         <p id="emptyFolderText">תיקייה זו ריקה מקבצים</p>
       </div>
     </div>
@@ -1218,11 +1227,13 @@
   <!-- סרגל פעולות מרובות צף -->
   <div class="floating-batch-bar" id="floatingBatchBar">
     <span id="selectedCountText" style="font-weight:700; font-size:0.875rem;">0 פריטים נבחרו</span>
-    <button class="btn btn-primary" id="btnBatchZip" onclick="downloadSelectedAsZip()">
-      <span>📦</span> <span id="lblBatchZip">הורד כ-ZIP</span>
+    <button class="btn btn-primary" id="btnBatchZip" onclick="downloadSelectedAsZip()" style="display:inline-flex; align-items:center; gap:6px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+      <span id="lblBatchZip">הורד כ-ZIP</span>
     </button>
-    <button class="btn" id="btnBatchDelete" onclick="deleteSelectedItems()" style="color:var(--danger); border-color:var(--danger);">
-      <span>🗑️</span> <span id="lblBatchDelete">מחק</span>
+    <button class="btn" id="btnBatchDelete" onclick="deleteSelectedItems()" style="color:var(--danger); border-color:var(--danger); display:inline-flex; align-items:center; gap:6px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+      <span id="lblBatchDelete">מחק</span>
     </button>
     <button class="btn btn-icon" id="btnClearSelection" onclick="clearSelection()" title="בטל בחירה">✕</button>
   </div>
@@ -1231,7 +1242,7 @@
   <div class="modal-overlay" id="settingsModal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3 id="settingsModalTitle" style="font-size:1.15rem;">⚙️ הגדרות מתקדמות (EasyShare Settings)</h3>
+        <h3 id="settingsModalTitle" style="font-size:1.15rem;">הגדרות מתקדמות (EasyShare Settings)</h3>
         <button class="btn btn-icon" onclick="closeSettingsModal()">✕</button>
       </div>
       <div class="modal-body">
@@ -1322,7 +1333,7 @@
       <div class="modal-footer">
         <span id="textEditorStatus" style="margin-left:auto; font-size:0.8rem; color:var(--text-muted);"></span>
         <button class="btn" onclick="closeTextEditor()">סגור</button>
-        <button class="btn btn-primary" id="btnSaveText" onclick="saveTextFile()">💾 שמור שינויים</button>
+        <button class="btn btn-primary" id="btnSaveText" onclick="saveTextFile()">שמור שינויים</button>
       </div>
     </div>
   </div>
@@ -1352,7 +1363,7 @@
   <div class="modal-overlay" id="qrModal">
     <div class="modal-card" style="max-width:440px;">
       <div class="modal-header">
-        <h3 id="qrModalTitle">📱 חיבור מהיר מסמארטפון</h3>
+        <h3 id="qrModalTitle">חיבור וסריקת QR</h3>
         <button class="btn btn-icon" onclick="closeQrModal()">✕</button>
       </div>
       <div class="modal-body" style="text-align:center;">
@@ -1366,9 +1377,11 @@
   <div class="modal-overlay" id="pdfViewerModal">
     <div class="modal-card" style="max-width:92vw; width:950px; height:88vh; display:flex; flex-direction:column;">
       <div class="modal-header">
-        <h3 id="pdfViewerTitle" style="font-size:1.05rem;">📕 צפייה במסמך PDF</h3>
+        <h3 id="pdfViewerTitle" style="font-size:1.05rem;">צפייה במסמך PDF</h3>
         <div style="display:flex; gap:0.5rem; align-items:center;">
-          <a id="btnPdfDownload" href="#" class="btn btn-icon" download title="הורד קובץ">📥</a>
+          <a id="btnPdfDownload" href="#" class="btn btn-icon" download title="הורד קובץ">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </a>
           <button class="btn btn-icon" onclick="closePdfViewer()">✕</button>
         </div>
       </div>
@@ -1383,13 +1396,17 @@
     <div class="modal-card" style="max-width:96vw; width:1100px; height:90vh; background:rgba(19,27,43,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--border); display:flex; flex-direction:column; padding:0; overflow:hidden;">
       <div class="modal-header" style="background:rgba(11,15,23,0.6); padding:0.75rem 1.25rem;">
         <div style="display:flex; align-items:center; gap:0.75rem;">
-          <span style="font-size:1.2rem;">🖼️</span>
-          <span id="galleryImageTitle" style="font-weight:600; font-size:0.95rem;">תמונה</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+          <span id="galleryImageTitle" style="font-weight:600; font-size:0.95rem;">גלריית מדיה</span>
           <span id="galleryCounter" style="font-size:0.8rem; color:var(--text-muted);">(1 / 1)</span>
         </div>
         <div style="display:flex; gap:0.5rem; align-items:center;">
-          <button class="btn btn-icon" id="btnSlideshow" onclick="toggleSlideshow()" title="הפעל / עצור מצגת">▶️</button>
-          <a id="btnGalleryDownload" href="#" class="btn btn-icon" download title="הורד תמונה זו">📥</a>
+          <button class="btn btn-icon" id="btnSlideshow" onclick="toggleSlideshow()" title="הפעל / עצור מצגת">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          </button>
+          <a id="btnGalleryDownload" href="#" class="btn btn-icon" download title="הורד תמונה זו">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </a>
           <button class="btn btn-icon" onclick="closeAdvancedGallery()">✕</button>
         </div>
       </div>
@@ -1406,8 +1423,8 @@
     <div class="modal-card" style="max-width:540px;">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:0.5rem;">
-          <span style="font-size:1.3rem;">📋</span>
-          <h3 id="clipboardModalTitle">לוח שיתוף מהיר (Quick Drop)</h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+          <h3 id="clipboardModalTitle">לוח סנכרון מהיר (Quick Drop)</h3>
         </div>
         <button class="btn btn-icon" onclick="closeClipboardModal()">✕</button>
       </div>
@@ -1423,8 +1440,9 @@
           <div id="clipboardCurrentHostText" style="background:var(--bg-main); border:1px solid var(--border); border-radius:8px; padding:0.75rem; font-family:monospace; font-size:0.875rem; min-height:60px; max-height:150px; overflow-y:auto; word-break:break-all; color:var(--text-main);">
             (טוען מהמחשב...)
           </div>
-          <button class="btn btn-primary" id="btnCopyHostClipboard" style="margin-top:0.5rem; width:100%;" onclick="copyHostClipboard()">
-            📋 העתק תוכן זה למכשיר שלי
+          <button class="btn btn-primary" id="btnCopyHostClipboard" style="margin-top:0.5rem; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="copyHostClipboard()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+            <span>העתק תוכן זה למכשיר שלי</span>
           </button>
         </div>
 
@@ -1435,8 +1453,9 @@
             שלח טקסט או קישור מהמכשיר שלך למחשב:
           </label>
           <textarea id="clipboardInputText" class="form-control" rows="3" placeholder="הקלד או הדבק כאן טקסט, הודעה או קישור..." style="width:100%; resize:vertical; font-size:0.875rem;"></textarea>
-          <button class="btn btn-primary" id="btnSendHostClipboard" style="margin-top:0.5rem; width:100%;" onclick="sendTextToHostClipboard()">
-            🚀 שלח מיד ללוח המחשב
+          <button class="btn btn-primary" id="btnSendHostClipboard" style="margin-top:0.5rem; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="sendTextToHostClipboard()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <span>שלח ללוח המחשב</span>
           </button>
         </div>
       </div>
@@ -1447,7 +1466,7 @@
   <div class="modal-overlay" id="pinModal" style="z-index:9999;">
     <div class="modal-card" style="max-width:420px; text-align:center;">
       <div class="modal-header" style="justify-content:center;">
-        <h3 id="pinModalTitle">🔒 נדרש קוד אימות PIN</h3>
+        <h3 id="pinModalTitle">אימות קוד PIN</h3>
       </div>
       <div class="modal-body" style="display:flex; flex-direction:column; gap:1.2rem; padding:1rem 0.5rem;">
         <p id="pinModalDesc" style="font-size:0.875rem; color:var(--text-muted); margin:0;">
@@ -1457,8 +1476,9 @@
           <input type="password" id="pinModalInput" class="form-control" placeholder="••••••••" style="width:100%; text-align:center; font-size:1.4rem; letter-spacing:4px; font-weight:bold; height:48px;" autocomplete="current-password">
           <div id="pinModalError" style="color:var(--danger); font-size:0.85rem; margin-top:0.6rem; display:none; font-weight:600;"></div>
         </div>
-        <button class="btn btn-primary" id="btnSubmitPin" style="width:100%; height:46px; font-size:1rem;" onclick="submitPinAuth()">
-          🔓 כניסה לשרת
+        <button class="btn btn-primary" id="btnSubmitPin" style="width:100%; height:46px; font-size:1rem; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="submitPinAuth()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <span>כניסה לשרת</span>
         </button>
       </div>
     </div>
@@ -1468,12 +1488,12 @@
   <div class="upload-drawer" id="uploadDrawer">
     <div class="upload-drawer-header" onclick="toggleUploadDrawer()">
       <div style="display:flex; align-items:center; gap:0.5rem;">
-        <span>📤</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
         <span id="uploadDrawerSummary" style="font-weight:600; font-size:0.85rem;">מנהל העלאות קבצים</span>
       </div>
       <div style="display:flex; gap:0.5rem; align-items:center;">
         <span id="uploadDrawerOverallPct" style="font-size:0.85rem; font-weight:700; color:var(--accent);"></span>
-        <button class="btn btn-icon" style="padding:2px 6px; font-size:0.75rem;" onclick="event.stopPropagation(); toggleUploadDrawer()">➖</button>
+        <button class="btn btn-icon" style="padding:2px 6px; font-size:0.75rem;" onclick="event.stopPropagation(); toggleUploadDrawer()">—</button>
       </div>
     </div>
     <div class="upload-drawer-list" id="uploadDrawerList">
@@ -1488,22 +1508,22 @@
   <script>
     const i18n = {
       he: {
-        langBtn: '🌐 EN',
+        langBtn: 'EN',
         brandTitle: 'שיתוף קל <span style="font-size:0.75rem; color:var(--accent);">PRO</span>',
         brandSubtitle: 'שרת קבצים וסטרימינג מקומי',
         readOnlyBadge: 'מצב קריאה בלבד',
         pinBadge: 'מאובטח ב-PIN',
-        btnUpload: '<span>📤</span><span>העלאה</span>',
-        btnNewFolder: '<span>📁+</span><span class="hide-sm">תיקייה חדשה</span>',
+        btnUpload: 'העלאה',
+        btnNewFolder: 'תיקייה חדשה',
         btnSettingsTitle: 'הגדרות מתקדמות',
-        btnQrTitle: 'קוד QR ושיתוף',
-        btnClipboardTitle: 'לוח שיתוף מהיר (Quick Drop)',
+        btnQrTitle: 'חיבור וסריקת QR',
+        btnClipboardTitle: 'לוח סנכרון מהיר (Quick Drop)',
         btnThemeTitle: 'החלף עיצוב',
         dropzoneText: 'שחרר קבצים בכל מקום להעלאה מיידית',
-        drivesTitle: '💻 כונני אחסון מחוברים',
-        quickFoldersTitle: '⚡ תיקיות מהירות במחשב',
+        drivesTitle: 'כונני אחסון מחוברים',
+        quickFoldersTitle: 'תיקיות מהירות במחשב',
         freeOf: 'פנויים מתוך',
-        thisPc: '💻 מחשב זה',
+        thisPc: 'מחשב זה',
         searchPlaceholder: 'סינון קבצים...',
         sortNameAsc: 'שם (א-ת)',
         sortNameDesc: 'שם (ת-א)',
@@ -1513,11 +1533,11 @@
         sortSizeAsc: 'גודל (הקטן ביותר)',
         toggleViewTitle: 'החלף תצוגה (רשת/רשימה)',
         chipAll: 'הכל',
-        chipImages: '🖼️ תמונות',
-        chipVideo: '🎬 וידאו',
-        chipAudio: '🎵 אודיו',
-        chipDocs: '📄 מסמכים',
-        chipArchives: '📦 ארכיונים',
+        chipImages: 'תמונות',
+        chipVideo: 'וידאו',
+        chipAudio: 'אודיו',
+        chipDocs: 'מסמכים',
+        chipArchives: 'ארכיונים',
         thName: 'שם',
         thSize: 'גודל',
         thModified: 'תאריך שינוי',
@@ -1528,7 +1548,7 @@
         downloadZip: 'הורד כ-ZIP',
         deleteBatch: 'מחק',
         clearSelection: 'בטל בחירה',
-        settingsTitle: '⚙️ הגדרות מתקדמות (EasyShare Settings)',
+        settingsTitle: 'הגדרות מתקדמות (EasyShare Settings)',
         accessModeLabel: 'מצב גישה למחשב',
         accessModeFull: 'גישה מלאה לכל הכוננים והמחשב (מומלץ)',
         accessModeSingle: 'הגבלה לתיקייה ייעודית בלבד (מצב בטוח)',
@@ -1550,30 +1570,30 @@
         btnCancel: 'ביטול',
         btnSaveSettings: 'שמור הגדרות',
         editorTitle: 'עריכת קובץ: {name}',
-        editorSave: '💾 שמור שינויים',
+        editorSave: 'שמור שינויים',
         editorClose: 'סגור',
         mediaPlayerTitle: 'נגן מדיה',
-        qrTitle: '📱 חיבור מהיר מסמארטפון',
+        qrTitle: 'חיבור וסריקת QR',
         qrLocal: 'רשת מקומית:',
         qrTunnel: 'מנהור ציבורי (HTTPS):',
-        pdfTitle: '📕 צפייה במסמך PDF',
+        pdfTitle: 'צפייה במסמך PDF',
         galleryImage: 'תמונה',
-        clipboardTitle: 'לוח שיתוף מהיר (Quick Drop)',
+        clipboardTitle: 'לוח סנכרון מהיר (Quick Drop)',
         clipboardDesc: 'שתף טקסטים, פתקים וקישורים בין המחשב לסמארטפון בזמן אמת.',
         clipboardHostLabel: 'תוכן נוכחי מהמחשב:',
         clipboardLoading: '(טוען מהמחשב...)',
         clipboardEmpty: '(לוח המחשב ריק)',
-        clipboardCopyBtn: '📋 העתק תוכן זה למכשיר שלי',
+        clipboardCopyBtn: 'העתק תוכן זה למכשיר שלי',
         clipboardSendLabel: 'שלח טקסט או קישור מהמכשיר שלך למחשב:',
         clipboardPlaceholder: 'הקלד או הדבק כאן טקסט, הודעה או קישור...',
-        clipboardSendBtn: '🚀 שלח מיד ללוח המחשב',
+        clipboardSendBtn: 'שלח ללוח המחשב',
         uploadDrawerSummary: 'מנהל העלאות קבצים',
         uploadingCount: 'מעלה {count} קבצים...',
         uploadComplete: 'העלאה הושלמה ({count} קבצים)',
         statusWaiting: 'ממתין...',
         statusUploading: 'מעלה...',
-        statusDone: 'הושלם ✔️',
-        statusFailed: 'נכשל ❌',
+        statusDone: 'הושלם',
+        statusFailed: 'נכשל',
         actionDownload: 'הורדה',
         actionEdit: 'ערוך טקסט',
         actionPlay: 'נגן',
@@ -1587,9 +1607,9 @@
         toggleSlideshow: 'הפעל / עצור מצגת',
         prevImage: 'תמונה קודמת',
         nextImage: 'תמונה הבאה',
-        clipboardCopiedAlert: 'התוכן הועתק ללוח המכשיר שלך! 📋',
+        clipboardCopiedAlert: 'התוכן הועתק ללוח המכשיר שלך!',
         clipboardEnterTextAlert: 'אנא הזן טקסט לשליחה.',
-        clipboardSentSuccessAlert: 'הטקסט נשלח בהצלחה והוגדר בלוח המחשב! 🚀',
+        clipboardSentSuccessAlert: 'הטקסט נשלח בהצלחה והוגדר בלוח המחשב!',
         clipboardSendErrorAlert: 'שגיאה בשליחת הטקסט למחשב.',
         clipboardCommErrorAlert: 'שגיאת תקשורת בעת השליחה.',
         clipboardLoadError: '(שגיאה בטעינת הלוח מהמחשב)',
@@ -1601,22 +1621,22 @@
         footerHtml: 'נבנה על ידי <a href="https://ivrit.smartbinary.org" target="_blank">בינארי חכם</a> | Built by <a href="https://smartbinary.org" target="_blank">Smart Binary</a>'
       },
       en: {
-        langBtn: '🌐 עברית',
+        langBtn: 'עברית',
         brandTitle: 'EasyShare <span style="font-size:0.75rem; color:var(--accent);">(שיתוף קל) PRO</span>',
         brandSubtitle: 'Local File & Streaming Server',
         readOnlyBadge: 'Read-Only Mode',
         pinBadge: 'PIN Protected',
-        btnUpload: '<span>📤</span><span>Upload</span>',
-        btnNewFolder: '<span>📁+</span><span class="hide-sm">New Folder</span>',
+        btnUpload: 'Upload',
+        btnNewFolder: 'New Folder',
         btnSettingsTitle: 'Advanced Settings',
         btnQrTitle: 'QR Code & Share',
         btnClipboardTitle: 'Quick Drop (Clipboard Sync)',
         btnThemeTitle: 'Toggle Theme',
         dropzoneText: 'Drop files anywhere to upload instantly',
-        drivesTitle: '💻 Connected Storage Drives',
-        quickFoldersTitle: '⚡ Quick Folders',
+        drivesTitle: 'Connected Storage Drives',
+        quickFoldersTitle: 'Quick Folders',
         freeOf: 'free of',
-        thisPc: '💻 This PC',
+        thisPc: 'This PC',
         searchPlaceholder: 'Filter files...',
         sortNameAsc: 'Name (A-Z)',
         sortNameDesc: 'Name (Z-A)',
@@ -1626,11 +1646,11 @@
         sortSizeAsc: 'Size (Smallest)',
         toggleViewTitle: 'Toggle View (Grid/List)',
         chipAll: 'All',
-        chipImages: '🖼️ Images',
-        chipVideo: '🎬 Video',
-        chipAudio: '🎵 Audio',
-        chipDocs: '📄 Documents',
-        chipArchives: '📦 Archives',
+        chipImages: 'Images',
+        chipVideo: 'Video',
+        chipAudio: 'Audio',
+        chipDocs: 'Documents',
+        chipArchives: 'Archives',
         thName: 'Name',
         thSize: 'Size',
         thModified: 'Date Modified',
@@ -1641,7 +1661,7 @@
         downloadZip: 'Download ZIP',
         deleteBatch: 'Delete',
         clearSelection: 'Clear Selection',
-        settingsTitle: '⚙️ Advanced Settings (EasyShare)',
+        settingsTitle: 'Advanced Settings (EasyShare)',
         accessModeLabel: 'Computer Access Mode',
         accessModeFull: 'Full Computer Access (Recommended)',
         accessModeSingle: 'Restricted to Dedicated Folder Only (Safe)',
@@ -1663,30 +1683,30 @@
         btnCancel: 'Cancel',
         btnSaveSettings: 'Save Settings',
         editorTitle: 'Edit File: {name}',
-        editorSave: '💾 Save Changes',
+        editorSave: 'Save Changes',
         editorClose: 'Close',
         mediaPlayerTitle: 'Media Player',
-        qrTitle: '📱 Mobile Quick Connect',
+        qrTitle: 'Mobile Quick Connect',
         qrLocal: 'Local Network:',
         qrTunnel: 'Public Tunnel (HTTPS):',
-        pdfTitle: '📕 PDF Document Viewer',
+        pdfTitle: 'PDF Document Viewer',
         galleryImage: 'Image',
         clipboardTitle: 'Quick Drop (Clipboard Sync)',
         clipboardDesc: 'Share text, notes, and links between PC and mobile in real time.',
         clipboardHostLabel: 'Current PC Clipboard Content:',
         clipboardLoading: '(Loading from PC...)',
         clipboardEmpty: '(PC clipboard is empty)',
-        clipboardCopyBtn: '📋 Copy to My Device',
+        clipboardCopyBtn: 'Copy to My Device',
         clipboardSendLabel: 'Send Text or Link from Your Device to PC:',
         clipboardPlaceholder: 'Type or paste text, note, or link here...',
-        clipboardSendBtn: '🚀 Send to PC Clipboard',
+        clipboardSendBtn: 'Send to PC Clipboard',
         uploadDrawerSummary: 'Upload Manager',
         uploadingCount: 'Uploading {count} files...',
         uploadComplete: 'Upload complete ({count} files)',
         statusWaiting: 'Waiting...',
         statusUploading: 'Uploading...',
-        statusDone: 'Completed ✔️',
-        statusFailed: 'Failed ❌',
+        statusDone: 'Completed',
+        statusFailed: 'Failed',
         actionDownload: 'Download',
         actionEdit: 'Edit Text',
         actionPlay: 'Play',
@@ -1700,9 +1720,9 @@
         toggleSlideshow: 'Play / Pause Slideshow',
         prevImage: 'Previous Image',
         nextImage: 'Next Image',
-        clipboardCopiedAlert: 'Content copied to your device clipboard! 📋',
+        clipboardCopiedAlert: 'Content copied to your device clipboard!',
         clipboardEnterTextAlert: 'Please enter text to send.',
-        clipboardSentSuccessAlert: 'Text sent successfully and set on PC clipboard! 🚀',
+        clipboardSentSuccessAlert: 'Text sent successfully and set on PC clipboard!',
         clipboardSendErrorAlert: 'Error sending text to PC.',
         clipboardCommErrorAlert: 'Communication error while sending.',
         clipboardLoadError: '(Error loading PC clipboard)',
@@ -1735,7 +1755,10 @@
       const dict = i18n[currentLang];
 
       const btnLang = document.getElementById('btnLangToggle');
-      if (btnLang) btnLang.textContent = dict.langBtn;
+      if (btnLang) {
+        const spanText = document.getElementById('btnLangText');
+        if (spanText) spanText.textContent = dict.langBtn;
+      }
 
       const brandTitle = document.getElementById('brandTitle');
       if (brandTitle) brandTitle.innerHTML = dict.brandTitle;
@@ -1748,9 +1771,13 @@
       if (pinBadge) pinBadge.textContent = dict.pinBadge;
 
       const btnUp = document.getElementById('btnUpload');
-      if (btnUp) btnUp.innerHTML = dict.btnUpload;
+      if (btnUp) {
+        btnUp.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-left:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg><span>${dict.btnUpload}</span>`;
+      }
       const btnNf = document.getElementById('btnNewFolder');
-      if (btnNf) btnNf.innerHTML = dict.btnNewFolder;
+      if (btnNf) {
+        btnNf.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-left:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg><span class="hide-sm">${dict.btnNewFolder}</span>`;
+      }
 
       const btnSettings = document.getElementById('btnSettings');
       if (btnSettings) btnSettings.title = dict.btnSettingsTitle;
@@ -2100,8 +2127,10 @@
           card.onclick = () => loadDirectory(d.name);
           card.innerHTML = `
             <div class="drive-header">
-              <span class="drive-icon">💾</span>
-              <div>
+              <div class="drive-icon-box" style="width:36px; height:36px; border-radius:8px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.25); display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="12" x2="2" y2="12"></line><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="6" y1="16" x2="6.01" y2="16"></line><line x1="10" y1="16" x2="10.01" y2="16"></line></svg>
+              </div>
+              <div style="flex:1; min-width:0;">
                 <div class="drive-name">${escapeHtml(d.name)} (${escapeHtml(d.label)})</div>
                 <div class="drive-sub">${formatBytes(d.freeSpace)} ${t('freeOf')} ${formatBytes(d.totalSize)}</div>
               </div>
@@ -2121,8 +2150,9 @@
           card.className = 'card-quick';
           card.onclick = () => loadDirectory(q.path);
           const qName = (quickFolderTranslations[q.name] && quickFolderTranslations[q.name][currentLang]) || q.name;
+          const svgIcon = getFolderSvgIcon(q.icon || q.name);
           card.innerHTML = `
-            <div class="card-quick-icon">${q.icon}</div>
+            <div class="card-quick-icon">${svgIcon}</div>
             <div class="card-quick-name">${escapeHtml(qName)}</div>
           `;
           quickGrid.appendChild(card);
@@ -2186,6 +2216,7 @@
         // כרטיס לתצוגת Grid
         const card = document.createElement('div');
         card.className = `file-card ${isSelected ? 'selected' : ''}`;
+        card.setAttribute('data-path', file.path);
         card.onclick = (e) => {
           if (e.target.tagName === 'INPUT' || e.target.closest('button') || e.target.closest('a')) return;
           openFileOrFolder(file);
@@ -2211,6 +2242,7 @@
         // שורה לתצוגת List
         const tr = document.createElement('tr');
         tr.className = isSelected ? 'selected' : '';
+        tr.setAttribute('data-path', file.path);
         tr.innerHTML = `
           <td><input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleItemSelection('${escapeJsString(file.path)}', this.checked)"></td>
           <td style="cursor:pointer;" onclick="openFileOrFolder(${JSON.stringify(file).replace(/"/g, '&quot;')})">
@@ -2234,32 +2266,32 @@
       const dlUrl = `/api/download?path=${encodeURIComponent(file.path)}`;
 
       // כפתור הורדה
-      btns += `<a href="${dlUrl}" class="btn btn-icon" download title="${t('actionDownload')}">📥</a>`;
+      btns += `<a href="${dlUrl}" class="btn btn-icon" download title="${t('actionDownload')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg></a>`;
 
       // קובץ טקסט / קוד לעריכה
       if (isTextFile(file.name)) {
-        btns += `<button class="btn btn-icon" onclick="openTextEditor('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionEdit')}">📝</button>`;
+        btns += `<button class="btn btn-icon" onclick="openTextEditor('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionEdit')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>`;
       }
 
       // נגן מדיה
       if (file.mimeType.startsWith('video/') || file.mimeType.startsWith('audio/')) {
-        btns += `<button class="btn btn-icon" onclick="playMedia('${escapeJsString(file.path)}', '${escapeJsString(file.name)}', '${file.mimeType}')" title="${t('actionPlay')}">▶️</button>`;
+        btns += `<button class="btn btn-icon" onclick="playMedia('${escapeJsString(file.path)}', '${escapeJsString(file.name)}', '${file.mimeType}')" title="${t('actionPlay')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>`;
       }
 
       // צפייה ב-PDF
       if (file.mimeType.includes('pdf') || file.name.toLowerCase().endsWith('.pdf')) {
-        btns += `<button class="btn btn-icon" onclick="openPdfViewer('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionPdf')}">📕</button>`;
+        btns += `<button class="btn btn-icon" onclick="openPdfViewer('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionPdf')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg></button>`;
       }
 
       // תצוגת גלריה לתמונות
       if (file.mimeType.startsWith('image/')) {
-        btns += `<button class="btn btn-icon" onclick="openAdvancedGallery('${escapeJsString(file.path)}')" title="${t('actionGallery')}">🖼️</button>`;
+        btns += `<button class="btn btn-icon" onclick="openAdvancedGallery('${escapeJsString(file.path)}')" title="${t('actionGallery')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></button>`;
       }
 
       // מחיקה ושינוי שם
       if (!appSettings.serverReadOnly) {
-        btns += `<button class="btn btn-icon" onclick="renameItem('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionRename')}">✏️</button>`;
-        btns += `<button class="btn btn-icon" onclick="deleteSingleItem('${escapeJsString(file.path)}')" title="${t('actionDelete')}" style="color:var(--danger);">🗑️</button>`;
+        btns += `<button class="btn btn-icon" onclick="renameItem('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionRename')}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>`;
+        btns += `<button class="btn btn-icon" onclick="deleteSingleItem('${escapeJsString(file.path)}')" title="${t('actionDelete')}" style="color:var(--danger);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>`;
       }
 
       return btns;
@@ -2286,7 +2318,26 @@
       if (checked) selectedPaths.add(path);
       else selectedPaths.delete(path);
       updateBatchBar();
-      renderFilesList();
+
+      // עדכון ישיר ומהיר של הרכיב המתאים ללא רינדור מחדש של אלפי פריטים ב-DOM
+      try {
+        const escapedPath = CSS.escape ? CSS.escape(path) : path.replace(/["\\]/g, '\\$&');
+        const cards = document.querySelectorAll(`.file-card[data-path="${escapedPath}"]`);
+        cards.forEach(card => {
+          card.classList.toggle('selected', checked);
+          const cb = card.querySelector('.file-card-checkbox');
+          if (cb && cb.checked !== checked) cb.checked = checked;
+        });
+
+        const rows = document.querySelectorAll(`tr[data-path="${escapedPath}"]`);
+        rows.forEach(tr => {
+          tr.classList.toggle('selected', checked);
+          const cb = tr.querySelector('input[type="checkbox"]');
+          if (cb && cb.checked !== checked) cb.checked = checked;
+        });
+      } catch {
+        renderFilesList();
+      }
     }
 
     function toggleSelectAll(checked) {
@@ -2431,7 +2482,7 @@
           body: JSON.stringify({ path: activeEditorPath, content })
         });
         if (res.ok) {
-          status.textContent = currentLang === 'en' ? 'File saved successfully! ✔️' : 'הקובץ נשמר בהצלחה! ✔️';
+          status.textContent = currentLang === 'en' ? 'File saved successfully!' : 'הקובץ נשמר בהצלחה!';
           setTimeout(() => closeTextEditor(), 800);
         } else {
           status.textContent = currentLang === 'en' ? 'Error saving file!' : 'שגיאה בשמירה!';
@@ -2703,7 +2754,7 @@
 
           xhr.addEventListener('error', () => {
             if (rowStatus) {
-              rowStatus.textContent = currentLang === 'en' ? 'Network error ❌' : 'שגיאת רשת ❌';
+              rowStatus.textContent = currentLang === 'en' ? 'Network error' : 'שגיאת רשת';
               rowStatus.style.color = 'var(--danger)';
             }
             resolve();
@@ -2766,11 +2817,11 @@
       if (viewMode === 'grid') {
         grid.style.display = 'grid';
         list.style.display = 'none';
-        btn.textContent = '📋';
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>`;
       } else {
         grid.style.display = 'none';
         list.style.display = 'block';
-        btn.textContent = '🔲';
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>`;
       }
     }
 
@@ -2834,7 +2885,7 @@
 
     // מציג מסמכי PDF מובנה
     function openPdfViewer(path, name) {
-      document.getElementById('pdfViewerTitle').textContent = `📕 ${name}`;
+      document.getElementById('pdfViewerTitle').textContent = name;
       const dlUrl = `/api/download?path=${encodeURIComponent(path)}`;
       document.getElementById('btnPdfDownload').href = dlUrl;
       document.getElementById('pdfViewerFrame').src = dlUrl;
@@ -2887,10 +2938,10 @@
       if (slideshowInterval) {
         clearInterval(slideshowInterval);
         slideshowInterval = null;
-        btn.textContent = '▶️';
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
       } else {
         slideshowInterval = setInterval(nextGalleryImage, 3000);
-        btn.textContent = '⏸️';
+        btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
       }
     }
 
@@ -3023,16 +3074,55 @@
       return textExts.some(ext => name.toLowerCase().endsWith(ext));
     }
 
+    function getFolderSvgIcon(type) {
+      const t = (type || '').toLowerCase();
+      if (t.includes('download')) {
+        return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`;
+      }
+      if (t.includes('desktop') || t.includes('עבודה')) {
+        return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`;
+      }
+      if (t.includes('doc') || t.includes('מסמכים')) {
+        return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#818CF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
+      }
+      if (t.includes('pic') || t.includes('תמונות')) {
+        return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+      }
+      if (t.includes('vid') || t.includes('סרטונים')) {
+        return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>`;
+      }
+      if (t.includes('music') || t.includes('מוזיקה')) {
+        return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`;
+      }
+      return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+    }
+
     function getFileIcon(f) {
-      if (f.isDirectory) return '📁';
-      if (f.mimeType.startsWith('video/')) return '🎬';
-      if (f.mimeType.startsWith('audio/')) return '🎵';
-      if (f.mimeType.startsWith('image/')) return '🖼️';
-      if (f.mimeType.includes('zip') || f.mimeType.includes('compressed')) return '📦';
-      if (f.mimeType.includes('pdf')) return '📕';
-      if (isTextFile(f.name)) return '📄';
-      if (f.name.endsWith('.exe') || f.name.endsWith('.apk')) return '⚙️';
-      return '📄';
+      if (f.isDirectory) {
+        return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#38BDF8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`;
+      }
+      if (f.mimeType.startsWith('video/')) {
+        return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F472B6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+      }
+      if (f.mimeType.startsWith('audio/')) {
+        return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>`;
+      }
+      if (f.mimeType.startsWith('image/')) {
+        return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>`;
+      }
+      if (f.mimeType.includes('zip') || f.mimeType.includes('compressed')) {
+        return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`;
+      }
+      if (f.mimeType.includes('pdf')) {
+        return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="9" y1="15" x2="15" y2="15"></line></svg>`;
+      }
+      if (isTextFile(f.name)) {
+        return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>`;
+      }
+      if (f.name.endsWith('.exe') || f.name.endsWith('.apk')) {
+        return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>`;
+      }
+      return `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>`;
     }
 
     function formatBytes(bytes) {

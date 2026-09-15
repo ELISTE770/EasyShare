@@ -131,19 +131,27 @@ public sealed class LocalWebServerService : IDisposable
         }
         catch { }
 
-        // נסיון פתיחת פורט אוטומטית בראוטר דרך UPnP ברקע
-        _ = Task.Run(async () =>
+        // נסיון פתיחת פורט אוטומטית בראוטר דרך UPnP ברקע (רק אם מופעל במפורש בהגדרות)
+        if (Settings.EnableUpnp)
         {
-            try
+            _ = Task.Run(async () =>
             {
-                bool upnpOk = await Core.UpnpPortForwarder.ForwardPortAsync(Port);
-                if (upnpOk && !string.IsNullOrEmpty(Core.UpnpPortForwarder.ExternalPublicIp))
+                try
                 {
-                    OnLog?.Invoke($"[UPnP] Router port {Port} mapped successfully! Public WAN IP: {Core.UpnpPortForwarder.ExternalPublicIp}");
+                    if (Settings.ServerAnonymous && !SecurityService.IsPinRequired)
+                    {
+                        OnLog?.Invoke("[UPnP WARNING] UPnP is enabled while server has no PIN or password authentication! Router WAN mapping might expose unauthenticated access.");
+                    }
+
+                    bool upnpOk = await Core.UpnpPortForwarder.ForwardPortAsync(Port);
+                    if (upnpOk && !string.IsNullOrEmpty(Core.UpnpPortForwarder.ExternalPublicIp))
+                    {
+                        OnLog?.Invoke($"[UPnP] Router port {Port} mapped successfully! Public WAN IP: {Core.UpnpPortForwarder.ExternalPublicIp}");
+                    }
                 }
-            }
-            catch { }
-        });
+                catch { }
+            });
+        }
 
         if (Settings.EnableCloudflareTunnel)
         {
@@ -690,12 +698,12 @@ public sealed class LocalWebServerService : IDisposable
         string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var quickFolders = new List<object>
         {
-            new { name = "הורדות", path = Path.Combine(userProfile, "Downloads"), icon = "📥" },
-            new { name = "שולחן עבודה", path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop), icon = "🖥️" },
-            new { name = "מסמכים", path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), icon = "📁" },
-            new { name = "תמונות", path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), icon = "🖼️" },
-            new { name = "סרטונים", path = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), icon = "🎬" },
-            new { name = "מוזיקה", path = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), icon = "🎵" }
+            new { name = "הורדות", path = Path.Combine(userProfile, "Downloads"), icon = "downloads" },
+            new { name = "שולחן עבודה", path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop), icon = "desktop" },
+            new { name = "מסמכים", path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), icon = "documents" },
+            new { name = "תמונות", path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), icon = "pictures" },
+            new { name = "סרטונים", path = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), icon = "videos" },
+            new { name = "מוזיקה", path = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), icon = "music" }
         }.Where(q => Directory.Exists((string)((dynamic)q).path)).ToList();
 
         var overview = new
@@ -940,49 +948,95 @@ public sealed class LocalWebServerService : IDisposable
 
         await HttpResponse.WriteHeadersAsync(stream, 200, "OK", "application/zip", null, customHeaders, ct);
 
-        using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true, Encoding.UTF8))
+        var failedFiles = new List<string>();
+
+        try
         {
-            byte[] copyBuffer = new byte[65536];
-
-            foreach (var p in paths)
+            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true, Encoding.UTF8))
             {
-                if (ct.IsCancellationRequested) break;
-                string fullPath = SafeResolvePath(p);
+                byte[] copyBuffer = new byte[65536];
 
-                if (File.Exists(fullPath))
+                foreach (var p in paths)
                 {
-                    string entryName = Path.GetFileName(fullPath);
-                    var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
-                    await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, useAsync: true);
-                    await using var es = entry.Open();
-                    int read;
-                    while ((read = await fs.ReadAsync(copyBuffer, ct)) > 0)
+                    if (ct.IsCancellationRequested) break;
+                    string fullPath = SafeResolvePath(p);
+
+                    if (File.Exists(fullPath))
                     {
-                        await es.WriteAsync(copyBuffer.AsMemory(0, read), ct);
-                    }
-                }
-                else if (Directory.Exists(fullPath))
-                {
-                    string folderBase = Path.GetFileName(fullPath.TrimEnd('/', '\\'));
-                    var files = Directory.EnumerateFiles(fullPath, "*", SearchOption.AllDirectories);
-                    foreach (var f in files)
-                    {
-                        if (ct.IsCancellationRequested) break;
-                        string rel = Path.Combine(folderBase, Path.GetRelativePath(fullPath, f)).Replace('\\', '/');
-                        var entry = archive.CreateEntry(rel, CompressionLevel.Fastest);
-                        await using var fs = new FileStream(f, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, useAsync: true);
-                        await using var es = entry.Open();
-                        int read;
-                        while ((read = await fs.ReadAsync(copyBuffer, ct)) > 0)
+                        try
                         {
-                            await es.WriteAsync(copyBuffer.AsMemory(0, read), ct);
+                            string entryName = Path.GetFileName(fullPath);
+                            var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
+                            await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, useAsync: true);
+                            await using var es = entry.Open();
+                            int read;
+                            while ((read = await fs.ReadAsync(copyBuffer, ct)) > 0)
+                            {
+                                await es.WriteAsync(copyBuffer.AsMemory(0, read), ct);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            failedFiles.Add($"{p}: {ex.Message}");
+                        }
+                    }
+                    else if (Directory.Exists(fullPath))
+                    {
+                        string folderBase = Path.GetFileName(fullPath.TrimEnd('/', '\\'));
+                        IEnumerable<string> files;
+                        try
+                        {
+                            files = Directory.EnumerateFiles(fullPath, "*", SearchOption.AllDirectories);
+                        }
+                        catch (Exception ex)
+                        {
+                            failedFiles.Add($"{p}: {ex.Message}");
+                            continue;
+                        }
+
+                        foreach (var f in files)
+                        {
+                            if (ct.IsCancellationRequested) break;
+                            try
+                            {
+                                string rel = Path.Combine(folderBase, Path.GetRelativePath(fullPath, f)).Replace('\\', '/');
+                                var entry = archive.CreateEntry(rel, CompressionLevel.Fastest);
+                                await using var fs = new FileStream(f, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, useAsync: true);
+                                await using var es = entry.Open();
+                                int read;
+                                while ((read = await fs.ReadAsync(copyBuffer, ct)) > 0)
+                                {
+                                    await es.WriteAsync(copyBuffer.AsMemory(0, read), ct);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                failedFiles.Add($"{f}: {ex.Message}");
+                            }
                         }
                     }
                 }
-            }
-        }
 
-        await stream.FlushAsync(ct);
+                if (failedFiles.Count > 0)
+                {
+                    try
+                    {
+                        var failEntry = archive.CreateEntry("_FAILED_FILES.txt", CompressionLevel.Fastest);
+                        await using var fes = failEntry.Open();
+                        byte[] failBytes = Encoding.UTF8.GetBytes("The following files could not be read (e.g. locked by another process):\r\n\r\n" + string.Join("\r\n", failedFiles));
+                        await fes.WriteAsync(failBytes, ct);
+                    }
+                    catch { }
+                }
+            }
+
+            await stream.FlushAsync(ct);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            OnLog?.Invoke($"[ZIP STREAM ERROR] Batch download interrupted: {ex.Message}");
+            // כותרות ה-HTTP כבר נשלחו (200 OK) - אין לכתוב תגובת שגיאת 500 לתוך נתוני ה-ZIP הבינאריים
+        }
     }
 
     private async Task HandleFileContentAsync(HttpRequest req, Stream stream, CancellationToken ct)
@@ -1299,14 +1353,14 @@ public sealed class LocalWebServerService : IDisposable
         var item = SecureTransferService.GetTransfer(token);
         if (item == null)
         {
-            string notFoundHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>קישור לא נמצא</title><style>body{background:#0F172A;color:#F8FAFC;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1E293B;padding:32px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #334155;}</style></head><body><div class='card'><h2>❌ קישור לא נמצא</h2><p style='color:#94A3B8;'>הקישור שביקשת אינו קיים, בוטל על ידי השולח, או שנמחק.</p></div></body></html>";
+            string notFoundHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>קישור לא נמצא</title><style>body{background:#1F1F1F;color:#FFFFFF;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#2B2B2B;padding:36px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #383838;}</style></head><body><div class='card'><h2 style='color:#E11D48; margin-top:0;'>קישור לא נמצא</h2><p style='color:#B0B0B0;'>הקישור שביקשת אינו קיים, בוטל על ידי השולח, או שנמחק.</p></div></body></html>";
             await HttpResponse.WriteTextAsync(stream, notFoundHtml, "text/html; charset=utf-8", 404, "Not Found", ct);
             return;
         }
 
         if (item.IsExpired)
         {
-            string expiredHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>הקישור פג תוקף</title><style>body{background:#0F172A;color:#F8FAFC;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1E293B;padding:32px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #334155;}</style></head><body><div class='card'><h2>⏳ הקישור פג תוקף</h2><p style='color:#94A3B8;'>תוקף הקישור פג או שהושגה מגבלת ההורדות המרבית.</p></div></body></html>";
+            string expiredHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>הקישור פג תוקף</title><style>body{background:#1F1F1F;color:#FFFFFF;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#2B2B2B;padding:36px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #383838;}</style></head><body><div class='card'><h2 style='color:#F59E0B; margin-top:0;'>הקישור פג תוקף</h2><p style='color:#B0B0B0;'>תוקף הקישור פג או שהושגה מגבלת ההורדות המרבית.</p></div></body></html>";
             await HttpResponse.WriteTextAsync(stream, expiredHtml, "text/html; charset=utf-8", 410, "Gone", ct);
             return;
         }
@@ -1319,7 +1373,7 @@ public sealed class LocalWebServerService : IDisposable
             : $"{Math.Max(1, item.FileSizeBytes / 1024)} KB";
 
         string expText = item.ExpiresAt == DateTime.MaxValue
-            ? "ללא תפוגה (תמידי ♾️)"
+            ? "ללא תפוגה"
             : $"{Math.Max(1, (int)(item.ExpiresAt - DateTime.Now).TotalMinutes)} דקות";
 
         string pageHtml = $@"<!DOCTYPE html>
@@ -1330,23 +1384,28 @@ public sealed class LocalWebServerService : IDisposable
     <title>שיתוף קבצים מאובטח | {System.Web.HttpUtility.HtmlEncode(item.FileName)}</title>
     <style>
         * {{ box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }}
-        body {{ background: #0B1120; color: #F8FAFC; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }}
-        .card {{ background: #1E293B; border: 1.5px solid #334155; border-radius: 20px; padding: 36px 30px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }}
-        .icon {{ font-size: 54px; margin-bottom: 16px; display: inline-block; }}
-        h1 {{ font-size: 20px; margin: 0 0 8px 0; word-break: break-all; color: #F8FAFC; }}
-        .badge {{ display: inline-block; background: #0B1120; border: 1px solid #334155; padding: 6px 14px; border-radius: 999px; font-size: 13px; color: #38BDF8; font-weight: 600; margin-bottom: 22px; }}
+        body {{ background: #1F1F1F; color: #FFFFFF; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }}
+        .card {{ background: #2B2B2B; border: 1px solid #383838; border-radius: 16px; padding: 36px 30px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }}
+        .icon-box {{ width: 56px; height: 56px; border-radius: 12px; background: rgba(0,120,212,0.12); border: 1px solid rgba(0,120,212,0.3); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; }}
+        h1 {{ font-size: 20px; margin: 0 0 8px 0; word-break: break-all; color: #FFFFFF; font-weight: 600; }}
+        .badge {{ display: inline-block; background: #252525; border: 1px solid #383838; padding: 6px 14px; border-radius: 999px; font-size: 13px; color: #388BE8; font-weight: 500; margin-bottom: 22px; }}
         .input-group {{ text-align: right; margin-bottom: 20px; }}
-        label {{ font-size: 13px; font-weight: bold; color: #94A3B8; margin-bottom: 6px; display: block; }}
-        input[type='text'] {{ width: 100%; height: 46px; background: #0B1120; border: 1.5px solid #334155; border-radius: 10px; padding: 0 14px; font-size: 16px; font-weight: bold; color: #38BDF8; text-align: center; letter-spacing: 2px; outline: none; }}
-        input:focus {{ border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }}
-        .btn {{ width: 100%; height: 48px; background: #2563EB; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: background 0.2s; }}
-        .btn:hover {{ background: #1D4ED8; }}
-        .footer {{ margin-top: 24px; font-size: 12px; color: #64748B; border-top: 1px solid #334155; padding-top: 16px; display: flex; justify-content: space-between; }}
+        label {{ font-size: 13px; font-weight: 600; color: #B0B0B0; margin-bottom: 6px; display: block; }}
+        input[type='text'] {{ width: 100%; height: 46px; background: #1F1F1F; border: 1px solid #383838; border-radius: 10px; padding: 0 14px; font-size: 16px; font-weight: 600; color: #388BE8; text-align: center; letter-spacing: 2px; outline: none; }}
+        input:focus {{ border-color: #0078D4; box-shadow: 0 0 0 3px rgba(0,120,212,0.25); }}
+        .btn {{ width: 100%; height: 48px; background: #0078D4; color: white; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; transition: background 0.2s; }}
+        .btn:hover {{ background: #0067C0; }}
+        .footer {{ margin-top: 24px; font-size: 12px; color: #737373; border-top: 1px solid #383838; padding-top: 16px; display: flex; justify-content: space-between; }}
     </style>
 </head>
 <body>
     <div class='card'>
-        <div class='icon'>📁</div>
+        <div class='icon-box'>
+            <svg width='28' height='28' viewBox='0 0 24 24' fill='none' stroke='#388BE8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                <rect x='3' y='11' width='18' height='11' rx='2' ry='2'></rect>
+                <path d='M7 11V7a5 5 0 0 1 10 0v4'></path>
+            </svg>
+        </div>
         <h1>{System.Web.HttpUtility.HtmlEncode(item.FileName)}</h1>
         <div class='badge'>גודל: {sizeText} | תפוגה: {expText}</div>
 
@@ -1356,12 +1415,19 @@ public sealed class LocalWebServerService : IDisposable
                 <label for='pin'>קוד אימות PIN שהתקבל מהשולח:</label>
                 <input type='text' id='pin' name='pin' value='{System.Web.HttpUtility.HtmlEncode(prefillPin)}' placeholder='הזן קוד PIN' required autocomplete='off'>
             </div>
-            <button type='submit' class='btn'>הורד קובץ עכשיו 📥</button>
+            <button type='submit' class='btn'>
+                <svg width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>
+                    <path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'></path>
+                    <polyline points='7 10 12 15 17 10'></polyline>
+                    <line x1='12' y1='15' x2='12' y2='3'></line>
+                </svg>
+                הורד קובץ מאובטח
+            </button>
         </form>
 
         <div class='footer'>
-            <span>מוגן ומאובטח ב-PIN 🔒</span>
-            <span>שיתוף קל PRO 🚀</span>
+            <span>מוגן קוד אימות PIN</span>
+            <span>EasyShare PRO Enterprise</span>
         </div>
     </div>
 </body>
@@ -1389,7 +1455,7 @@ public sealed class LocalWebServerService : IDisposable
         if (!string.Equals(item.PinCode, pin, StringComparison.OrdinalIgnoreCase))
         {
             SecurityService.RecordFailedAttempt(req.ClientIp);
-            string failHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>קוד PIN שגוי</title><style>body{background:#0F172A;color:#F8FAFC;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1E293B;padding:32px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #334155;}.btn{display:inline-block;margin-top:16px;background:#2563EB;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold;}</style></head><body><div class='card'><h2 style='color:#EF4444;'>❌ קוד PIN שגוי</h2><p style='color:#94A3B8;'>קוד האימות שהזנת אינו תואם. אנא ודא את הקוד עם השולח.</p><a class='btn' href='javascript:history.back()'>נסה שוב ↩️</a></div></body></html>";
+            string failHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>קוד PIN שגוי</title><style>body{background:#1F1F1F;color:#FFFFFF;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#2B2B2B;padding:36px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #383838;}.btn{display:inline-block;margin-top:20px;background:#0078D4;color:white;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600;font-size:14px;}</style></head><body><div class='card'><h2 style='color:#E11D48; margin-top:0;'>קוד אימות PIN שגוי</h2><p style='color:#B0B0B0; font-size:14px;'>קוד האימות שהוזן אינו תואם. אנא ודא את הקוד מול השולח.</p><a class='btn' href='javascript:history.back()'>חזרה וניסיון חוזר</a></div></body></html>";
             await HttpResponse.WriteTextAsync(stream, failHtml, "text/html; charset=utf-8", 401, "Unauthorized", ct);
             return;
         }

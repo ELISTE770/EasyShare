@@ -16,7 +16,7 @@ public class ActiveClientConnection
 {
     public string ConnectionId { get; set; } = Guid.NewGuid().ToString("N")[..10];
     public string ClientIp { get; set; } = "127.0.0.1";
-    public string CountryFlag { get; set; } = "🏠";
+    public string CountryFlag { get; set; } = "LAN";
     public string TargetFileName { get; set; } = string.Empty;
     public long TotalBytes { get; set; }
     public long BytesTransferred { get; set; }
@@ -128,11 +128,11 @@ public sealed class LiveNetworkMonitorService
 
     private static string ResolveCountryFlag(string ip)
     {
-        if (string.IsNullOrWhiteSpace(ip)) return "🌐";
+        if (string.IsNullOrWhiteSpace(ip)) return "WAN";
         if (ip == "127.0.0.1" || ip == "::1" || ip.StartsWith("192.168.") || ip.StartsWith("10.") || ip.StartsWith("172."))
         {
-            return "🏠"; // רשת מקומית
+            return "LAN"; // רשת מקומית
         }
-        return "🌐"; // אינטרנט
+        return "WAN"; // אינטרנט / מנהור
     }
 }

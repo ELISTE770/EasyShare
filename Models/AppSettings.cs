@@ -143,9 +143,9 @@ public class AppSettings
     public bool EnableMdns { get; set; } = true;
 
     /// <summary>
-    /// האם לנסות לפתוח פורט בראוטר דרך UPnP
+    /// האם לנסות לפתוח פורט בראוטר דרך UPnP (ברירת מחדל: כבוי, דורש הפעלה יזומה)
     /// </summary>
-    public bool EnableUpnp { get; set; } = true;
+    public bool EnableUpnp { get; set; } = false;
 
     /// <summary>
     /// פעולה בעת לחיצה על כפתור הסגירה (X): "MinimizeToTray" (מזעור למגש המערכת) או "ExitApplication" (סגירה מלאה ויציאה)

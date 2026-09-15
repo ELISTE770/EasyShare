@@ -55,7 +55,7 @@ public static class CloudDriveService
         {
             Id = "OneDrive",
             DisplayName = "Microsoft OneDrive",
-            Icon = "⛅",
+            Icon = "onedrive",
             LocalRootPath = isLoc ? path : null,
             WebUrl = "https://onedrive.live.com",
             Description = isLoc
@@ -115,7 +115,7 @@ public static class CloudDriveService
         {
             Id = "GoogleDrive",
             DisplayName = "Google Drive",
-            Icon = "📁",
+            Icon = "googledrive",
             LocalRootPath = isLoc ? path : null,
             WebUrl = "https://drive.google.com/drive/my-drive",
             Description = isLoc

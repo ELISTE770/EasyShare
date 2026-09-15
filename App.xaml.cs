@@ -23,25 +23,37 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
 
         // בדיקה האם המשתמש הריץ עם --test משורת הפקודה
-        if (Array.Exists(e.Args, a => a.Equals("--test", StringComparison.OrdinalIgnoreCase)))
+        string[] allArgs = Environment.GetCommandLineArgs();
+        if (Array.Exists(allArgs, a => a.Equals("--test", StringComparison.OrdinalIgnoreCase)) ||
+            (e.Args != null && Array.Exists(e.Args, a => a.Equals("--test", StringComparison.OrdinalIgnoreCase))))
         {
-            if (!AttachConsole(ATTACH_PARENT_PROCESS))
+            try
             {
-                AllocConsole();
-            }
+                if (!AttachConsole(ATTACH_PARENT_PROCESS))
+                {
+                    AllocConsole();
+                }
 
-            Console.OutputEncoding = Encoding.UTF8;
-            bool passed = await SelfTestRunner.RunAllTestsAsync();
-            Environment.Exit(passed ? 0 : 1);
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                Console.OutputEncoding = Encoding.UTF8;
+                bool passed = await SelfTestRunner.RunAllTestsAsync();
+                Environment.Exit(passed ? 0 : 1);
+            }
+            catch (Exception ex)
+            {
+                try { File.WriteAllText("test_crash.txt", ex.ToString()); } catch { }
+                Environment.Exit(1);
+            }
             return;
         }
 
         // בדיקת פקודת שיתוף מהיר מסייר הקבצים (Windows Shell Context Menu)
-        int idx = Array.FindIndex(e.Args, a => a.Equals("--quick-share", StringComparison.OrdinalIgnoreCase));
-        if (idx != -1 && e.Args.Length > idx + 2)
+        string[] activeArgs = (e.Args != null && e.Args.Length > 0) ? e.Args : allArgs;
+        int idx = Array.FindIndex(activeArgs, a => a.Equals("--quick-share", StringComparison.OrdinalIgnoreCase));
+        if (idx != -1 && activeArgs.Length > idx + 2)
         {
-            string channel = e.Args[idx + 1];
-            string targetPath = e.Args[idx + 2];
+            string channel = activeArgs[idx + 1];
+            string targetPath = activeArgs[idx + 2];
 
             bool sent = await EasyShare.Services.SingleInstanceIpcService.SendShareCommandAsync(channel, targetPath);
             if (sent)

@@ -32,6 +32,7 @@ public partial class MainWindow : Window
     private Core.GlobalHotkeyManager? _hotkeyManager;
     private WatchFolderService? _watchFolderService;
     private readonly List<double> _speedHistory = new();
+    private bool _isProgrammaticTunnelToggle = false;
 
     public MainWindow()
     {
@@ -206,10 +207,8 @@ public partial class MainWindow : Window
     private void ExitApplication()
     {
         _isExplicitExit = true;
-        _notifyIcon?.Dispose();
-        _notifyIcon = null;
-        _server.Dispose();
-        Application.Current.Shutdown();
+        Close();
+        Application.Current?.Shutdown();
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
@@ -218,24 +217,28 @@ public partial class MainWindow : Window
         {
             _server.Dispose();
             _notifyIcon?.Dispose();
+            _notifyIcon = null;
             base.OnClosing(e);
             return;
         }
 
         bool minimizeToTray = !string.Equals(_server.Settings.CloseAction, "ExitApplication", StringComparison.OrdinalIgnoreCase);
-        if (minimizeToTray)
+        if (minimizeToTray && _notifyIcon != null)
         {
             // מזעור למגש המערכת במקום סגירה מלאה שמפילה את השרת
             e.Cancel = true;
             Hide();
             var loc = LocalizationService.Instance;
-            _notifyIcon?.ShowBalloonTip(2500, loc["HeaderTitle"], loc["BalloonServerRunningBg"], System.Windows.Forms.ToolTipIcon.Info);
+            _notifyIcon.ShowBalloonTip(2500, loc["HeaderTitle"], loc["BalloonServerRunningBg"], System.Windows.Forms.ToolTipIcon.Info);
+            return;
         }
-        else
-        {
-            // סגירה מלאה ויציאה מהתוכנה (מכבה את השרת לחלוטין)
-            ExitApplication();
-        }
+
+        // סגירה רגילה של החלון ושחרור משאבים
+        _isExplicitExit = true;
+        _server.Dispose();
+        _notifyIcon?.Dispose();
+        _notifyIcon = null;
+        base.OnClosing(e);
     }
 
     private void BtnMinimizeToTray_Click(object sender, RoutedEventArgs e)
@@ -249,36 +252,75 @@ public partial class MainWindow : Window
 
     #region ניהול שרת רשת ומדיה
 
+    private enum ServerState
+    {
+        Running,
+        Stopped,
+        Error
+    }
+
+    private void ApplyServerState(ServerState state, string? errorMessage = null)
+    {
+        var loc = LocalizationService.Instance;
+        switch (state)
+        {
+            case ServerState.Running:
+                TxtServerStatus.Text = loc["ServerRunning"];
+                TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Emerald Green
+                StatusDot.Fill = new SolidColorBrush(Color.FromRgb(16, 185, 129));
+                BtnToggleServerTop.Content = loc["StopServer"];
+                BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 239, 68, 68));
+                BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 239, 68, 68));
+                BtnToggleServerTop.BorderThickness = new Thickness(1);
+                BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(254, 202, 202));
+
+                TxtLocalUrl.Text = _server.LocalUrl;
+                UpdateQrCodeImage(_server.LocalUrl);
+                TxtFooterInfo.Text = $"{loc["HeaderTitle"]} | Port {_server.Port} | Mode: {_server.Settings.AccessMode}";
+                break;
+
+            case ServerState.Stopped:
+                TxtServerStatus.Text = loc["ServerStopped"];
+                TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)); // Gray Muted
+                StatusDot.Fill = new SolidColorBrush(Color.FromRgb(148, 163, 184));
+                BtnToggleServerTop.Content = loc["StartServer"];
+                BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 16, 185, 129));
+                BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 16, 185, 129));
+                BtnToggleServerTop.BorderThickness = new Thickness(1);
+                BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(167, 243, 208));
+
+                TxtLocalUrl.Text = string.Empty;
+                ImgQrCode.Source = null;
+                TxtFooterInfo.Text = $"{loc["HeaderTitle"]} | {loc["ServerStopped"]}";
+                break;
+
+            case ServerState.Error:
+                TxtServerStatus.Text = loc["MsgErrorTitle"];
+                TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(239, 68, 68));
+                StatusDot.Fill = new SolidColorBrush(Color.FromRgb(239, 68, 68));
+                BtnToggleServerTop.Content = loc["StartServer"];
+                BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 16, 185, 129));
+                BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 16, 185, 129));
+                BtnToggleServerTop.BorderThickness = new Thickness(1);
+                BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(167, 243, 208));
+
+                TxtLocalUrl.Text = string.Empty;
+                ImgQrCode.Source = null;
+                TxtFooterInfo.Text = $"{loc["HeaderTitle"]} | {errorMessage ?? loc["MsgErrorTitle"]}";
+                break;
+        }
+    }
+
     private void StartServer()
     {
         try
         {
             _server.Start();
-
-            TxtServerStatus.Text = LocalizationService.Instance["ServerRunning"];
-            TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Emerald Green
-            StatusDot.Fill = new SolidColorBrush(Color.FromRgb(16, 185, 129));
-            BtnToggleServerTop.Content = LocalizationService.Instance["StopServer"];
-            BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 239, 68, 68));
-            BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 239, 68, 68));
-            BtnToggleServerTop.BorderThickness = new Thickness(1);
-            BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(254, 202, 202));
-
-            TxtLocalUrl.Text = _server.LocalUrl;
-            UpdateQrCodeImage(_server.LocalUrl);
-            TxtFooterInfo.Text = $"{LocalizationService.Instance["HeaderTitle"]} | Port {_server.Port} | Mode: {_server.Settings.AccessMode}";
+            ApplyServerState(ServerState.Running);
         }
         catch (Exception ex)
         {
-            TxtServerStatus.Text = LocalizationService.Instance["MsgErrorTitle"];
-            TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(239, 68, 68));
-            StatusDot.Fill = new SolidColorBrush(Color.FromRgb(239, 68, 68));
-            BtnToggleServerTop.Content = LocalizationService.Instance["StartServer"];
-            BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 16, 185, 129));
-            BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 16, 185, 129));
-            BtnToggleServerTop.BorderThickness = new Thickness(1);
-            BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(167, 243, 208));
-
+            ApplyServerState(ServerState.Error, ex.Message);
             AppendLog($"[SERVER ERROR] {ex.Message}");
             MessageBox.Show($"Error starting server on port {_server.Port}:\n{ex.Message}", LocalizationService.Instance["MsgErrorTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
@@ -287,16 +329,7 @@ public partial class MainWindow : Window
     private void StopServer()
     {
         _server.Stop();
-
-        TxtServerStatus.Text = LocalizationService.Instance["ServerStopped"];
-        TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)); // Gray Muted
-        StatusDot.Fill = new SolidColorBrush(Color.FromRgb(148, 163, 184));
-        BtnToggleServerTop.Content = LocalizationService.Instance["StartServer"];
-        BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 16, 185, 129));
-        BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 16, 185, 129));
-        BtnToggleServerTop.BorderThickness = new Thickness(1);
-        BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(167, 243, 208));
-
+        ApplyServerState(ServerState.Stopped);
         AppendLog("[SERVER] Server was stopped by user.");
     }
 
@@ -399,8 +432,10 @@ public partial class MainWindow : Window
                 {
                     Dispatcher.Invoke(() =>
                     {
-                        TxtTunnelUrl.Text = "שגיאה בהפעלת מנהור Cloudflare (בדוק חיבור אינטרנט או תקינות ה-Token).";
-                        ChkEnableTunnel.IsChecked = false;
+                        string errMsg = "שגיאה בהפעלת מנהור Cloudflare (בדוק חיבור אינטרנט או תקינות ה-Token).";
+                        _isProgrammaticTunnelToggle = true;
+                        try { ChkEnableTunnel.IsChecked = false; } finally { _isProgrammaticTunnelToggle = false; }
+                        TxtTunnelUrl.Text = errMsg;
                     });
                 }
             }
@@ -408,8 +443,10 @@ public partial class MainWindow : Window
             {
                 Dispatcher.Invoke(() =>
                 {
-                    TxtTunnelUrl.Text = $"שגיאה בהפעלת מנהור: {ex.Message}";
-                    ChkEnableTunnel.IsChecked = false;
+                    string errMsg = $"שגיאה בהפעלת מנהור: {ex.Message}";
+                    _isProgrammaticTunnelToggle = true;
+                    try { ChkEnableTunnel.IsChecked = false; } finally { _isProgrammaticTunnelToggle = false; }
+                    TxtTunnelUrl.Text = errMsg;
                     AppendLog($"[TUNNEL ERROR] {ex.Message}");
                 });
             }
@@ -418,6 +455,8 @@ public partial class MainWindow : Window
 
     private void ChkEnableTunnel_Unchecked(object sender, RoutedEventArgs e)
     {
+        if (_isProgrammaticTunnelToggle) return;
+
         _server.Settings.EnableCloudflareTunnel = false;
         _server.SettingsManager.Save();
 

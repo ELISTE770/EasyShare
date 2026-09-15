@@ -173,7 +173,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="BorderBrush" Value="#3B82F6" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource BrushBorderHighlight}" />
                             </Trigger>
                             <Trigger Property="IsFocused" Value="True">
                                 <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource BrushAccentCyan}" />

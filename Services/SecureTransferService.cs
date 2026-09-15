@@ -88,6 +88,7 @@ public sealed class SecureTransferService
     private readonly TimeSpan _sessionDuration = TimeSpan.FromHours(24);
     private readonly TimeSpan _lockoutDuration = TimeSpan.FromMinutes(15);
     private const int MaxFailedAttempts = 6;
+    private static readonly System.Threading.Timer _cleanupTimer = new(_ => CleanExpiredTransfersAndTempFiles(), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(15));
 
     public static SecureTransferService Instance { get; } = new();
 
@@ -271,6 +272,52 @@ public sealed class SecureTransferService
                 SecureZeroFillShred(item.TempZipFilePath);
             }
         }
+    }
+
+    /// <summary>
+    /// מנקה קובצי ZIP זמניים של שיתופים שפגו או שיתופים יתומים שהושארו בתיקיית ה-TEMP
+    /// </summary>
+    public static void CleanExpiredTransfersAndTempFiles()
+    {
+        try
+        {
+            var activeTempFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var item in _transfers.Values)
+            {
+                if (item.IsExpired)
+                {
+                    if (!string.IsNullOrEmpty(item.TempZipFilePath) && File.Exists(item.TempZipFilePath))
+                    {
+                        SecureZeroFillShred(item.TempZipFilePath);
+                        item.TempZipFilePath = null;
+                    }
+                }
+                else if (!string.IsNullOrEmpty(item.TempZipFilePath))
+                {
+                    activeTempFiles.Add(Path.GetFullPath(item.TempZipFilePath));
+                }
+            }
+
+            string tempDir = Path.Combine(Path.GetTempPath(), "EasyShare_Transfers");
+            if (Directory.Exists(tempDir))
+            {
+                var files = Directory.GetFiles(tempDir, "*.zip");
+                var now = DateTime.Now;
+                foreach (var f in files)
+                {
+                    string full = Path.GetFullPath(f);
+                    if (!activeTempFiles.Contains(full))
+                    {
+                        var fi = new FileInfo(f);
+                        if (now - fi.CreationTime > TimeSpan.FromHours(2) || now - fi.LastWriteTime > TimeSpan.FromHours(2))
+                        {
+                            SecureZeroFillShred(f);
+                        }
+                    }
+                }
+            }
+        }
+        catch { }
     }
 
     /// <summary>
