@@ -956,7 +956,9 @@ public partial class MainWindow : Window
         {
             foreach (ComboBoxItem item in CmbSettingsCloseAction.Items)
             {
-                if (string.Equals(item.Tag?.ToString(), settings.CloseAction, StringComparison.OrdinalIgnoreCase))
+                string tag = item.Tag?.ToString() ?? "";
+                if (string.Equals(tag, settings.CloseAction, StringComparison.OrdinalIgnoreCase) ||
+                    (string.Equals(settings.CloseAction, "Exit", StringComparison.OrdinalIgnoreCase) && string.Equals(tag, "ExitApplication", StringComparison.OrdinalIgnoreCase)))
                 {
                     CmbSettingsCloseAction.SelectedItem = item;
                     break;
