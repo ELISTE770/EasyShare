@@ -1,0 +1,1293 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using EasyShare.Core;
+using EasyShare.Http;
+using EasyShare.Models;
+using EasyShare.Web;
+
+namespace EasyShare.Services;
+
+/// <summary>
+/// מנוע שרת ה-Web המקומי המשודרג (LocalWebServerService).
+/// תומך במצב גישה מלאה לכל כונני המחשב (Full Computer Access) או תיקייה ספציפית,
+/// סל מחזור של Windows, עורך טקסט מובנה, הורדה ומחיקה מרובה (Batch), ופאנל הגדרות מתקדמות דינמי.
+/// </summary>
+public sealed class LocalWebServerService : IDisposable
+{
+    private TcpListener? _listener;
+    private CancellationTokenSource? _cts;
+    private Task? _listenTask;
+    private Core.MdnsDiscoveryService? _mdnsService;
+
+    public record ClipboardItem(string Id, string Content, bool IsUrl, DateTime CreatedAt);
+    private static readonly List<ClipboardItem> _clipboardItems = new();
+    private static readonly ConcurrentDictionary<string, string> _webrtcSignals = new(StringComparer.OrdinalIgnoreCase);
+
+    public SettingsService SettingsManager { get; }
+    public AppSettings Settings => SettingsManager.Current;
+
+    public int Port => Settings.ServerPort;
+    public string RootDirectory => Settings.SharedFolderPath;
+    public bool IsReadOnly { get => Settings.ServerReadOnly; set => Settings.ServerReadOnly = value; }
+    public SecureTransferService SecurityService { get; }
+    public CloudflareTunnelService TunnelService { get; }
+
+    public string LocalIpAddress { get; private set; } = "127.0.0.1";
+    public string LocalUrl => $"http://{LocalIpAddress}:{Port}";
+    public bool IsRunning => _listener != null;
+
+    public event Action<string>? OnLog;
+
+    public LocalWebServerService(SettingsService? settingsService = null)
+    {
+        SettingsManager = settingsService ?? new SettingsService();
+        SecurityService = new SecureTransferService(Settings.SecurityPin);
+        TunnelService = new CloudflareTunnelService();
+
+        SecurityService.OnIpBlocked += (ip, msg) => OnLog?.Invoke($"[SECURITY] {msg}");
+        TunnelService.OnStateChanged += state => OnLog?.Invoke($"[TUNNEL] {state}");
+        TunnelService.OnError += err => OnLog?.Invoke($"[TUNNEL ERROR] {err}");
+    }
+
+    public LocalWebServerService(
+        string rootDirectory,
+        int port = 2121,
+        bool isReadOnly = false,
+        string? pin = null,
+        string? basicUser = null,
+        string? basicPassword = null) : this(new SettingsService())
+    {
+        Settings.SharedFolderPath = Path.GetFullPath(rootDirectory);
+        Settings.ServerPort = port;
+        Settings.ServerReadOnly = isReadOnly;
+        Settings.SecurityPin = pin;
+        Settings.ServerAnonymous = string.IsNullOrEmpty(basicUser);
+        Settings.ServerUsername = basicUser ?? "pc";
+        Settings.ServerPassword = basicPassword ?? "";
+        SecurityService.SetCustomPin(pin);
+    }
+
+    /// <summary>
+    /// מתחיל את האזנת השרת המקומי
+    /// </summary>
+    public void Start()
+    {
+        if (IsRunning) return;
+
+        LocalIpAddress = NetworkHelper.GetPreferredLocalIpAddress();
+        _cts = new CancellationTokenSource();
+
+        int targetPort = Port > 0 ? Port : 2121;
+        bool bound = false;
+
+        for (int attempts = 0; attempts < 10; attempts++)
+        {
+            try
+            {
+                _listener = new TcpListener(IPAddress.Any, targetPort);
+                _listener.Start();
+                bound = true;
+                if (targetPort != Port)
+                {
+                    OnLog?.Invoke($"[SERVER] שים לב: יציאה {Port} תפוסה על ידי יישום אחר. השרת הופעל אוטומטית ביציאה פנויה {targetPort}.");
+                    Settings.ServerPort = targetPort;
+                    SettingsManager.Save(Settings);
+                }
+                break;
+            }
+            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
+            {
+                _listener?.Stop();
+                _listener = null;
+                targetPort++;
+            }
+        }
+
+        if (!bound)
+        {
+            throw new InvalidOperationException($"לא ניתן היה להפעיל את השרת ביציאה {Port} או ביציאות העוקבות אחריה (כולן תפוסות).");
+        }
+
+        OnLog?.Invoke($"[SERVER] Listening on {LocalUrl} (Mode: {Settings.AccessMode})");
+        _listenTask = Task.Run(() => ListenLoopAsync(_cts.Token));
+
+        // הפעלת שירות mDNS לזיהוי מקומי מהיר (easyshare.local)
+        try
+        {
+            _mdnsService = new Core.MdnsDiscoveryService(Port);
+            _mdnsService.Start();
+            OnLog?.Invoke($"[MDNS] Broadcasted local network name: http://easyshare.local:{Port}");
+        }
+        catch { }
+
+        // נסיון פתיחת פורט אוטומטית בראוטר דרך UPnP ברקע
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                bool upnpOk = await Core.UpnpPortForwarder.ForwardPortAsync(Port);
+                if (upnpOk && !string.IsNullOrEmpty(Core.UpnpPortForwarder.ExternalPublicIp))
+                {
+                    OnLog?.Invoke($"[UPnP] Router port {Port} mapped successfully! Public WAN IP: {Core.UpnpPortForwarder.ExternalPublicIp}");
+                }
+            }
+            catch { }
+        });
+
+        if (Settings.EnableCloudflareTunnel)
+        {
+            _ = Task.Run(async () =>
+            {
+                await TunnelService.StartAsync(
+                    Port,
+                    Settings.TunnelMode,
+                    Settings.CloudflareTunnelToken,
+                    Settings.CloudflareCustomDomain,
+                    msg => OnLog?.Invoke($"[TUNNEL] {msg}"));
+            });
+        }
+    }
+
+    private async Task ListenLoopAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested && _listener != null)
+        {
+            try
+            {
+                var client = await _listener.AcceptTcpClientAsync(ct);
+                _ = Task.Run(() => HandleClientAsync(client, ct), ct);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                if (!ct.IsCancellationRequested)
+                {
+                    OnLog?.Invoke($"[SERVER ERROR] Accept error: {ex.Message}");
+                }
+            }
+        }
+    }
+
+    private async Task HandleClientAsync(TcpClient client, CancellationToken ct)
+    {
+        using (client)
+        await using (var stream = client.GetStream())
+        {
+            string clientIp = "127.0.0.1";
+            if (client.Client.RemoteEndPoint is IPEndPoint ipEp)
+            {
+                var addr = ipEp.Address;
+                if (addr.IsIPv4MappedToIPv6) addr = addr.MapToIPv4();
+                clientIp = IPAddress.IsLoopback(addr) ? "127.0.0.1" : addr.ToString();
+            }
+
+            var request = await HttpRequest.ReadAsync(stream, clientIp, ct);
+            if (request == null) return;
+
+            // בדיקת כתובת IP חסומה
+            if (SecurityService.IsIpBlocked(clientIp, out string blockReason))
+            {
+                await HttpResponse.WriteStatusAsync(stream, 429, "Too Many Requests", blockReason, ct);
+                return;
+            }
+
+            // CORS Preflight
+            if (request.Method == "OPTIONS")
+            {
+                await HttpResponse.WriteHeadersAsync(stream, 204, "No Content", "text/plain", 0, null, ct);
+                return;
+            }
+
+            // אימות Basic Auth
+            if (!Settings.ServerAnonymous)
+            {
+                if (request.BasicAuthUser != Settings.ServerUsername || request.BasicAuthPassword != Settings.ServerPassword)
+                {
+                    await HttpResponse.WriteUnauthorizedBasicAsync(stream, "EasyShare", ct);
+                    return;
+                }
+            }
+
+            // אימות PIN
+            if (SecurityService.IsPinRequired && request.Path != "/api/auth/pin" && request.Path != "/" && !request.Path.StartsWith("/assets") && !request.Path.StartsWith("/secure"))
+            {
+                string? providedPin = request.GetHeader("X-PIN");
+                if (string.IsNullOrEmpty(providedPin) && request.Query.TryGetValue("pin", out var qPin))
+                {
+                    providedPin = qPin;
+                }
+
+                if (!SecurityService.ValidatePin(clientIp, providedPin))
+                {
+                    await HttpResponse.WriteStatusAsync(stream, 401, "Unauthorized", "Invalid or missing PIN.", ct);
+                    return;
+                }
+            }
+
+            try
+            {
+                await RouteRequestAsync(request, stream, ct);
+            }
+            catch (Exception ex)
+            {
+                OnLog?.Invoke($"[ROUTER ERROR] {request.Method} {request.Path}: {ex.Message}");
+                await HttpResponse.WriteStatusAsync(stream, 500, "Internal Server Error", ex.Message, ct);
+            }
+        }
+    }
+
+    private async Task RouteRequestAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        // ממשק ה-Web המוטמע (SPA)
+        if (req.Method == "GET" && (req.Path == "/" || req.Path == "/index.html"))
+        {
+            string html = EmbeddedResources.GetIndexHtml();
+            await HttpResponse.WriteTextAsync(stream, html, "text/html; charset=utf-8", 200, "OK", ct);
+            return;
+        }
+
+        // הגשת קובצי PWA Manifest ו-Service Worker
+        if (req.Method == "GET" && (req.Path == "/manifest.json" || req.Path == "/manifest.webmanifest"))
+        {
+            string manifest = EmbeddedResources.GetManifestJson();
+            await HttpResponse.WriteTextAsync(stream, manifest, "application/manifest+json; charset=utf-8", 200, "OK", ct);
+            return;
+        }
+
+        if (req.Method == "GET" && req.Path == "/sw.js")
+        {
+            string sw = EmbeddedResources.GetServiceWorkerJs();
+            var swHeaders = new Dictionary<string, string> { { "Service-Worker-Allowed", "/" } };
+            byte[] swBytes = Encoding.UTF8.GetBytes(sw);
+            await HttpResponse.WriteHeadersAsync(stream, 200, "OK", "application/javascript; charset=utf-8", swBytes.Length, swHeaders, ct);
+            await stream.WriteAsync(swBytes, ct);
+            await stream.FlushAsync(ct);
+            return;
+        }
+
+        // הגשת צלמיות אתר ו-PWA
+        if (req.Method == "GET" && (req.Path == "/favicon.ico" || req.Path == "/icon-192.png" || req.Path == "/icon-512.png"))
+        {
+            string filename = req.Path.TrimStart('/');
+            byte[]? assetBytes = EmbeddedResources.GetAssetBytes(filename);
+            if (assetBytes != null && assetBytes.Length > 0)
+            {
+                string contentType = filename.EndsWith(".ico", StringComparison.OrdinalIgnoreCase) 
+                    ? "image/x-icon" 
+                    : "image/png";
+                var cacheHeaders = new Dictionary<string, string> { { "Cache-Control", "public, max-age=86400" } };
+                await HttpResponse.WriteHeadersAsync(stream, 200, "OK", contentType, assetBytes.Length, cacheHeaders, ct);
+                await stream.WriteAsync(assetBytes, ct);
+                await stream.FlushAsync(ct);
+                return;
+            }
+        }
+
+        // לוח שיתוף מהיר בזמן אמת (Quick Drop / Universal Clipboard Sync)
+        if (req.Method == "GET" && req.Path == "/api/clipboard")
+        {
+            ClipboardItem? latest;
+            List<ClipboardItem> list;
+            lock (_clipboardItems)
+            {
+                list = _clipboardItems.OrderByDescending(x => x.CreatedAt).Take(30).ToList();
+                latest = list.FirstOrDefault();
+            }
+            await HttpResponse.WriteJsonAsync(stream, new { text = latest?.Content ?? "", items = list }, 200, "OK", ct);
+            return;
+        }
+
+        if (req.Method == "POST" && req.Path == "/api/clipboard")
+        {
+            string body = await req.ReadBodyAsStringAsync(ct);
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                string? text = doc.RootElement.TryGetProperty("text", out var tElem) ? tElem.GetString() : null;
+
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    bool isUrl = Uri.TryCreate(text, UriKind.Absolute, out var uriResult) &&
+                                 (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+
+                    var item = new ClipboardItem(Guid.NewGuid().ToString("N")[..8], text.Trim(), isUrl, DateTime.Now);
+                    lock (_clipboardItems)
+                    {
+                        _clipboardItems.Insert(0, item);
+                        if (_clipboardItems.Count > 50) _clipboardItems.RemoveAt(_clipboardItems.Count - 1);
+                    }
+                    OnLog?.Invoke($"[CLIPBOARD] New shared item from {req.ClientIp}");
+                    await HttpResponse.WriteJsonAsync(stream, new { success = true, item }, 200, "OK", ct);
+                    return;
+                }
+            }
+            catch { }
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing text", ct);
+            return;
+        }
+
+        // איתות WebRTC P2P
+        if (req.Method == "POST" && req.Path == "/api/webrtc/signal")
+        {
+            string body = await req.ReadBodyAsStringAsync(ct);
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                string? roomId = doc.RootElement.TryGetProperty("roomId", out var rElem) ? rElem.GetString() : null;
+                string? signal = doc.RootElement.TryGetProperty("signal", out var sElem) ? sElem.GetString() : null;
+
+                if (!string.IsNullOrEmpty(roomId) && !string.IsNullOrEmpty(signal))
+                {
+                    _webrtcSignals[roomId] = signal;
+                    await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+                    return;
+                }
+            }
+            catch { }
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Invalid signal", ct);
+            return;
+        }
+
+        if (req.Method == "GET" && req.Path == "/api/webrtc/signal")
+        {
+            if (req.Query.TryGetValue("roomId", out var roomId) && !string.IsNullOrEmpty(roomId))
+            {
+                if (_webrtcSignals.TryRemove(roomId, out var signal))
+                {
+                    await HttpResponse.WriteJsonAsync(stream, new { success = true, signal }, 200, "OK", ct);
+                    return;
+                }
+            }
+            await HttpResponse.WriteJsonAsync(stream, new { success = false }, 200, "OK", ct);
+            return;
+        }
+
+        // נקודת סטטוס המערכת והאחסון
+        if (req.Method == "GET" && req.Path == "/api/status")
+        {
+            var status = new
+            {
+                isReadOnly = Settings.ServerReadOnly,
+                isPinRequired = SecurityService.IsPinRequired,
+                port = Port,
+                localIp = LocalIpAddress,
+                localUrl = LocalUrl,
+                tunnelUrl = TunnelService.CurrentUrl,
+                isTunnelActive = TunnelService.IsRunning,
+                accessMode = Settings.AccessMode,
+                rootDirectory = Settings.SharedFolderPath,
+                sendToRecycleBin = Settings.SendToRecycleBin,
+                theme = Settings.ThemeMode,
+                language = Settings.Language
+            };
+            await HttpResponse.WriteJsonAsync(stream, status, 200, "OK", ct);
+            return;
+        }
+
+        // סקירת כוננים ותיקיות מהירות במחשב
+        if (req.Method == "GET" && req.Path == "/api/system/overview")
+        {
+            await HandleSystemOverviewAsync(stream, ct);
+            return;
+        }
+
+        // קריאת הגדרות
+        if (req.Method == "GET" && req.Path == "/api/settings")
+        {
+            await HttpResponse.WriteJsonAsync(stream, Settings, 200, "OK", ct);
+            return;
+        }
+
+        // שמירת הגדרות מתקדמות
+        if (req.Method == "POST" && req.Path == "/api/settings")
+        {
+            await HandleSaveSettingsAsync(req, stream, ct);
+            return;
+        }
+
+        // עמוד שיתוף מאובטח ייעודי
+        if (req.Method == "GET" && (req.Path == "/secure" || req.Path == "/secure/"))
+        {
+            await HandleSecurePageAsync(req, stream, ct);
+            return;
+        }
+
+        // הורדת קובץ משיתוף מאובטח
+        if (req.Method == "GET" && req.Path == "/secure/download")
+        {
+            await HandleSecureDownloadAsync(req, stream, ct);
+            return;
+        }
+
+        // סייר קבצים
+        if (req.Method == "GET" && req.Path == "/api/browse")
+        {
+            await HandleBrowseAsync(req, stream, ct);
+            return;
+        }
+
+        // הורדת קובץ או תיקייה
+        if (req.Method == "GET" && req.Path == "/api/download")
+        {
+            await HandleDownloadAsync(req, stream, ct);
+            return;
+        }
+
+        // צפייה בתוכן קובץ טקסט / קוד
+        if (req.Method == "GET" && req.Path == "/api/file/content")
+        {
+            await HandleFileContentAsync(req, stream, ct);
+            return;
+        }
+
+        // הפקת קוד QR
+        if (req.Method == "GET" && req.Path == "/api/qrcode")
+        {
+            string targetUrl = TunnelService.CurrentUrl ?? LocalUrl;
+            string svg = QrCodeGenerator.GenerateSvg(targetUrl);
+            var qrResponse = new
+            {
+                url = LocalUrl,
+                tunnelUrl = TunnelService.CurrentUrl,
+                target = targetUrl,
+                svg = svg
+            };
+            await HttpResponse.WriteJsonAsync(stream, qrResponse, 200, "OK", ct);
+            return;
+        }
+
+        // אימות PIN
+        if (req.Method == "POST" && req.Path == "/api/auth/pin")
+        {
+            await HandlePinAuthAsync(req, stream, ct);
+            return;
+        }
+
+        // הורדה מרובה (Batch Download as ZIP)
+        if (req.Method == "POST" && req.Path == "/api/batch/download")
+        {
+            await HandleBatchDownloadAsync(req, stream, ct);
+            return;
+        }
+
+        // פעולות כתיבה - נחסמות ב-Read Only
+        if (Settings.ServerReadOnly && (req.Path == "/api/upload" || req.Path == "/api/mkdir" || req.Path == "/api/delete" ||
+                                      req.Path == "/api/rename" || req.Path == "/api/file/save" || req.Path == "/api/batch/delete"))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 403, "Forbidden", "Server is operating in Read-Only mode.", ct);
+            return;
+        }
+
+        // העלאת קבצים
+        if (req.Method == "POST" && req.Path == "/api/upload")
+        {
+            await HandleUploadAsync(req, stream, ct);
+            return;
+        }
+
+        // יצירת תיקייה
+        if (req.Method == "POST" && req.Path == "/api/mkdir")
+        {
+            await HandleMkdirAsync(req, stream, ct);
+            return;
+        }
+
+        // מחיקת פריט יחיד
+        if (req.Method == "POST" && req.Path == "/api/delete")
+        {
+            await HandleDeleteAsync(req, stream, ct);
+            return;
+        }
+
+        // מחיקה מרובה (Batch Delete)
+        if (req.Method == "POST" && req.Path == "/api/batch/delete")
+        {
+            await HandleBatchDeleteAsync(req, stream, ct);
+            return;
+        }
+
+        // שינוי שם
+        if (req.Method == "POST" && req.Path == "/api/rename")
+        {
+            await HandleRenameAsync(req, stream, ct);
+            return;
+        }
+
+        // שמירת קובץ טקסט ערוך
+        if (req.Method == "POST" && req.Path == "/api/file/save")
+        {
+            await HandleFileSaveAsync(req, stream, ct);
+            return;
+        }
+
+        await HttpResponse.WriteStatusAsync(stream, 404, "Not Found", "Endpoint not found.", ct);
+    }
+
+    private async Task HandleSystemOverviewAsync(Stream stream, CancellationToken ct)
+    {
+        var drives = DriveInfo.GetDrives()
+            .Where(d => d.IsReady)
+            .Select(d =>
+            {
+                long total = d.TotalSize;
+                long free = d.AvailableFreeSpace;
+                long used = total - free;
+                double usedPercent = total > 0 ? Math.Round((double)used / total * 100, 1) : 0;
+                string label = string.IsNullOrWhiteSpace(d.VolumeLabel) ? (d.Name == "C:\\" ? "כונן מקומי" : "כונן") : d.VolumeLabel;
+
+                return new
+                {
+                    name = d.Name,
+                    label = label,
+                    driveType = d.DriveType.ToString(),
+                    totalSize = total,
+                    freeSpace = free,
+                    usedPercent = usedPercent
+                };
+            }).ToList();
+
+        string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var quickFolders = new List<object>
+        {
+            new { name = "הורדות", path = Path.Combine(userProfile, "Downloads"), icon = "📥" },
+            new { name = "שולחן עבודה", path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop), icon = "🖥️" },
+            new { name = "מסמכים", path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), icon = "📁" },
+            new { name = "תמונות", path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), icon = "🖼️" },
+            new { name = "סרטונים", path = Environment.GetFolderPath(Environment.SpecialFolder.MyVideos), icon = "🎬" },
+            new { name = "מוזיקה", path = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic), icon = "🎵" }
+        }.Where(q => Directory.Exists((string)((dynamic)q).path)).ToList();
+
+        var overview = new
+        {
+            drives = drives,
+            quickFolders = quickFolders,
+            accessMode = Settings.AccessMode,
+            currentRoot = Settings.SharedFolderPath
+        };
+
+        await HttpResponse.WriteJsonAsync(stream, overview, 200, "OK", ct);
+    }
+
+    private async Task HandleSaveSettingsAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        try
+        {
+            var updated = JsonSerializer.Deserialize<AppSettings>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            if (updated != null)
+            {
+                Settings.ServerReadOnly = updated.ServerReadOnly;
+                Settings.SendToRecycleBin = updated.SendToRecycleBin;
+                Settings.ShowHiddenFiles = updated.ShowHiddenFiles;
+                Settings.FoldersFirst = updated.FoldersFirst;
+                Settings.DefaultViewMode = updated.DefaultViewMode;
+                Settings.ThemeMode = updated.ThemeMode;
+                Settings.AccessMode = updated.AccessMode;
+                Settings.ServerAnonymous = updated.ServerAnonymous;
+                Settings.ServerUsername = updated.ServerUsername;
+                Settings.ServerPassword = updated.ServerPassword;
+
+                if (!string.IsNullOrWhiteSpace(updated.Language))
+                {
+                    Settings.Language = updated.Language;
+                    LocalizationService.Instance.SetLanguage(updated.Language);
+                }
+
+                if (!string.IsNullOrWhiteSpace(updated.SharedFolderPath) && Directory.Exists(updated.SharedFolderPath))
+                {
+                    Settings.SharedFolderPath = updated.SharedFolderPath;
+                }
+
+                if (!string.IsNullOrEmpty(updated.SecurityPin))
+                {
+                    Settings.SecurityPin = updated.SecurityPin;
+                    SecurityService.SetCustomPin(updated.SecurityPin);
+                }
+                else
+                {
+                    Settings.SecurityPin = null;
+                    SecurityService.SetCustomPin(null);
+                }
+
+                SettingsManager.Save(Settings);
+                OnLog?.Invoke("[SETTINGS] Configuration updated and saved successfully.");
+                await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", ex.Message, ct);
+            return;
+        }
+
+        await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Invalid settings JSON", ct);
+    }
+
+    private async Task HandleBrowseAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string subPath = req.Query.TryGetValue("path", out var p) ? p : "";
+
+        // אם מצב גישה הוא FullComputer ו-subPath ריק -> מציגים את תצוגת הכוננים והתיקיות המהירות
+        if (string.IsNullOrWhiteSpace(subPath) && Settings.AccessMode == "FullComputer")
+        {
+            var rootOverview = new
+            {
+                isRoot = true,
+                currentPath = "",
+                items = new List<object>()
+            };
+            await HttpResponse.WriteJsonAsync(stream, rootOverview, 200, "OK", ct);
+            return;
+        }
+
+        string targetDir = SafeResolvePath(subPath);
+
+        if (!Directory.Exists(targetDir))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 404, "Not Found", "Directory does not exist.", ct);
+            return;
+        }
+
+        var dirInfo = new DirectoryInfo(targetDir);
+        var items = new List<object>();
+
+        // תיקיות
+        foreach (var dir in dirInfo.EnumerateDirectories())
+        {
+            if (!Settings.ShowHiddenFiles && (dir.Attributes.HasFlag(FileAttributes.Hidden) || dir.Name.StartsWith('.')))
+            {
+                continue;
+            }
+
+            items.Add(new
+            {
+                name = dir.Name,
+                path = dir.FullName,
+                relativePath = GetDisplayPath(dir.FullName),
+                isDirectory = true,
+                size = 0L,
+                modifiedDate = dir.LastWriteTimeUtc.ToString("o"),
+                mimeType = "inode/directory"
+            });
+        }
+
+        // קבצים
+        foreach (var file in dirInfo.EnumerateFiles())
+        {
+            if (!Settings.ShowHiddenFiles && (file.Attributes.HasFlag(FileAttributes.Hidden) || file.Name.StartsWith('.')))
+            {
+                continue;
+            }
+
+            string mime = MimeTypes.GetMimeType(file.FullName);
+            items.Add(new
+            {
+                name = file.Name,
+                path = file.FullName,
+                relativePath = GetDisplayPath(file.FullName),
+                isDirectory = false,
+                size = file.Length,
+                modifiedDate = file.LastWriteTimeUtc.ToString("o"),
+                mimeType = mime
+            });
+        }
+
+        var responseData = new
+        {
+            isRoot = false,
+            currentPath = targetDir,
+            displayPath = GetDisplayPath(targetDir),
+            parentPath = Directory.GetParent(targetDir)?.FullName,
+            items = items
+        };
+
+        await HttpResponse.WriteJsonAsync(stream, responseData, 200, "OK", ct);
+    }
+
+    private async Task HandleDownloadAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        if (!req.Query.TryGetValue("path", out var subPath) || string.IsNullOrWhiteSpace(subPath))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing 'path' parameter.", ct);
+            return;
+        }
+
+        string fullPath = SafeResolvePath(subPath);
+
+        // אם מדובר בתיקייה - דחיסת ZIP ישירות ל-Stream
+        if (Directory.Exists(fullPath))
+        {
+            string folderName = Path.GetFileName(fullPath.TrimEnd('/', '\\'));
+            if (string.IsNullOrEmpty(folderName)) folderName = "SharedFolder";
+            string zipName = $"{folderName}.zip";
+
+            await SecureTransferService.StreamDirectoryAsZipAsync(stream, fullPath, zipName, ct);
+            return;
+        }
+
+        // אם מדובר בקובץ
+        if (File.Exists(fullPath))
+        {
+            var fi = new FileInfo(fullPath);
+            var conn = LiveNetworkMonitorService.Instance.RegisterConnection(req.ClientIp, fi.Name, fi.Length);
+            try
+            {
+                string mime = MimeTypes.GetMimeType(fullPath);
+                await HttpResponse.WriteFileAsync(stream, fullPath, mime, req.ByteRange, ct);
+            }
+            finally
+            {
+                LiveNetworkMonitorService.Instance.UnregisterConnection(conn.ConnectionId);
+            }
+            return;
+        }
+
+        await HttpResponse.WriteStatusAsync(stream, 404, "Not Found", "File or directory not found.", ct);
+    }
+
+    private async Task HandleBatchDownloadAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        List<string>? paths = null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("paths", out var pElem) && pElem.ValueKind == JsonValueKind.Array)
+            {
+                paths = pElem.EnumerateArray().Select(x => x.GetString()).Where(x => !string.IsNullOrEmpty(x)).ToList()!;
+            }
+        }
+        catch { }
+
+        if (paths == null || paths.Count == 0)
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "No paths provided for batch download.", ct);
+            return;
+        }
+
+        string zipName = $"Download_{DateTime.Now:yyyyMMdd_HHmmss}.zip";
+        var customHeaders = new Dictionary<string, string>
+        {
+            { "Content-Disposition", $@"attachment; filename=""{zipName}""" }
+        };
+
+        await HttpResponse.WriteHeadersAsync(stream, 200, "OK", "application/zip", null, customHeaders, ct);
+
+        using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true, Encoding.UTF8))
+        {
+            byte[] copyBuffer = new byte[65536];
+
+            foreach (var p in paths)
+            {
+                if (ct.IsCancellationRequested) break;
+                string fullPath = SafeResolvePath(p);
+
+                if (File.Exists(fullPath))
+                {
+                    string entryName = Path.GetFileName(fullPath);
+                    var entry = archive.CreateEntry(entryName, CompressionLevel.Fastest);
+                    await using var fs = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, useAsync: true);
+                    await using var es = entry.Open();
+                    int read;
+                    while ((read = await fs.ReadAsync(copyBuffer, ct)) > 0)
+                    {
+                        await es.WriteAsync(copyBuffer.AsMemory(0, read), ct);
+                    }
+                }
+                else if (Directory.Exists(fullPath))
+                {
+                    string folderBase = Path.GetFileName(fullPath.TrimEnd('/', '\\'));
+                    var files = Directory.EnumerateFiles(fullPath, "*", SearchOption.AllDirectories);
+                    foreach (var f in files)
+                    {
+                        if (ct.IsCancellationRequested) break;
+                        string rel = Path.Combine(folderBase, Path.GetRelativePath(fullPath, f)).Replace('\\', '/');
+                        var entry = archive.CreateEntry(rel, CompressionLevel.Fastest);
+                        await using var fs = new FileStream(f, FileMode.Open, FileAccess.Read, FileShare.Read, 65536, useAsync: true);
+                        await using var es = entry.Open();
+                        int read;
+                        while ((read = await fs.ReadAsync(copyBuffer, ct)) > 0)
+                        {
+                            await es.WriteAsync(copyBuffer.AsMemory(0, read), ct);
+                        }
+                    }
+                }
+            }
+        }
+
+        await stream.FlushAsync(ct);
+    }
+
+    private async Task HandleFileContentAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        if (!req.Query.TryGetValue("path", out var p) || string.IsNullOrWhiteSpace(p))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing 'path'", ct);
+            return;
+        }
+
+        string fullPath = SafeResolvePath(p);
+        if (!File.Exists(fullPath))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 404, "Not Found", "File not found.", ct);
+            return;
+        }
+
+        var fi = new FileInfo(fullPath);
+        if (fi.Length > 5 * 1024 * 1024) // הגבלה ל-5MB לעריכת טקסט
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "File too large for text editor (max 5MB).", ct);
+            return;
+        }
+
+        string text = await File.ReadAllTextAsync(fullPath, Encoding.UTF8, ct);
+        var res = new
+        {
+            name = fi.Name,
+            path = fullPath,
+            size = fi.Length,
+            content = text
+        };
+        await HttpResponse.WriteJsonAsync(stream, res, 200, "OK", ct);
+    }
+
+    private async Task HandleFileSaveAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string? path = null;
+        string? content = null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("path", out var pElem)) path = pElem.GetString();
+            if (doc.RootElement.TryGetProperty("content", out var cElem)) content = cElem.GetString();
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(path) || content == null)
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing path or content.", ct);
+            return;
+        }
+
+        string fullPath = SafeResolvePath(path);
+        await File.WriteAllTextAsync(fullPath, content, Encoding.UTF8, ct);
+        OnLog?.Invoke($"[SAVE] File edited and saved: {fullPath}");
+
+        await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+    }
+
+    private async Task HandleUploadAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string subPath = req.Query.TryGetValue("path", out var p) ? p : "";
+        string targetDir = SafeResolvePath(subPath);
+
+        var savedFiles = await MultipartParser.ParseAndSaveFilesAsync(req, targetDir, ct);
+        OnLog?.Invoke($"[UPLOAD] {savedFiles.Count} file(s) uploaded to '{targetDir}' from {req.ClientIp}");
+
+        await HttpResponse.WriteJsonAsync(stream, new { success = true, count = savedFiles.Count, files = savedFiles }, 200, "OK", ct);
+    }
+
+    private async Task HandlePinAuthAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string? pin = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("pin", out var pElem)) pin = pElem.GetString();
+        }
+        catch { }
+
+        bool valid = SecurityService.ValidatePin(req.ClientIp, pin);
+        if (valid)
+        {
+            await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+        }
+        else
+        {
+            await HttpResponse.WriteStatusAsync(stream, 401, "Unauthorized", "Invalid PIN.", ct);
+        }
+    }
+
+    private async Task HandleMkdirAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string? parentPath = "";
+        string? name = null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("parentPath", out var pElem)) parentPath = pElem.GetString() ?? "";
+            if (doc.RootElement.TryGetProperty("name", out var nElem)) name = nElem.GetString();
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Directory name is required.", ct);
+            return;
+        }
+
+        name = Path.GetFileName(name);
+        string parentDir = SafeResolvePath(parentPath);
+        string newDir = Path.Combine(parentDir, name);
+
+        Directory.CreateDirectory(newDir);
+        OnLog?.Invoke($"[MKDIR] Created directory: {newDir}");
+
+        await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+    }
+
+    private async Task HandleDeleteAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string? path = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("path", out var pElem)) path = pElem.GetString();
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Path is required.", ct);
+            return;
+        }
+
+        string fullPath = SafeResolvePath(path);
+        DeleteItemInternal(fullPath);
+
+        await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+    }
+
+    private async Task HandleBatchDeleteAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        List<string>? paths = null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("paths", out var pElem) && pElem.ValueKind == JsonValueKind.Array)
+            {
+                paths = pElem.EnumerateArray().Select(x => x.GetString()).Where(x => !string.IsNullOrEmpty(x)).ToList()!;
+            }
+        }
+        catch { }
+
+        if (paths == null || paths.Count == 0)
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "No paths provided.", ct);
+            return;
+        }
+
+        int count = 0;
+        foreach (var p in paths)
+        {
+            string fullPath = SafeResolvePath(p);
+            if (DeleteItemInternal(fullPath)) count++;
+        }
+
+        await HttpResponse.WriteJsonAsync(stream, new { success = true, deletedCount = count }, 200, "OK", ct);
+    }
+
+    private bool DeleteItemInternal(string fullPath)
+    {
+        try
+        {
+            if (Settings.SendToRecycleBin)
+            {
+                if (File.Exists(fullPath) || Directory.Exists(fullPath))
+                {
+                    bool ok = SettingsService.MoveToRecycleBin(fullPath);
+                    OnLog?.Invoke($"[DELETE] Moved to Recycle Bin: {fullPath}");
+                    return ok;
+                }
+            }
+            else
+            {
+                if (File.Exists(fullPath))
+                {
+                    File.Delete(fullPath);
+                    OnLog?.Invoke($"[DELETE] Deleted permanently: {fullPath}");
+                    return true;
+                }
+                if (Directory.Exists(fullPath))
+                {
+                    Directory.Delete(fullPath, true);
+                    OnLog?.Invoke($"[DELETE] Folder deleted permanently: {fullPath}");
+                    return true;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            OnLog?.Invoke($"[DELETE ERROR] Could not delete {fullPath}: {ex.Message}");
+        }
+        return false;
+    }
+
+    private async Task HandleRenameAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string? oldPath = null;
+        string? newName = null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("oldPath", out var opElem)) oldPath = opElem.GetString();
+            if (doc.RootElement.TryGetProperty("newName", out var nnElem)) newName = nnElem.GetString();
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(oldPath) || string.IsNullOrWhiteSpace(newName))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "oldPath and newName are required.", ct);
+            return;
+        }
+
+        string fullOldPath = SafeResolvePath(oldPath);
+        newName = Path.GetFileName(newName);
+        string? parent = Path.GetDirectoryName(fullOldPath);
+
+        if (string.IsNullOrEmpty(parent))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Invalid parent directory.", ct);
+            return;
+        }
+
+        string fullNewPath = Path.Combine(parent, newName);
+
+        if (File.Exists(fullOldPath))
+        {
+            File.Move(fullOldPath, fullNewPath);
+            OnLog?.Invoke($"[RENAME] File renamed: {fullOldPath} -> {fullNewPath}");
+            await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+            return;
+        }
+
+        if (Directory.Exists(fullOldPath))
+        {
+            Directory.Move(fullOldPath, fullNewPath);
+            OnLog?.Invoke($"[RENAME] Directory renamed: {fullOldPath} -> {fullNewPath}");
+            await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+            return;
+        }
+
+        await HttpResponse.WriteStatusAsync(stream, 404, "Not Found", "Item not found.", ct);
+    }
+
+    private string SafeResolvePath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return RootDirectory;
+        }
+
+        if (Path.IsPathRooted(path))
+        {
+            string full = Path.GetFullPath(path);
+            if (Settings.AccessMode == "FullComputer" || full.StartsWith(RootDirectory, StringComparison.OrdinalIgnoreCase))
+            {
+                return full;
+            }
+            return RootDirectory;
+        }
+
+        string rel = path.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+        string combined = Path.GetFullPath(Path.Combine(RootDirectory, rel));
+        if (Settings.AccessMode != "FullComputer" && !combined.StartsWith(RootDirectory, StringComparison.OrdinalIgnoreCase))
+        {
+            return RootDirectory;
+        }
+        return combined;
+    }
+
+    private async Task HandleSecurePageAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string token = req.Query.TryGetValue("token", out var t) ? t : "";
+        var item = SecureTransferService.GetTransfer(token);
+        if (item == null)
+        {
+            string notFoundHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>קישור לא נמצא</title><style>body{background:#0F172A;color:#F8FAFC;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1E293B;padding:32px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #334155;}</style></head><body><div class='card'><h2>❌ קישור לא נמצא</h2><p style='color:#94A3B8;'>הקישור שביקשת אינו קיים, בוטל על ידי השולח, או שנמחק.</p></div></body></html>";
+            await HttpResponse.WriteTextAsync(stream, notFoundHtml, "text/html; charset=utf-8", 404, "Not Found", ct);
+            return;
+        }
+
+        if (item.IsExpired)
+        {
+            string expiredHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>הקישור פג תוקף</title><style>body{background:#0F172A;color:#F8FAFC;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1E293B;padding:32px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #334155;}</style></head><body><div class='card'><h2>⏳ הקישור פג תוקף</h2><p style='color:#94A3B8;'>תוקף הקישור פג או שהושגה מגבלת ההורדות המרבית.</p></div></body></html>";
+            await HttpResponse.WriteTextAsync(stream, expiredHtml, "text/html; charset=utf-8", 410, "Gone", ct);
+            return;
+        }
+
+        string prefillPin = req.Query.TryGetValue("pin", out var p) ? p : "";
+        string sizeText = item.FileSizeBytes > 1024 * 1024 * 1024
+            ? $"{item.FileSizeBytes / (1024.0 * 1024 * 1024):F2} GB"
+            : item.FileSizeBytes > 1024 * 1024
+            ? $"{item.FileSizeBytes / (1024.0 * 1024):F1} MB"
+            : $"{Math.Max(1, item.FileSizeBytes / 1024)} KB";
+
+        string expText = item.ExpiresAt == DateTime.MaxValue
+            ? "ללא תפוגה (תמידי ♾️)"
+            : $"{Math.Max(1, (int)(item.ExpiresAt - DateTime.Now).TotalMinutes)} דקות";
+
+        string pageHtml = $@"<!DOCTYPE html>
+<html dir='rtl' lang='he'>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>שיתוף קבצים מאובטח | {System.Web.HttpUtility.HtmlEncode(item.FileName)}</title>
+    <style>
+        * {{ box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }}
+        body {{ background: #0B1120; color: #F8FAFC; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }}
+        .card {{ background: #1E293B; border: 1.5px solid #334155; border-radius: 20px; padding: 36px 30px; max-width: 480px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }}
+        .icon {{ font-size: 54px; margin-bottom: 16px; display: inline-block; }}
+        h1 {{ font-size: 20px; margin: 0 0 8px 0; word-break: break-all; color: #F8FAFC; }}
+        .badge {{ display: inline-block; background: #0B1120; border: 1px solid #334155; padding: 6px 14px; border-radius: 999px; font-size: 13px; color: #38BDF8; font-weight: 600; margin-bottom: 22px; }}
+        .input-group {{ text-align: right; margin-bottom: 20px; }}
+        label {{ font-size: 13px; font-weight: bold; color: #94A3B8; margin-bottom: 6px; display: block; }}
+        input[type='text'] {{ width: 100%; height: 46px; background: #0B1120; border: 1.5px solid #334155; border-radius: 10px; padding: 0 14px; font-size: 16px; font-weight: bold; color: #38BDF8; text-align: center; letter-spacing: 2px; outline: none; }}
+        input:focus {{ border-color: #2563EB; box-shadow: 0 0 0 3px rgba(37,99,235,0.2); }}
+        .btn {{ width: 100%; height: 48px; background: #2563EB; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; text-decoration: none; transition: background 0.2s; }}
+        .btn:hover {{ background: #1D4ED8; }}
+        .footer {{ margin-top: 24px; font-size: 12px; color: #64748B; border-top: 1px solid #334155; padding-top: 16px; display: flex; justify-content: space-between; }}
+    </style>
+</head>
+<body>
+    <div class='card'>
+        <div class='icon'>📁</div>
+        <h1>{System.Web.HttpUtility.HtmlEncode(item.FileName)}</h1>
+        <div class='badge'>גודל: {sizeText} | תפוגה: {expText}</div>
+
+        <form method='GET' action='/secure/download'>
+            <input type='hidden' name='token' value='{item.Token}'>
+            <div class='input-group'>
+                <label for='pin'>קוד אימות PIN שהתקבל מהשולח:</label>
+                <input type='text' id='pin' name='pin' value='{System.Web.HttpUtility.HtmlEncode(prefillPin)}' placeholder='הזן קוד PIN' required autocomplete='off'>
+            </div>
+            <button type='submit' class='btn'>הורד קובץ עכשיו 📥</button>
+        </form>
+
+        <div class='footer'>
+            <span>מוגן ומאובטח ב-PIN 🔒</span>
+            <span>שיתוף קל PRO 🚀</span>
+        </div>
+    </div>
+</body>
+</html>";
+        await HttpResponse.WriteTextAsync(stream, pageHtml, "text/html; charset=utf-8", 200, "OK", ct);
+    }
+
+    private async Task HandleSecureDownloadAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string token = req.Query.TryGetValue("token", out var t) ? t : "";
+        var item = SecureTransferService.GetTransfer(token);
+        if (item == null)
+        {
+            await HttpResponse.WriteStatusAsync(stream, 404, "Not Found", "Transfer not found.", ct);
+            return;
+        }
+
+        if (item.IsExpired)
+        {
+            await HttpResponse.WriteStatusAsync(stream, 410, "Gone", "Link has expired or download limit reached.", ct);
+            return;
+        }
+
+        string pin = req.Query.TryGetValue("pin", out var p) ? p.Trim() : "";
+        if (!string.Equals(item.PinCode, pin, StringComparison.OrdinalIgnoreCase))
+        {
+            SecurityService.RecordFailedAttempt(req.ClientIp);
+            string failHtml = "<!DOCTYPE html><html dir='rtl' lang='he'><head><meta charset='utf-8'><title>קוד PIN שגוי</title><style>body{background:#0F172A;color:#F8FAFC;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;}.card{background:#1E293B;padding:32px;border-radius:16px;text-align:center;max-width:440px;border:1px solid #334155;}.btn{display:inline-block;margin-top:16px;background:#2563EB;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:bold;}</style></head><body><div class='card'><h2 style='color:#EF4444;'>❌ קוד PIN שגוי</h2><p style='color:#94A3B8;'>קוד האימות שהזנת אינו תואם. אנא ודא את הקוד עם השולח.</p><a class='btn' href='javascript:history.back()'>נסה שוב ↩️</a></div></body></html>";
+            await HttpResponse.WriteTextAsync(stream, failHtml, "text/html; charset=utf-8", 401, "Unauthorized", ct);
+            return;
+        }
+
+        if (!File.Exists(item.FilePath))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 404, "Not Found", "Target file is missing on host.", ct);
+            return;
+        }
+
+        // הגדלת מונה ההורדות
+        item.DownloadCount++;
+        OnLog?.Invoke($"[SECURE DOWNLOAD] {req.ClientIp} downloaded {item.FileName} (Count: {item.DownloadCount}/{item.MaxDownloads})");
+
+        var fi = new FileInfo(item.FilePath);
+        var activeConn = LiveNetworkMonitorService.Instance.RegisterConnection(req.ClientIp, item.FileName, fi.Length);
+        try
+        {
+            string contentType = MimeTypes.GetMimeType(item.FileName);
+            await HttpResponse.WriteFileAsync(stream, item.FilePath, contentType, req.ByteRange, ct);
+        }
+        finally
+        {
+            LiveNetworkMonitorService.Instance.UnregisterConnection(activeConn.ConnectionId);
+
+            // אם ההורדה הגיעה למקסימום המותר (Burn on First View) ומדובר בארכיון זמני
+            if (item.MaxDownloads > 0 && item.DownloadCount >= item.MaxDownloads)
+            {
+                if (!string.IsNullOrEmpty(item.TempZipFilePath) && File.Exists(item.TempZipFilePath))
+                {
+                    SecureTransferService.SecureZeroFillShred(item.TempZipFilePath);
+                    OnLog?.Invoke($"[BURN ON FIRST VIEW] Shredded temporary file: {item.FileName}");
+                }
+            }
+        }
+    }
+
+    private string GetDisplayPath(string fullPath)
+    {
+        if (Settings.AccessMode == "FullComputer")
+        {
+            return fullPath;
+        }
+        return Path.GetRelativePath(RootDirectory, fullPath).Replace('\\', '/');
+    }
+
+    public void Stop()
+    {
+        _cts?.Cancel();
+        _listener?.Stop();
+        _listener = null;
+        TunnelService.Stop();
+
+        try
+        {
+            _mdnsService?.Dispose();
+            _mdnsService = null;
+            _ = Core.UpnpPortForwarder.DeletePortMappingAsync(Port);
+        }
+        catch { }
+
+        OnLog?.Invoke("[SERVER] Stopped.");
+    }
+
+    public void Dispose()
+    {
+        Stop();
+        _cts?.Dispose();
+        TunnelService.Dispose();
+    }
+}

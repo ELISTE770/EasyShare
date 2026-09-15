@@ -1,0 +1,27 @@
+# Build outputs
+bin/
+obj/
+publish/
+publish_standalone/
+
+# Local settings and secrets
+settings.json
+
+# Binaries in root
+*.exe
+*.dll
+*.pdb
+*.deps.json
+*.runtimeconfig.json
+
+# Test outputs and logs
+*.log
+test_run_out.txt
+test_summary.txt
+
+# IDE / Editor
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo

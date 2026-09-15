@@ -1,0 +1,2967 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שיתוף קל | EasyShare Pro</title>
+  
+  <!-- תמיכת PWA והתקנה למסך הבית -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
+  <meta name="theme-color" content="#0B0F17">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="שיתוף קל">
+
+  <style>
+    :root {
+      --bg-main: #0B0F17;
+      --bg-card: #131B2B;
+      --bg-card-hover: #1C263B;
+      --bg-card-selected: rgba(59, 130, 246, 0.15);
+      --border: #243247;
+      --text-main: #F8FAFC;
+      --text-muted: #CBD5E1;
+      --accent: #2563EB;
+      --accent-hover: #1D4ED8;
+      --accent-light: #38BDF8;
+      --accent-indigo: #6366F1;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --radius: 12px;
+      --shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    [data-theme="light"] {
+      --bg-main: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #F1F5F9;
+      --bg-card-selected: rgba(37, 99, 235, 0.12);
+      --border: #CBD5E1;
+      --text-main: #0F172A;
+      --text-muted: #475569;
+      --accent: #2563EB;
+      --accent-hover: #1D4ED8;
+      --accent-light: #0284C7;
+      --accent-indigo: #4F46E5;
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    }
+
+    /* איפוס וטיפוגרפיה חדה */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Heebo', 'Rubik', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    /* מחוון פוקוס נגיש WCAG AAA לכל הכפתורים, השדות והרכיבים האינטראקטיביים */
+    :focus-visible {
+      outline: 2px solid var(--accent-light);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.3) !important;
+    }
+
+    button:focus:not(:focus-visible),
+    input:focus:not(:focus-visible),
+    select:focus:not(:focus-visible),
+    textarea:focus:not(:focus-visible) {
+      outline: none;
+    }
+
+    /* סרגלי גלילה מודרניים */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334663;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header עם אפקט זכוכית יוקרתי Frosted Glass */
+    header {
+      background-color: rgba(19, 27, 43, 0.82);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    [data-theme="light"] header {
+      background-color: rgba(255, 255, 255, 0.85);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .header-content {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0.85rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s ease;
+    }
+    .brand-group:hover {
+      transform: translateY(-1px);
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-indigo));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .brand-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+
+    /* כפתורים עם אזורי לחיצה ארגונומיים (גובה 44px מינימום) */
+    .btn {
+      min-height: 44px;
+      min-width: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      outline: none;
+      user-select: none;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn:hover {
+      background-color: var(--bg-card-hover);
+      border-color: rgba(56, 189, 248, 0.4);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: #FFFFFF;
+      border-color: var(--accent);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--accent-hover), #1E40AF);
+      border-color: var(--accent-light);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn-icon {
+      padding: 0.5rem;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-ro {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid var(--warning);
+    }
+
+    .badge-pin {
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--accent-light);
+      border: 1px solid var(--accent-light);
+    }
+
+    /* פס התקדמות העלאה עליון */
+    .upload-progress-container {
+      width: 100%;
+      height: 4px;
+      background: var(--border);
+      display: none;
+      overflow: hidden;
+    }
+
+    .upload-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--success));
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+      transition: width 0.15s ease;
+    }
+
+    /* לשוניות סינון מהיר (Category Chips) - עיצוב קפסולה אלגנטי עם תאורת גבול בריחוף */
+    .category-chips {
+      display: flex;
+      gap: 0.6rem;
+      overflow-x: auto;
+      padding: 0.25rem 0.2rem 0.6rem;
+      margin-bottom: 0.85rem;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .chip {
+      min-height: 44px;
+      padding: 0.5rem 1.15rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      position: relative;
+      user-select: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .chip:hover {
+      color: var(--text-main);
+      border-color: rgba(56, 189, 248, 0.6);
+      background: var(--bg-card-hover);
+      box-shadow: 0 0 14px rgba(56, 189, 248, 0.25), 0 4px 12px rgba(0, 0, 0, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: #FFFFFF;
+      border-color: var(--accent-light);
+      box-shadow: 0 0 18px rgba(37, 99, 235, 0.45), 0 4px 14px rgba(0, 0, 0, 0.35);
+      font-weight: 700;
+    }
+
+    .chip:active {
+      transform: scale(0.97);
+    }
+
+    .chip-count {
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+
+    .chip.active .chip-count {
+      background: rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+    }
+
+    /* מגירת העלאות צפה מרובת קבצים (Upload Drawer) עם Frosted Glass 16px */
+    .upload-drawer {
+      position: fixed;
+      bottom: 1.5rem;
+      width: 380px;
+      max-width: calc(100vw - 3rem);
+      background: rgba(19, 27, 43, 0.88);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      z-index: 75;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+    }
+
+    html[dir="rtl"] .upload-drawer {
+      right: 1.5rem;
+      left: auto;
+    }
+
+    html[dir="ltr"] .upload-drawer {
+      left: 1.5rem;
+      right: auto;
+    }
+
+    [data-theme="light"] .upload-drawer {
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.15);
+    }
+
+    .upload-drawer.active {
+      display: flex;
+    }
+
+    .upload-drawer-header {
+      padding: 0.85rem 1.1rem;
+      background: rgba(11, 15, 23, 0.55);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    [data-theme="light"] .upload-drawer-header {
+      background: rgba(241, 245, 249, 0.65);
+    }
+
+    .upload-drawer-list {
+      max-height: 240px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .upload-file-row {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .upload-file-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .upload-file-bar {
+      height: 5px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .upload-file-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--success));
+      width: 0%;
+      transition: width 0.15s ease;
+    }
+
+    /* נגן גלריה מתקדם ומחוות החלקה */
+    .gallery-nav-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(11, 15, 23, 0.75);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      color: white;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+
+    .gallery-nav-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent-light);
+      box-shadow: 0 0 16px rgba(37, 99, 235, 0.5);
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    html[dir="rtl"] .gallery-nav-btn.prev {
+      right: 1.25rem;
+    }
+    html[dir="rtl"] .gallery-nav-btn.next {
+      left: 1.25rem;
+    }
+    html[dir="ltr"] .gallery-nav-btn.prev {
+      left: 1.25rem;
+    }
+    html[dir="ltr"] .gallery-nav-btn.next {
+      right: 1.25rem;
+    }
+
+    .gallery-filmstrip {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      max-width: 60%;
+      padding: 6px;
+    }
+
+    .filmstrip-thumb {
+      width: 44px;
+      height: 44px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0.5;
+      border: 2px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .filmstrip-thumb.active {
+      opacity: 1;
+      border-color: var(--accent-light);
+      transform: scale(1.1);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.5);
+    }
+
+    /* סימון מים דינמי למניעת הדלפות (DLP Watermark) */
+    .watermark-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.16;
+      display: none;
+    }
+
+    /* תוכן ראשי */
+    main {
+      flex: 1;
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.75rem 1.25rem 5.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    /* אזור כוננים ותיקיות מהירות במחשב */
+    .overview-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      letter-spacing: -0.01em;
+    }
+
+    .grid-drives {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card-drive {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      box-shadow: var(--shadow);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .card-drive:hover {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: var(--bg-card-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+    }
+
+    .drive-header {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .drive-icon {
+      font-size: 1.85rem;
+      flex-shrink: 0;
+    }
+
+    .drive-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .drive-sub {
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .drive-bar-bg {
+      height: 8px;
+      background: rgba(36, 50, 71, 0.6);
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .drive-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      border-radius: 9999px;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+    }
+
+    .grid-quick {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+      gap: 1rem;
+    }
+
+    .card-quick {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 0.75rem;
+      text-align: center;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .card-quick:hover {
+      border-color: rgba(56, 189, 248, 0.45);
+      background: var(--bg-card-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+    }
+
+    .card-quick-icon {
+      font-size: 2rem;
+    }
+
+    .card-quick-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* סרגל כלים וסייר קבצים */
+    .explorer-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      background: var(--bg-card);
+      padding: 0.85rem 1.15rem;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .breadcrumbs {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      overflow-x: auto;
+      white-space: nowrap;
+      font-size: 0.95rem;
+    }
+
+    .crumb-item {
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.35rem 0.6rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .crumb-item:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-main);
+    }
+
+    .crumb-item.active {
+      color: var(--accent-light);
+      font-weight: 700;
+      background: rgba(37, 99, 235, 0.12);
+    }
+
+    .toolbar-tools {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      min-height: 44px;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.5rem 0.95rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      min-width: 200px;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+
+    /* תצוגת רשת (Grid View) */
+    .files-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 1.15rem;
+    }
+
+    .file-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.15rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .file-card:hover {
+      border-color: rgba(56, 189, 248, 0.45);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+    }
+
+    .file-card.selected {
+      background: var(--bg-card-selected);
+      border-color: var(--accent-light);
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
+    }
+
+    .file-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .file-card-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      accent-color: var(--accent);
+      border-radius: 4px;
+    }
+
+    .file-card-icon {
+      font-size: 2.5rem;
+      margin: 0.25rem auto;
+      text-align: center;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    }
+
+    .file-card-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      color: var(--text-main);
+    }
+
+    .file-card-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 0.6rem;
+      margin-top: auto;
+    }
+
+    .file-card-actions {
+      display: flex;
+      justify-content: center;
+      gap: 0.35rem;
+    }
+
+    /* תצוגת רשימה (List View) */
+    .files-list-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .files-list-table th {
+      padding: 0.95rem 1.15rem;
+      background: rgba(11, 15, 23, 0.6);
+      font-size: 0.825rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    html[dir="rtl"] .files-list-table th {
+      text-align: right;
+    }
+    html[dir="ltr"] .files-list-table th {
+      text-align: left;
+    }
+
+    .files-list-table td {
+      padding: 0.85rem 1.15rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    .files-list-table tr {
+      transition: background-color 0.15s ease;
+    }
+
+    .files-list-table tr:hover td {
+      background: var(--bg-card-hover);
+    }
+
+    .files-list-table tr.selected td {
+      background: var(--bg-card-selected);
+    }
+
+    /* סרגל פעולות מרובות צף (Floating Multi-Select Bar) */
+    .floating-batch-bar {
+      position: fixed;
+      bottom: 1.75rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(160%);
+      background: rgba(19, 27, 43, 0.92);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      border-radius: 50px;
+      padding: 0.75rem 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1.15rem;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+      z-index: 45;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .floating-batch-bar.active {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* מודלים (Modals) עם Frosted Glass 16px */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 23, 0.78);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+      padding: 1.25rem;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-card {
+      background: rgba(19, 27, 43, 0.92);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform: scale(0.97);
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.active .modal-card {
+      transform: scale(1);
+    }
+
+    [data-theme="light"] .modal-overlay {
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    [data-theme="light"] .modal-card {
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
+    }
+
+    .modal-header {
+      padding: 1.15rem 1.45rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(11, 15, 23, 0.4);
+    }
+
+    [data-theme="light"] .modal-header {
+      background: rgba(241, 245, 249, 0.5);
+    }
+
+    .modal-body {
+      padding: 1.45rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.45rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      background: rgba(11, 15, 23, 0.3);
+    }
+
+    [data-theme="light"] .modal-footer {
+      background: rgba(241, 245, 249, 0.4);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+
+    .form-label {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .form-desc {
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .form-control {
+      min-height: 44px;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 0.6rem 0.95rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+    }
+
+    .form-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--border);
+      gap: 1rem;
+    }
+
+    /* עורך טקסט מובנה */
+    .text-editor-textarea {
+      width: 100%;
+      height: 55vh;
+      background: #06090F;
+      color: #38BDF8;
+      font-family: Consolas, 'Fira Code', Monaco, monospace;
+      font-size: 0.95rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      resize: vertical;
+      line-height: 1.6;
+      outline: none;
+    }
+
+    /* נגן מולטימדיה (Frosted Glass & תאורה יוקרתית) */
+    #mediaPlayerContainer {
+      background: rgba(11, 15, 23, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #mediaPlayerContainer video,
+    #mediaPlayerContainer audio {
+      border-radius: 8px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    /* שכבת גרירה והעלאה (Drag & Drop) */
+    .dropzone-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 15, 23, 0.92);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      border: 3px dashed var(--accent-light);
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .dropzone-overlay.active {
+      display: flex;
+    }
+
+    footer {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 1.25rem;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    footer a {
+      color: var(--accent-light);
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+      .hide-sm { display: none; }
+      .explorer-toolbar { flex-direction: column; align-items: stretch; }
+      .search-input { min-width: 100%; }
+      .header-content { padding: 0.75rem 1rem; }
+      .brand-title { font-size: 1.15rem; }
+      .btn { padding: 0.5rem 0.85rem; font-size: 0.825rem; }
+      .category-chips { gap: 0.45rem; padding-bottom: 0.4rem; }
+      .chip { min-height: 44px; padding: 0.45rem 0.95rem; font-size: 0.825rem; }
+      .upload-drawer { left: 0.75rem; right: 0.75rem; width: auto; max-width: calc(100vw - 1.5rem); bottom: 1rem; }
+      html[dir="rtl"] .upload-drawer { right: 0.75rem; left: 0.75rem; }
+      html[dir="ltr"] .upload-drawer { left: 0.75rem; right: 0.75rem; }
+      .floating-batch-bar { bottom: 1rem; width: 92%; justify-content: space-between; padding: 0.6rem 1rem; }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+
+  <!-- שכבת גרירה והעלאה -->
+  <div class="dropzone-overlay" id="dropzoneOverlay">
+    <div style="font-size: 3.5rem;">📥</div>
+    <h2>שחרר קבצים בכל מקום להעלאה מיידית</h2>
+  </div>
+
+  <header>
+    <div class="header-content">
+      <div class="brand-group" onclick="loadOverview()">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title" id="brandTitle">שיתוף קל <span style="font-size:0.75rem; color:var(--accent);">PRO</span></div>
+          <div class="brand-subtitle" id="brandSubtitle">שרת קבצים וסטרימינג מקומי</div>
+        </div>
+      </div>
+
+      <div class="header-nav">
+        <span id="readOnlyBadge" class="badge badge-ro" style="display:none;">מצב קריאה בלבד</span>
+        <span id="pinBadge" class="badge badge-pin" style="display:none;">מאובטח ב-PIN</span>
+
+        <button class="btn btn-primary" id="btnUpload" onclick="document.getElementById('fileUploadInput').click()">
+          <span>📤</span>
+          <span>העלאה</span>
+        </button>
+        <input type="file" id="fileUploadInput" multiple style="display:none" onchange="uploadFiles(this.files)">
+
+        <button class="btn" id="btnNewFolder" onclick="openNewFolderPrompt()">
+          <span>📁+</span>
+          <span class="hide-sm">תיקייה חדשה</span>
+        </button>
+
+        <button class="btn btn-icon" id="btnSettings" onclick="openSettingsModal()" title="הגדרות מתקדמות">
+          ⚙️
+        </button>
+
+        <button class="btn btn-icon" id="btnQr" onclick="openQrModal()" title="קוד QR ושיתוף">
+          📱
+        </button>
+
+        <button class="btn btn-icon" id="btnClipboard" onclick="openClipboardModal()" title="לוח שיתוף מהיר (Quick Drop)">
+          📋
+        </button>
+
+        <button class="btn btn-icon" id="btnInstallPwa" onclick="installPwaApp()" title="התקן אפליקציה למכשיר (PWA)" style="display:none;">
+          📲
+        </button>
+
+        <button class="btn btn-icon" id="btnLangToggle" onclick="toggleLanguage()" title="החלף שפה / Switch Language" style="font-weight:bold; font-size:0.8rem; width:auto; padding:0 8px;">
+          🌐 EN
+        </button>
+
+        <button class="btn btn-icon" id="btnTheme" onclick="toggleTheme()" title="החלף עיצוב">
+          🌓
+        </button>
+      </div>
+    </div>
+
+    <!-- פס התקדמות העלאה -->
+    <div class="upload-progress-container" id="uploadProgressContainer">
+      <div class="upload-progress-fill" id="uploadProgressFill"></div>
+    </div>
+  </header>
+
+  <main>
+    <!-- מסך סקירת כוננים ותיקיות מחשב (מוצג כברירת מחדל בשורש) -->
+    <div class="overview-section" id="overviewSection">
+      <div class="section-title" id="drivesTitle">💻 כונני אחסון מחוברים</div>
+      <div class="grid-drives" id="drivesGrid">
+        <!-- נטען דינמית -->
+      </div>
+
+      <div class="section-title" id="quickFoldersTitle">⚡ תיקיות מהירות במחשב</div>
+      <div class="grid-quick" id="quickFoldersGrid">
+        <!-- נטען דינמית -->
+      </div>
+    </div>
+
+    <!-- סייר קבצים (מוצג בעת ניווט בתיקייה) -->
+    <div id="explorerSection" style="display:none; flex-direction:column; gap:1.25rem;">
+      <div class="explorer-toolbar">
+        <div class="breadcrumbs" id="breadcrumbs">
+          <!-- נטען דינמית -->
+        </div>
+
+        <div class="toolbar-tools">
+          <input type="text" class="search-input" id="searchFilter" placeholder="סינון קבצים..." oninput="filterFiles()">
+
+          <select class="form-control" id="sortSelect" onchange="applySorting()" style="padding:0.4rem; font-size:0.8rem;">
+            <option value="name_asc" id="optSortNameAsc">שם (א-ת)</option>
+            <option value="name_desc" id="optSortNameDesc">שם (ת-א)</option>
+            <option value="date_desc" id="optSortDateDesc">תאריך (החדש ביותר)</option>
+            <option value="date_asc" id="optSortDateAsc">תאריך (הישן ביותר)</option>
+            <option value="size_desc" id="optSortSizeDesc">גודל (הגדול ביותר)</option>
+            <option value="size_asc" id="optSortSizeAsc">גודל (הקטן ביותר)</option>
+          </select>
+
+          <button class="btn btn-icon" id="btnToggleView" onclick="toggleViewMode()" title="החלף תצוגה (רשת/רשימה)">
+            🔲
+          </button>
+        </div>
+      </div>
+
+      <!-- לשוניות סינון מהיר לפי קטגוריה -->
+      <div class="category-chips" id="categoryChips">
+        <button class="chip active" id="chipAll" onclick="setCategoryFilter('all', this)">הכל</button>
+        <button class="chip" id="chipImages" onclick="setCategoryFilter('images', this)">🖼️ תמונות</button>
+        <button class="chip" id="chipVideo" onclick="setCategoryFilter('video', this)">🎬 וידאו</button>
+        <button class="chip" id="chipAudio" onclick="setCategoryFilter('audio', this)">🎵 אודיו</button>
+        <button class="chip" id="chipDocs" onclick="setCategoryFilter('docs', this)">📄 מסמכים</button>
+        <button class="chip" id="chipArchives" onclick="setCategoryFilter('archives', this)">📦 ארכיונים</button>
+      </div>
+
+      <!-- תצוגת רשת (Grid) -->
+      <div class="files-grid" id="filesGrid"></div>
+
+      <!-- תצוגת רשימה (List) -->
+      <div id="filesListContainer" style="display:none; overflow-x:auto;">
+        <table class="files-list-table">
+          <thead>
+            <tr>
+              <th style="width:40px;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)"></th>
+              <th id="thName">שם</th>
+              <th id="thSize" class="hide-sm">גודל</th>
+              <th id="thDate" class="hide-sm">תאריך שינוי</th>
+              <th id="thActions" style="text-align:left;">פעולות</th>
+            </tr>
+          </thead>
+          <tbody id="filesListTbody"></tbody>
+        </table>
+      </div>
+
+      <div id="emptyFolderMessage" style="display:none; text-align:center; padding:3.5rem 1rem; color:var(--text-muted);">
+        <div style="font-size:3rem; margin-bottom:0.5rem;">📂</div>
+        <p id="emptyFolderText">תיקייה זו ריקה מקבצים</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- סרגל פעולות מרובות צף -->
+  <div class="floating-batch-bar" id="floatingBatchBar">
+    <span id="selectedCountText" style="font-weight:700; font-size:0.875rem;">0 פריטים נבחרו</span>
+    <button class="btn btn-primary" id="btnBatchZip" onclick="downloadSelectedAsZip()">
+      <span>📦</span> <span id="lblBatchZip">הורד כ-ZIP</span>
+    </button>
+    <button class="btn" id="btnBatchDelete" onclick="deleteSelectedItems()" style="color:var(--danger); border-color:var(--danger);">
+      <span>🗑️</span> <span id="lblBatchDelete">מחק</span>
+    </button>
+    <button class="btn btn-icon" id="btnClearSelection" onclick="clearSelection()" title="בטל בחירה">✕</button>
+  </div>
+
+  <!-- מודל הגדרות מתקדמות -->
+  <div class="modal-overlay" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="settingsModalTitle" style="font-size:1.15rem;">⚙️ הגדרות מתקדמות (EasyShare Settings)</h3>
+        <button class="btn btn-icon" onclick="closeSettingsModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" id="lblCfgLanguage">שפת ממשק (Language)</label>
+          <select class="form-control" id="cfgLanguage">
+            <option value="he">עברית (Hebrew)</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="lblAccessMode">מצב גישה למחשב</label>
+          <select class="form-control" id="cfgAccessMode">
+            <option value="FullComputer" id="optAccessFull">גישה מלאה לכל הכוננים והמחשב (מומלץ)</option>
+            <option value="SingleFolder" id="optAccessSingle">הגבלה לתיקייה ייעודית בלבד (מצב בטוח)</option>
+          </select>
+          <div class="form-desc" id="descAccessMode">במצב גישה מלאה ניתן לגשת לכונני C:, D: ולתיקיות המשתמש.</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="lblCfgPort">פורט שרת (Server Port)</label>
+          <input type="number" class="form-control" id="cfgPort" value="2121">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" id="lblCfgPin">קוד PIN לאבטחה נקודתית</label>
+          <input type="text" class="form-control" id="cfgPin" placeholder="השאר ריק לגישה חופשית ברשת הביתית">
+        </div>
+
+        <div class="form-toggle">
+          <div>
+            <div class="form-label" id="lblRecycleBin">סל המחזור של Windows (Recycle Bin)</div>
+            <div class="form-desc" id="descRecycleBin">העבר קבצים שנמחקים לסל המחזור במקום מחיקה לצמיתות</div>
+          </div>
+          <input type="checkbox" id="cfgRecycleBin" checked style="width:20px; height:20px; accent-color:var(--accent);">
+        </div>
+
+        <div class="form-toggle">
+          <div>
+            <div class="form-label" id="lblReadOnly">מצב קריאה בלבד (Read-Only Mode)</div>
+            <div class="form-desc" id="descReadOnly">חוסם העלאה, מחיקה ושינוי שם של קבצים</div>
+          </div>
+          <input type="checkbox" id="cfgReadOnly" style="width:20px; height:20px; accent-color:var(--accent);">
+        </div>
+
+        <div class="form-toggle">
+          <div>
+            <div class="form-label" id="lblShowHidden">הצג קבצים ותיקיות מוסתרים</div>
+            <div class="form-desc" id="descShowHidden">הצגת קבצים בעלי תכונת Hidden או שמתחילים בנקודה</div>
+          </div>
+          <input type="checkbox" id="cfgShowHidden" style="width:20px; height:20px; accent-color:var(--accent);">
+        </div>
+
+        <div class="form-toggle">
+          <div>
+            <div class="form-label" id="lblFoldersFirst">תיקיות תמיד בראש הרשימה</div>
+            <div class="form-desc" id="descFoldersFirst">מציג תיקיות לפני קבצים בכל סדר מיון</div>
+          </div>
+          <input type="checkbox" id="cfgFoldersFirst" checked style="width:20px; height:20px; accent-color:var(--accent);">
+        </div>
+
+        <div class="form-toggle">
+          <div>
+            <div class="form-label" id="lblTunnel">מנהור מאובטח (Cloudflare HTTPS Tunnel)</div>
+            <div class="form-desc" id="descTunnel">מאפשר גישה מכל מקום בעולם ללא פתיחת פורטים</div>
+          </div>
+          <input type="checkbox" id="cfgTunnel" style="width:20px; height:20px; accent-color:var(--accent);">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnSettingsCancel" onclick="closeSettingsModal()">ביטול</button>
+        <button class="btn btn-primary" id="btnSettingsSave" onclick="saveSettings()">שמור הגדרות</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודל עורך טקסט וקוד מובנה -->
+  <div class="modal-overlay" id="textEditorModal">
+    <div class="modal-card" style="max-width:850px;">
+      <div class="modal-header">
+        <h3 id="textEditorTitle" style="font-size:1.05rem; font-family:monospace;">עורך קבצים</h3>
+        <button class="btn btn-icon" onclick="closeTextEditor()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0.75rem;">
+        <textarea id="textEditorContent" class="text-editor-textarea" spellcheck="false"></textarea>
+      </div>
+      <div class="modal-footer">
+        <span id="textEditorStatus" style="margin-left:auto; font-size:0.8rem; color:var(--text-muted);"></span>
+        <button class="btn" onclick="closeTextEditor()">סגור</button>
+        <button class="btn btn-primary" id="btnSaveText" onclick="saveTextFile()">💾 שמור שינויים</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודל נגן מדיה ווידאו (עם תמיכה ב-Range 206) -->
+  <div class="modal-overlay" id="mediaModal">
+    <div class="modal-card" style="max-width:800px;">
+      <div class="modal-header">
+        <h3 id="mediaModalTitle" style="font-size:1.05rem;">נגן מדיה</h3>
+        <button class="btn btn-icon" onclick="closeMediaModal()">✕</button>
+      </div>
+      <div class="modal-body" id="mediaPlayerContainer" style="text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- מודל תצוגת תמונות (Lightbox) -->
+  <div class="modal-overlay" id="lightboxModal">
+    <div class="modal-card" style="max-width:90vw; background:transparent; border:none; box-shadow:none;">
+      <div style="text-align:left; margin-bottom:0.5rem;">
+        <button class="btn" id="btnLightboxClose" style="background:rgba(0,0,0,0.7); color:white;" onclick="closeLightbox()">✕ סגור</button>
+      </div>
+      <img id="lightboxImage" src="" style="max-width:100%; max-height:80vh; object-fit:contain; border-radius:12px; margin:0 auto; display:block; box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+    </div>
+  </div>
+
+  <!-- מודל קוד QR -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal-card" style="max-width:440px;">
+      <div class="modal-header">
+        <h3 id="qrModalTitle">📱 חיבור מהיר מסמארטפון</h3>
+        <button class="btn btn-icon" onclick="closeQrModal()">✕</button>
+      </div>
+      <div class="modal-body" style="text-align:center;">
+        <div id="qrCodeContainer" style="background:white; padding:15px; border-radius:12px; display:inline-block; margin:0 auto;"></div>
+        <div id="qrUrlsContainer" style="display:flex; flex-direction:column; gap:0.5rem; text-align:right; margin-top:1rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודל צפייה במסמכי PDF -->
+  <div class="modal-overlay" id="pdfViewerModal">
+    <div class="modal-card" style="max-width:92vw; width:950px; height:88vh; display:flex; flex-direction:column;">
+      <div class="modal-header">
+        <h3 id="pdfViewerTitle" style="font-size:1.05rem;">📕 צפייה במסמך PDF</h3>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <a id="btnPdfDownload" href="#" class="btn btn-icon" download title="הורד קובץ">📥</a>
+          <button class="btn btn-icon" onclick="closePdfViewer()">✕</button>
+        </div>
+      </div>
+      <div class="modal-body" style="flex:1; padding:0; overflow:hidden; position:relative; background:#111;">
+        <iframe id="pdfViewerFrame" style="width:100%; height:100%; border:none;" src="about:blank"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- גלריית תמונות מתקדמת עם החלקה ומצגת (Advanced Gallery) -->
+  <div class="modal-overlay" id="advancedGalleryModal">
+    <div class="modal-card" style="max-width:96vw; width:1100px; height:90vh; background:rgba(19,27,43,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--border); display:flex; flex-direction:column; padding:0; overflow:hidden;">
+      <div class="modal-header" style="background:rgba(11,15,23,0.6); padding:0.75rem 1.25rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem;">
+          <span style="font-size:1.2rem;">🖼️</span>
+          <span id="galleryImageTitle" style="font-weight:600; font-size:0.95rem;">תמונה</span>
+          <span id="galleryCounter" style="font-size:0.8rem; color:var(--text-muted);">(1 / 1)</span>
+        </div>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <button class="btn btn-icon" id="btnSlideshow" onclick="toggleSlideshow()" title="הפעל / עצור מצגת">▶️</button>
+          <a id="btnGalleryDownload" href="#" class="btn btn-icon" download title="הורד תמונה זו">📥</a>
+          <button class="btn btn-icon" onclick="closeAdvancedGallery()">✕</button>
+        </div>
+      </div>
+      <div class="modal-body" id="galleryContainer" style="flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; user-select:none; padding:1rem;">
+        <button class="gallery-nav-btn prev" id="btnGalleryPrev" onclick="prevGalleryImage()" title="תמונה קודמת">❮</button>
+        <img id="galleryCurrentImg" src="" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); transition:transform 0.2s ease;">
+        <button class="gallery-nav-btn next" id="btnGalleryNext" onclick="nextGalleryImage()" title="תמונה הבאה">❯</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודל לוח שיתוף מהיר (Quick Drop / Clipboard Sync) -->
+  <div class="modal-overlay" id="clipboardModal">
+    <div class="modal-card" style="max-width:540px;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <span style="font-size:1.3rem;">📋</span>
+          <h3 id="clipboardModalTitle">לוח שיתוף מהיר (Quick Drop)</h3>
+        </div>
+        <button class="btn btn-icon" onclick="closeClipboardModal()">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:1rem;">
+        <p id="clipboardModalDesc" style="font-size:0.875rem; color:var(--text-muted); margin:0;">
+          שתף טקסטים, פתקים וקישורים בין המחשב לסמארטפון בזמן אמת.
+        </p>
+
+        <div>
+          <label id="lblClipboardCurrentHost" style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.4rem;">
+            תוכן נוכחי מהמחשב:
+          </label>
+          <div id="clipboardCurrentHostText" style="background:var(--bg-main); border:1px solid var(--border); border-radius:8px; padding:0.75rem; font-family:monospace; font-size:0.875rem; min-height:60px; max-height:150px; overflow-y:auto; word-break:break-all; color:var(--text-main);">
+            (טוען מהמחשב...)
+          </div>
+          <button class="btn btn-primary" id="btnCopyHostClipboard" style="margin-top:0.5rem; width:100%;" onclick="copyHostClipboard()">
+            📋 העתק תוכן זה למכשיר שלי
+          </button>
+        </div>
+
+        <hr style="border:none; border-top:1px solid var(--border); margin:0.25rem 0;">
+
+        <div>
+          <label id="lblClipboardSend" style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.4rem;">
+            שלח טקסט או קישור מהמכשיר שלך למחשב:
+          </label>
+          <textarea id="clipboardInputText" class="form-control" rows="3" placeholder="הקלד או הדבק כאן טקסט, הודעה או קישור..." style="width:100%; resize:vertical; font-size:0.875rem;"></textarea>
+          <button class="btn btn-primary" id="btnSendHostClipboard" style="margin-top:0.5rem; width:100%;" onclick="sendTextToHostClipboard()">
+            🚀 שלח מיד ללוח המחשב
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- מגירת העלאות צפה רב-קובצית (Upload Drawer) -->
+  <div class="upload-drawer" id="uploadDrawer">
+    <div class="upload-drawer-header" onclick="toggleUploadDrawer()">
+      <div style="display:flex; align-items:center; gap:0.5rem;">
+        <span>📤</span>
+        <span id="uploadDrawerSummary" style="font-weight:600; font-size:0.85rem;">מנהל העלאות קבצים</span>
+      </div>
+      <div style="display:flex; gap:0.5rem; align-items:center;">
+        <span id="uploadDrawerOverallPct" style="font-size:0.85rem; font-weight:700; color:var(--accent);"></span>
+        <button class="btn btn-icon" style="padding:2px 6px; font-size:0.75rem;" onclick="event.stopPropagation(); toggleUploadDrawer()">➖</button>
+      </div>
+    </div>
+    <div class="upload-drawer-list" id="uploadDrawerList">
+      <!-- שורות התקדמות דינמיות -->
+    </div>
+  </div>
+
+  <footer>
+    <p id="footerText">נבנה על ידי <a href="https://ivrit.smartbinary.org" target="_blank">בינארי חכם</a> | Built by <a href="https://smartbinary.org" target="_blank">Smart Binary</a></p>
+  </footer>
+
+  <script>
+    const i18n = {
+      he: {
+        langBtn: '🌐 EN',
+        brandTitle: 'שיתוף קל <span style="font-size:0.75rem; color:var(--accent);">PRO</span>',
+        brandSubtitle: 'שרת קבצים וסטרימינג מקומי',
+        readOnlyBadge: 'מצב קריאה בלבד',
+        pinBadge: 'מאובטח ב-PIN',
+        btnUpload: '<span>📤</span><span>העלאה</span>',
+        btnNewFolder: '<span>📁+</span><span class="hide-sm">תיקייה חדשה</span>',
+        btnSettingsTitle: 'הגדרות מתקדמות',
+        btnQrTitle: 'קוד QR ושיתוף',
+        btnClipboardTitle: 'לוח שיתוף מהיר (Quick Drop)',
+        btnThemeTitle: 'החלף עיצוב',
+        dropzoneText: 'שחרר קבצים בכל מקום להעלאה מיידית',
+        drivesTitle: '💻 כונני אחסון מחוברים',
+        quickFoldersTitle: '⚡ תיקיות מהירות במחשב',
+        freeOf: 'פנויים מתוך',
+        thisPc: '💻 מחשב זה',
+        searchPlaceholder: 'סינון קבצים...',
+        sortNameAsc: 'שם (א-ת)',
+        sortNameDesc: 'שם (ת-א)',
+        sortDateDesc: 'תאריך (החדש ביותר)',
+        sortDateAsc: 'תאריך (הישן ביותר)',
+        sortSizeDesc: 'גודל (הגדול ביותר)',
+        sortSizeAsc: 'גודל (הקטן ביותר)',
+        toggleViewTitle: 'החלף תצוגה (רשת/רשימה)',
+        chipAll: 'הכל',
+        chipImages: '🖼️ תמונות',
+        chipVideo: '🎬 וידאו',
+        chipAudio: '🎵 אודיו',
+        chipDocs: '📄 מסמכים',
+        chipArchives: '📦 ארכיונים',
+        thName: 'שם',
+        thSize: 'גודל',
+        thModified: 'תאריך שינוי',
+        thActions: 'פעולות',
+        emptyFolder: 'תיקייה זו ריקה מקבצים',
+        folder: 'תיקייה',
+        selectedItems: 'פריטים נבחרו',
+        downloadZip: 'הורד כ-ZIP',
+        deleteBatch: 'מחק',
+        clearSelection: 'בטל בחירה',
+        settingsTitle: '⚙️ הגדרות מתקדמות (EasyShare Settings)',
+        accessModeLabel: 'מצב גישה למחשב',
+        accessModeFull: 'גישה מלאה לכל הכוננים והמחשב (מומלץ)',
+        accessModeSingle: 'הגבלה לתיקייה ייעודית בלבד (מצב בטוח)',
+        accessModeDesc: 'במצב גישה מלאה ניתן לגשת לכונני C:, D: ולתיקיות המשתמש.',
+        portLabel: 'פורט שרת (Server Port)',
+        pinLabel: 'קוד PIN לאבטחה נקודתית',
+        pinPlaceholder: 'השאר ריק לגישה חופשית ברשת הביתית',
+        recycleBinLabel: 'סל המחזור של Windows (Recycle Bin)',
+        recycleBinDesc: 'העבר קבצים שנמחקים לסל המחזור במקום מחיקה לצמיתות',
+        readOnlyLabel: 'מצב קריאה בלבד (Read-Only Mode)',
+        readOnlyDesc: 'חוסם העלאה, מחיקה ושינוי שם של קבצים',
+        showHiddenLabel: 'הצג קבצים ותיקיות מוסתרים',
+        showHiddenDesc: 'הצגת קבצים בעלי תכונת Hidden או שמתחילים בנקודה',
+        foldersFirstLabel: 'תיקיות תמיד בראש הרשימה',
+        foldersFirstDesc: 'מציג תיקיות לפני קבצים בכל סדר מיון',
+        tunnelLabel: 'מנהור מאובטח (Cloudflare HTTPS Tunnel)',
+        tunnelDesc: 'מאפשר גישה מכל מקום בעולם ללא פתיחת פורטים',
+        langLabel: 'שפת ממשק (Language)',
+        btnCancel: 'ביטול',
+        btnSaveSettings: 'שמור הגדרות',
+        editorTitle: 'עריכת קובץ: {name}',
+        editorSave: '💾 שמור שינויים',
+        editorClose: 'סגור',
+        mediaPlayerTitle: 'נגן מדיה',
+        qrTitle: '📱 חיבור מהיר מסמארטפון',
+        qrLocal: 'רשת מקומית:',
+        qrTunnel: 'מנהור ציבורי (HTTPS):',
+        pdfTitle: '📕 צפייה במסמך PDF',
+        galleryImage: 'תמונה',
+        clipboardTitle: 'לוח שיתוף מהיר (Quick Drop)',
+        clipboardDesc: 'שתף טקסטים, פתקים וקישורים בין המחשב לסמארטפון בזמן אמת.',
+        clipboardHostLabel: 'תוכן נוכחי מהמחשב:',
+        clipboardLoading: '(טוען מהמחשב...)',
+        clipboardEmpty: '(לוח המחשב ריק)',
+        clipboardCopyBtn: '📋 העתק תוכן זה למכשיר שלי',
+        clipboardSendLabel: 'שלח טקסט או קישור מהמכשיר שלך למחשב:',
+        clipboardPlaceholder: 'הקלד או הדבק כאן טקסט, הודעה או קישור...',
+        clipboardSendBtn: '🚀 שלח מיד ללוח המחשב',
+        uploadDrawerSummary: 'מנהל העלאות קבצים',
+        uploadingCount: 'מעלה {count} קבצים...',
+        uploadComplete: 'העלאה הושלמה ({count} קבצים)',
+        statusWaiting: 'ממתין...',
+        statusUploading: 'מעלה...',
+        statusDone: 'הושלם ✔️',
+        statusFailed: 'נכשל ❌',
+        actionDownload: 'הורדה',
+        actionEdit: 'ערוך טקסט',
+        actionPlay: 'נגן',
+        actionPdf: 'צפה ב-PDF',
+        actionGallery: 'הצג בגלריה',
+        actionRename: 'שנה שם',
+        actionDelete: 'מחק',
+        lightboxClose: '✕ סגור',
+        downloadFile: 'הורד קובץ',
+        downloadImage: 'הורד תמונה זו',
+        toggleSlideshow: 'הפעל / עצור מצגת',
+        prevImage: 'תמונה קודמת',
+        nextImage: 'תמונה הבאה',
+        clipboardCopiedAlert: 'התוכן הועתק ללוח המכשיר שלך! 📋',
+        clipboardEnterTextAlert: 'אנא הזן טקסט לשליחה.',
+        clipboardSentSuccessAlert: 'הטקסט נשלח בהצלחה והוגדר בלוח המחשב! 🚀',
+        clipboardSendErrorAlert: 'שגיאה בשליחת הטקסט למחשב.',
+        clipboardCommErrorAlert: 'שגיאת תקשורת בעת השליחה.',
+        clipboardLoadError: '(שגיאה בטעינת הלוח מהמחשב)',
+        clipboardCommError: '(שגיאת תקשורת)',
+        confirmBatchDelete: 'האם אתה בטוח שברצונך למחוק {count} פריטים שנבחרו?',
+        confirmSingleDelete: 'האם למחוק פריט זה?',
+        promptRename: 'הזן שם חדש:',
+        promptNewFolder: 'שם התיקייה החדשה:',
+        footerHtml: 'נבנה על ידי <a href="https://ivrit.smartbinary.org" target="_blank">בינארי חכם</a> | Built by <a href="https://smartbinary.org" target="_blank">Smart Binary</a>'
+      },
+      en: {
+        langBtn: '🌐 עברית',
+        brandTitle: 'EasyShare <span style="font-size:0.75rem; color:var(--accent);">(שיתוף קל) PRO</span>',
+        brandSubtitle: 'Local File & Streaming Server',
+        readOnlyBadge: 'Read-Only Mode',
+        pinBadge: 'PIN Protected',
+        btnUpload: '<span>📤</span><span>Upload</span>',
+        btnNewFolder: '<span>📁+</span><span class="hide-sm">New Folder</span>',
+        btnSettingsTitle: 'Advanced Settings',
+        btnQrTitle: 'QR Code & Share',
+        btnClipboardTitle: 'Quick Drop (Clipboard Sync)',
+        btnThemeTitle: 'Toggle Theme',
+        dropzoneText: 'Drop files anywhere to upload instantly',
+        drivesTitle: '💻 Connected Storage Drives',
+        quickFoldersTitle: '⚡ Quick Folders',
+        freeOf: 'free of',
+        thisPc: '💻 This PC',
+        searchPlaceholder: 'Filter files...',
+        sortNameAsc: 'Name (A-Z)',
+        sortNameDesc: 'Name (Z-A)',
+        sortDateDesc: 'Date (Newest)',
+        sortDateAsc: 'Date (Oldest)',
+        sortSizeDesc: 'Size (Largest)',
+        sortSizeAsc: 'Size (Smallest)',
+        toggleViewTitle: 'Toggle View (Grid/List)',
+        chipAll: 'All',
+        chipImages: '🖼️ Images',
+        chipVideo: '🎬 Video',
+        chipAudio: '🎵 Audio',
+        chipDocs: '📄 Documents',
+        chipArchives: '📦 Archives',
+        thName: 'Name',
+        thSize: 'Size',
+        thModified: 'Date Modified',
+        thActions: 'Actions',
+        emptyFolder: 'This folder is empty',
+        folder: 'Folder',
+        selectedItems: 'items selected',
+        downloadZip: 'Download ZIP',
+        deleteBatch: 'Delete',
+        clearSelection: 'Clear Selection',
+        settingsTitle: '⚙️ Advanced Settings (EasyShare)',
+        accessModeLabel: 'Computer Access Mode',
+        accessModeFull: 'Full Computer Access (Recommended)',
+        accessModeSingle: 'Restricted to Dedicated Folder Only (Safe)',
+        accessModeDesc: 'In full mode, you can access drives (C:, D:) and user folders.',
+        portLabel: 'Server Port',
+        pinLabel: 'Security PIN Code',
+        pinPlaceholder: 'Leave empty for open local access',
+        recycleBinLabel: 'Windows Recycle Bin',
+        recycleBinDesc: 'Move deleted files to Recycle Bin instead of permanent deletion',
+        readOnlyLabel: 'Read-Only Mode',
+        readOnlyDesc: 'Block uploading, deleting, and renaming files',
+        showHiddenLabel: 'Show Hidden Files and Folders',
+        showHiddenDesc: 'Display files with Hidden attribute or leading dot',
+        foldersFirstLabel: 'Folders Always on Top',
+        foldersFirstDesc: 'Show folders before files in any sort order',
+        tunnelLabel: 'Secure Tunnel (Cloudflare HTTPS)',
+        tunnelDesc: 'Allow access from anywhere without port forwarding',
+        langLabel: 'Interface Language',
+        btnCancel: 'Cancel',
+        btnSaveSettings: 'Save Settings',
+        editorTitle: 'Edit File: {name}',
+        editorSave: '💾 Save Changes',
+        editorClose: 'Close',
+        mediaPlayerTitle: 'Media Player',
+        qrTitle: '📱 Mobile Quick Connect',
+        qrLocal: 'Local Network:',
+        qrTunnel: 'Public Tunnel (HTTPS):',
+        pdfTitle: '📕 PDF Document Viewer',
+        galleryImage: 'Image',
+        clipboardTitle: 'Quick Drop (Clipboard Sync)',
+        clipboardDesc: 'Share text, notes, and links between PC and mobile in real time.',
+        clipboardHostLabel: 'Current PC Clipboard Content:',
+        clipboardLoading: '(Loading from PC...)',
+        clipboardEmpty: '(PC clipboard is empty)',
+        clipboardCopyBtn: '📋 Copy to My Device',
+        clipboardSendLabel: 'Send Text or Link from Your Device to PC:',
+        clipboardPlaceholder: 'Type or paste text, note, or link here...',
+        clipboardSendBtn: '🚀 Send to PC Clipboard',
+        uploadDrawerSummary: 'Upload Manager',
+        uploadingCount: 'Uploading {count} files...',
+        uploadComplete: 'Upload complete ({count} files)',
+        statusWaiting: 'Waiting...',
+        statusUploading: 'Uploading...',
+        statusDone: 'Completed ✔️',
+        statusFailed: 'Failed ❌',
+        actionDownload: 'Download',
+        actionEdit: 'Edit Text',
+        actionPlay: 'Play',
+        actionPdf: 'View PDF',
+        actionGallery: 'View in Gallery',
+        actionRename: 'Rename',
+        actionDelete: 'Delete',
+        lightboxClose: '✕ Close',
+        downloadFile: 'Download File',
+        downloadImage: 'Download this image',
+        toggleSlideshow: 'Play / Pause Slideshow',
+        prevImage: 'Previous Image',
+        nextImage: 'Next Image',
+        clipboardCopiedAlert: 'Content copied to your device clipboard! 📋',
+        clipboardEnterTextAlert: 'Please enter text to send.',
+        clipboardSentSuccessAlert: 'Text sent successfully and set on PC clipboard! 🚀',
+        clipboardSendErrorAlert: 'Error sending text to PC.',
+        clipboardCommErrorAlert: 'Communication error while sending.',
+        clipboardLoadError: '(Error loading PC clipboard)',
+        clipboardCommError: '(Communication error)',
+        confirmBatchDelete: 'Are you sure you want to delete {count} selected items?',
+        confirmSingleDelete: 'Delete this item?',
+        promptRename: 'Enter new name:',
+        promptNewFolder: 'New folder name:',
+        footerHtml: 'Built by <a href="https://smartbinary.org" target="_blank">Smart Binary</a> | נבנה על ידי <a href="https://ivrit.smartbinary.org" target="_blank">בינארי חכם</a>'
+      }
+    };
+
+    let currentLang = localStorage.getItem('easyshare_lang') || 'he';
+
+    function t(key, vars = {}) {
+      const dict = i18n[currentLang] || i18n['he'];
+      let str = dict[key] || i18n['he'][key] || key;
+      for (const k in vars) {
+        str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), vars[k]);
+      }
+      return str;
+    }
+
+    function setLanguage(lang, syncServer = true) {
+      currentLang = (lang === 'en' ? 'en' : 'he');
+      localStorage.setItem('easyshare_lang', currentLang);
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir = (currentLang === 'he' ? 'rtl' : 'ltr');
+
+      const dict = i18n[currentLang];
+
+      const btnLang = document.getElementById('btnLangToggle');
+      if (btnLang) btnLang.textContent = dict.langBtn;
+
+      const brandTitle = document.getElementById('brandTitle');
+      if (brandTitle) brandTitle.innerHTML = dict.brandTitle;
+      const brandSub = document.getElementById('brandSubtitle');
+      if (brandSub) brandSub.textContent = dict.brandSubtitle;
+
+      const roBadge = document.getElementById('readOnlyBadge');
+      if (roBadge) roBadge.textContent = dict.readOnlyBadge;
+      const pinBadge = document.getElementById('pinBadge');
+      if (pinBadge) pinBadge.textContent = dict.pinBadge;
+
+      const btnUp = document.getElementById('btnUpload');
+      if (btnUp) btnUp.innerHTML = dict.btnUpload;
+      const btnNf = document.getElementById('btnNewFolder');
+      if (btnNf) btnNf.innerHTML = dict.btnNewFolder;
+
+      const btnSettings = document.getElementById('btnSettings');
+      if (btnSettings) btnSettings.title = dict.btnSettingsTitle;
+      const btnQr = document.getElementById('btnQr');
+      if (btnQr) btnQr.title = dict.btnQrTitle;
+      const btnClip = document.getElementById('btnClipboard');
+      if (btnClip) btnClip.title = dict.btnClipboardTitle;
+      const btnTheme = document.getElementById('btnTheme');
+      if (btnTheme) btnTheme.title = dict.btnThemeTitle;
+
+      const dzH2 = document.querySelector('#dropzoneOverlay h2');
+      if (dzH2) dzH2.textContent = dict.dropzoneText;
+
+      const dTitle = document.getElementById('drivesTitle');
+      if (dTitle) dTitle.textContent = dict.drivesTitle;
+      const qTitle = document.getElementById('quickFoldersTitle');
+      if (qTitle) qTitle.textContent = dict.quickFoldersTitle;
+
+      const search = document.getElementById('searchFilter');
+      if (search) search.placeholder = dict.searchPlaceholder;
+
+      const optSortNameAsc = document.getElementById('optSortNameAsc');
+      if (optSortNameAsc) optSortNameAsc.textContent = dict.sortNameAsc;
+      const optSortNameDesc = document.getElementById('optSortNameDesc');
+      if (optSortNameDesc) optSortNameDesc.textContent = dict.sortNameDesc;
+      const optSortDateDesc = document.getElementById('optSortDateDesc');
+      if (optSortDateDesc) optSortDateDesc.textContent = dict.sortDateDesc;
+      const optSortDateAsc = document.getElementById('optSortDateAsc');
+      if (optSortDateAsc) optSortDateAsc.textContent = dict.sortDateAsc;
+      const optSortSizeDesc = document.getElementById('optSortSizeDesc');
+      if (optSortSizeDesc) optSortSizeDesc.textContent = dict.sortSizeDesc;
+      const optSortSizeAsc = document.getElementById('optSortSizeAsc');
+      if (optSortSizeAsc) optSortSizeAsc.textContent = dict.sortSizeAsc;
+
+      const btnToggleView = document.getElementById('btnToggleView');
+      if (btnToggleView) btnToggleView.title = dict.toggleViewTitle;
+
+      const chipAll = document.getElementById('chipAll');
+      if (chipAll) chipAll.textContent = dict.chipAll;
+      const chipImages = document.getElementById('chipImages');
+      if (chipImages) chipImages.textContent = dict.chipImages;
+      const chipVideo = document.getElementById('chipVideo');
+      if (chipVideo) chipVideo.textContent = dict.chipVideo;
+      const chipAudio = document.getElementById('chipAudio');
+      if (chipAudio) chipAudio.textContent = dict.chipAudio;
+      const chipDocs = document.getElementById('chipDocs');
+      if (chipDocs) chipDocs.textContent = dict.chipDocs;
+      const chipArchives = document.getElementById('chipArchives');
+      if (chipArchives) chipArchives.textContent = dict.chipArchives;
+
+      const thName = document.getElementById('thName');
+      if (thName) thName.textContent = dict.thName;
+      const thSize = document.getElementById('thSize');
+      if (thSize) thSize.textContent = dict.thSize;
+      const thDate = document.getElementById('thDate');
+      if (thDate) thDate.textContent = dict.thModified;
+      const thActions = document.getElementById('thActions');
+      if (thActions) {
+        thActions.textContent = dict.thActions;
+        thActions.style.textAlign = (currentLang === 'he' ? 'left' : 'right');
+      }
+
+      const emptyText = document.getElementById('emptyFolderText');
+      if (emptyText) emptyText.textContent = dict.emptyFolder;
+
+      const lblBatchZip = document.getElementById('lblBatchZip');
+      if (lblBatchZip) lblBatchZip.textContent = dict.downloadZip;
+      const lblBatchDel = document.getElementById('lblBatchDelete');
+      if (lblBatchDel) lblBatchDel.textContent = dict.deleteBatch;
+      const btnClearSel = document.getElementById('btnClearSelection');
+      if (btnClearSel) btnClearSel.title = dict.clearSelection;
+
+      // Settings Modal
+      const sTitle = document.getElementById('settingsModalTitle');
+      if (sTitle) sTitle.textContent = dict.settingsTitle;
+      const lblLang = document.getElementById('lblCfgLanguage');
+      if (lblLang) lblLang.textContent = dict.langLabel;
+      const cfgLang = document.getElementById('cfgLanguage');
+      if (cfgLang) cfgLang.value = currentLang;
+
+      const lblAccess = document.getElementById('lblAccessMode');
+      if (lblAccess) lblAccess.textContent = dict.accessModeLabel;
+      const optAccessFull = document.getElementById('optAccessFull');
+      if (optAccessFull) optAccessFull.textContent = dict.accessModeFull;
+      const optAccessSingle = document.getElementById('optAccessSingle');
+      if (optAccessSingle) optAccessSingle.textContent = dict.accessModeSingle;
+      const descAccess = document.getElementById('descAccessMode');
+      if (descAccess) descAccess.textContent = dict.accessModeDesc;
+
+      const lblPort = document.getElementById('lblCfgPort');
+      if (lblPort) lblPort.textContent = dict.portLabel;
+      const lblPin = document.getElementById('lblCfgPin');
+      if (lblPin) lblPin.textContent = dict.pinLabel;
+      const cfgPin = document.getElementById('cfgPin');
+      if (cfgPin) cfgPin.placeholder = dict.pinPlaceholder;
+
+      const lblRecycle = document.getElementById('lblRecycleBin');
+      if (lblRecycle) lblRecycle.textContent = dict.recycleBinLabel;
+      const descRecycle = document.getElementById('descRecycleBin');
+      if (descRecycle) descRecycle.textContent = dict.recycleBinDesc;
+
+      const lblRo = document.getElementById('lblReadOnly');
+      if (lblRo) lblRo.textContent = dict.readOnlyLabel;
+      const descRo = document.getElementById('descReadOnly');
+      if (descRo) descRo.textContent = dict.readOnlyDesc;
+
+      const lblHidden = document.getElementById('lblShowHidden');
+      if (lblHidden) lblHidden.textContent = dict.showHiddenLabel;
+      const descHidden = document.getElementById('descShowHidden');
+      if (descHidden) descHidden.textContent = dict.showHiddenDesc;
+
+      const lblFoldersFirst = document.getElementById('lblFoldersFirst');
+      if (lblFoldersFirst) lblFoldersFirst.textContent = dict.foldersFirstLabel;
+      const descFoldersFirst = document.getElementById('descFoldersFirst');
+      if (descFoldersFirst) descFoldersFirst.textContent = dict.foldersFirstDesc;
+
+      const lblTunnel = document.getElementById('lblTunnel');
+      if (lblTunnel) lblTunnel.textContent = dict.tunnelLabel;
+      const descTunnel = document.getElementById('descTunnel');
+      if (descTunnel) descTunnel.textContent = dict.tunnelDesc;
+
+      const btnCancel = document.getElementById('btnSettingsCancel');
+      if (btnCancel) btnCancel.textContent = dict.btnCancel;
+      const btnSave = document.getElementById('btnSettingsSave');
+      if (btnSave) btnSave.textContent = dict.btnSaveSettings;
+
+      // Clipboard modal
+      const clipTitle = document.getElementById('clipboardModalTitle');
+      if (clipTitle) clipTitle.textContent = dict.clipboardTitle;
+      const clipDesc = document.getElementById('clipboardModalDesc');
+      if (clipDesc) clipDesc.textContent = dict.clipboardDesc;
+      const clipHostLbl = document.getElementById('lblClipboardCurrentHost');
+      if (clipHostLbl) clipHostLbl.textContent = dict.clipboardHostLabel;
+      const btnCopyHost = document.getElementById('btnCopyHostClipboard');
+      if (btnCopyHost) btnCopyHost.textContent = dict.clipboardCopyBtn;
+      const clipSendLbl = document.getElementById('lblClipboardSend');
+      if (clipSendLbl) clipSendLbl.textContent = dict.clipboardSendLabel;
+      const clipInput = document.getElementById('clipboardInputText');
+      if (clipInput) clipInput.placeholder = dict.clipboardPlaceholder;
+      const btnSendHost = document.getElementById('btnSendHostClipboard');
+      if (btnSendHost) btnSendHost.textContent = dict.clipboardSendBtn;
+
+      // Modals
+      const btnLbClose = document.getElementById('btnLightboxClose');
+      if (btnLbClose) btnLbClose.textContent = dict.lightboxClose;
+      const mediaTitle = document.getElementById('mediaModalTitle');
+      if (mediaTitle) mediaTitle.textContent = dict.mediaPlayerTitle;
+      const qrTitle = document.getElementById('qrModalTitle');
+      if (qrTitle) qrTitle.textContent = dict.qrTitle;
+      const pdfTitle = document.getElementById('pdfViewerTitle');
+      if (pdfTitle) pdfTitle.textContent = dict.pdfTitle;
+      const btnPdfDl = document.getElementById('btnPdfDownload');
+      if (btnPdfDl) btnPdfDl.title = dict.downloadFile;
+      const btnSlide = document.getElementById('btnSlideshow');
+      if (btnSlide) btnSlide.title = dict.toggleSlideshow;
+      const btnGalDl = document.getElementById('btnGalleryDownload');
+      if (btnGalDl) btnGalDl.title = dict.downloadImage;
+      const btnGalPrev = document.getElementById('btnGalleryPrev');
+      if (btnGalPrev) btnGalPrev.title = dict.prevImage;
+      const btnGalNext = document.getElementById('btnGalleryNext');
+      if (btnGalNext) btnGalNext.title = dict.nextImage;
+
+      // Footer
+      const footer = document.getElementById('footerText');
+      if (footer) footer.innerHTML = dict.footerHtml;
+
+      updateBatchBar();
+
+      if (syncServer) {
+        fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language: currentLang })
+        }).catch(() => {});
+      }
+    }
+
+    function toggleLanguage() {
+      setLanguage(currentLang === 'he' ? 'en' : 'he', true);
+      if (currentPath) {
+        updateBreadcrumbs(currentPath);
+        renderFilesList();
+      } else {
+        loadOverview();
+      }
+    }
+
+    let currentPath = '';
+    let currentFiles = [];
+    let selectedPaths = new Set();
+    let appSettings = {};
+    let activeEditorPath = '';
+    let viewMode = localStorage.getItem('easyshare_view') || 'grid';
+    let activeCategory = 'all';
+    let deferredPwaPrompt = null;
+    let galleryImages = [];
+    let galleryCurrentIndex = 0;
+    let slideshowInterval = null;
+    let activeUploads = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      initTheme();
+      initDropzone();
+      initPwa();
+      initGalleryTouchSwipe();
+      setLanguage(currentLang, false);
+      await fetchSettingsAndStatus();
+      await loadOverview();
+    });
+
+    async function fetchSettingsAndStatus() {
+      try {
+        const res = await fetch('/api/settings');
+        if (res.ok) {
+          appSettings = await res.json();
+          if (appSettings.language && !localStorage.getItem('easyshare_lang')) {
+            setLanguage(appSettings.language, false);
+          }
+          if (appSettings.serverReadOnly) {
+            document.getElementById('readOnlyBadge').style.display = 'inline-block';
+            document.getElementById('btnUpload').style.display = 'none';
+            document.getElementById('btnNewFolder').style.display = 'none';
+            document.getElementById('btnBatchDelete').style.display = 'none';
+          }
+          if (appSettings.securityPin) {
+            document.getElementById('pinBadge').style.display = 'inline-block';
+          }
+        }
+      } catch (err) {
+        console.error('Settings error:', err);
+      }
+    }
+
+    const quickFolderTranslations = {
+      'שולחן העבודה': { en: 'Desktop', he: 'שולחן העבודה' },
+      'Desktop': { en: 'Desktop', he: 'שולחן העבודה' },
+      'הורדות': { en: 'Downloads', he: 'הורדות' },
+      'Downloads': { en: 'Downloads', he: 'הורדות' },
+      'מסמכים': { en: 'Documents', he: 'מסמכים' },
+      'Documents': { en: 'Documents', he: 'מסמכים' },
+      'תמונות': { en: 'Pictures', he: 'תמונות' },
+      'Pictures': { en: 'Pictures', he: 'תמונות' },
+      'מוזיקה': { en: 'Music', he: 'מוזיקה' },
+      'Music': { en: 'Music', he: 'מוזיקה' },
+      'סרטונים': { en: 'Videos', he: 'סרטונים' },
+      'Videos': { en: 'Videos', he: 'סרטונים' }
+    };
+
+    async function loadOverview() {
+      currentPath = '';
+      selectedPaths.clear();
+      updateBatchBar();
+      document.getElementById('explorerSection').style.display = 'none';
+      document.getElementById('overviewSection').style.display = 'flex';
+
+      try {
+        const res = await fetch('/api/system/overview');
+        if (!res.ok) throw new Error('Cannot load system overview');
+        const data = await res.json();
+
+        // רינדור כוננים
+        const drivesGrid = document.getElementById('drivesGrid');
+        drivesGrid.innerHTML = '';
+        data.drives.forEach(d => {
+          const card = document.createElement('div');
+          card.className = 'card-drive';
+          card.onclick = () => loadDirectory(d.name);
+          card.innerHTML = `
+            <div class="drive-header">
+              <span class="drive-icon">💾</span>
+              <div>
+                <div class="drive-name">${escapeHtml(d.name)} (${escapeHtml(d.label)})</div>
+                <div class="drive-sub">${formatBytes(d.freeSpace)} ${t('freeOf')} ${formatBytes(d.totalSize)}</div>
+              </div>
+            </div>
+            <div class="drive-bar-bg">
+              <div class="drive-bar-fill" style="width: ${d.usedPercent}%;"></div>
+            </div>
+          `;
+          drivesGrid.appendChild(card);
+        });
+
+        // רינדור תיקיות מהירות
+        const quickGrid = document.getElementById('quickFoldersGrid');
+        quickGrid.innerHTML = '';
+        data.quickFolders.forEach(q => {
+          const card = document.createElement('div');
+          card.className = 'card-quick';
+          card.onclick = () => loadDirectory(q.path);
+          const qName = (quickFolderTranslations[q.name] && quickFolderTranslations[q.name][currentLang]) || q.name;
+          card.innerHTML = `
+            <div class="card-quick-icon">${q.icon}</div>
+            <div class="card-quick-name">${escapeHtml(qName)}</div>
+          `;
+          quickGrid.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Overview error:', err);
+      }
+    }
+
+    async function loadDirectory(path) {
+      if (!path) {
+        loadOverview();
+        return;
+      }
+
+      currentPath = path;
+      selectedPaths.clear();
+      updateBatchBar();
+      document.getElementById('overviewSection').style.display = 'none';
+      document.getElementById('explorerSection').style.display = 'flex';
+
+      updateBreadcrumbs(path);
+
+      try {
+        const res = await fetch('/api/browse?path=' + encodeURIComponent(path));
+        if (!res.ok) throw new Error('Cannot browse directory');
+        const data = await res.json();
+
+        if (data.isRoot) {
+          loadOverview();
+          return;
+        }
+
+        currentFiles = data.items || [];
+        renderFilesList();
+      } catch (err) {
+        alert((currentLang === 'en' ? 'Error loading folder: ' : 'שגיאה בטעינת התיקייה: ') + err.message);
+      }
+    }
+
+    function renderFilesList() {
+      applySorting(false);
+      const filtered = getFilteredFiles();
+
+      const grid = document.getElementById('filesGrid');
+      const tbody = document.getElementById('filesListTbody');
+      const empty = document.getElementById('emptyFolderMessage');
+
+      grid.innerHTML = '';
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      filtered.forEach(file => {
+        const isSelected = selectedPaths.has(file.path);
+
+        // כרטיס לתצוגת Grid
+        const card = document.createElement('div');
+        card.className = `file-card ${isSelected ? 'selected' : ''}`;
+        card.onclick = (e) => {
+          if (e.target.tagName === 'INPUT' || e.target.closest('button') || e.target.closest('a')) return;
+          openFileOrFolder(file);
+        };
+
+        const icon = getFileIcon(file);
+        card.innerHTML = `
+          <div class="file-card-top">
+            <input type="checkbox" class="file-card-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleItemSelection('${escapeJsString(file.path)}', this.checked)">
+            <div class="file-card-actions">
+              ${renderFileActionButtons(file)}
+            </div>
+          </div>
+          <div class="file-card-icon">${icon}</div>
+          <div class="file-card-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
+          <div class="file-card-meta">
+            <span>${file.isDirectory ? t('folder') : formatBytes(file.size)}</span>
+            <span>${formatShortDate(file.modifiedDate)}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+
+        // שורה לתצוגת List
+        const tr = document.createElement('tr');
+        tr.className = isSelected ? 'selected' : '';
+        tr.innerHTML = `
+          <td><input type="checkbox" ${isSelected ? 'checked' : ''} onchange="toggleItemSelection('${escapeJsString(file.path)}', this.checked)"></td>
+          <td style="cursor:pointer;" onclick="openFileOrFolder(${JSON.stringify(file).replace(/"/g, '&quot;')})">
+            <span style="font-size:1.25rem; vertical-align:middle; margin-left:8px;">${icon}</span>
+            <span style="font-weight:600;">${escapeHtml(file.name)}</span>
+          </td>
+          <td class="hide-sm">${file.isDirectory ? t('folder') : formatBytes(file.size)}</td>
+          <td class="hide-sm">${formatFullDate(file.modifiedDate)}</td>
+          <td>
+            <div style="display:flex; gap:0.4rem; justify-content:flex-end;">
+              ${renderFileActionButtons(file)}
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderFileActionButtons(file) {
+      let btns = '';
+      const dlUrl = `/api/download?path=${encodeURIComponent(file.path)}`;
+
+      // כפתור הורדה
+      btns += `<a href="${dlUrl}" class="btn btn-icon" download title="${t('actionDownload')}">📥</a>`;
+
+      // קובץ טקסט / קוד לעריכה
+      if (isTextFile(file.name)) {
+        btns += `<button class="btn btn-icon" onclick="openTextEditor('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionEdit')}">📝</button>`;
+      }
+
+      // נגן מדיה
+      if (file.mimeType.startsWith('video/') || file.mimeType.startsWith('audio/')) {
+        btns += `<button class="btn btn-icon" onclick="playMedia('${escapeJsString(file.path)}', '${escapeJsString(file.name)}', '${file.mimeType}')" title="${t('actionPlay')}">▶️</button>`;
+      }
+
+      // צפייה ב-PDF
+      if (file.mimeType.includes('pdf') || file.name.toLowerCase().endsWith('.pdf')) {
+        btns += `<button class="btn btn-icon" onclick="openPdfViewer('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionPdf')}">📕</button>`;
+      }
+
+      // תצוגת גלריה לתמונות
+      if (file.mimeType.startsWith('image/')) {
+        btns += `<button class="btn btn-icon" onclick="openAdvancedGallery('${escapeJsString(file.path)}')" title="${t('actionGallery')}">🖼️</button>`;
+      }
+
+      // מחיקה ושינוי שם
+      if (!appSettings.serverReadOnly) {
+        btns += `<button class="btn btn-icon" onclick="renameItem('${escapeJsString(file.path)}', '${escapeJsString(file.name)}')" title="${t('actionRename')}">✏️</button>`;
+        btns += `<button class="btn btn-icon" onclick="deleteSingleItem('${escapeJsString(file.path)}')" title="${t('actionDelete')}" style="color:var(--danger);">🗑️</button>`;
+      }
+
+      return btns;
+    }
+
+    function openFileOrFolder(file) {
+      if (file.isDirectory) {
+        loadDirectory(file.path);
+      } else if (file.mimeType.startsWith('video/') || file.mimeType.startsWith('audio/')) {
+        playMedia(file.path, file.name, file.mimeType);
+      } else if (file.mimeType.startsWith('image/')) {
+        openAdvancedGallery(file.path);
+      } else if (file.mimeType.includes('pdf') || file.name.toLowerCase().endsWith('.pdf')) {
+        openPdfViewer(file.path, file.name);
+      } else if (isTextFile(file.name)) {
+        openTextEditor(file.path, file.name);
+      } else {
+        window.open(`/api/download?path=${encodeURIComponent(file.path)}`, '_blank');
+      }
+    }
+
+    // בחירה מרובה
+    function toggleItemSelection(path, checked) {
+      if (checked) selectedPaths.add(path);
+      else selectedPaths.delete(path);
+      updateBatchBar();
+      renderFilesList();
+    }
+
+    function toggleSelectAll(checked) {
+      if (checked) {
+        currentFiles.forEach(f => selectedPaths.add(f.path));
+      } else {
+        selectedPaths.clear();
+      }
+      updateBatchBar();
+      renderFilesList();
+    }
+
+    function clearSelection() {
+      selectedPaths.clear();
+      updateBatchBar();
+      renderFilesList();
+    }
+
+    function updateBatchBar() {
+      const bar = document.getElementById('floatingBatchBar');
+      const countText = document.getElementById('selectedCountText');
+      if (selectedPaths.size > 0) {
+        countText.textContent = `${selectedPaths.size} ${t('selectedItems')}`;
+        bar.classList.add('active');
+      } else {
+        bar.classList.remove('active');
+      }
+    }
+
+    async function downloadSelectedAsZip() {
+      if (selectedPaths.size === 0) return;
+      const paths = Array.from(selectedPaths);
+
+      const res = await fetch('/api/batch/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paths })
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Batch_Download_${Date.now()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } else {
+        alert('שגיאה בהורדת הקבצים.');
+      }
+    }
+
+    async function deleteSelectedItems() {
+      if (selectedPaths.size === 0) return;
+      if (!confirm(t('confirmBatchDelete', { count: selectedPaths.size }))) return;
+
+      const paths = Array.from(selectedPaths);
+      const res = await fetch('/api/batch/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paths })
+      });
+
+      if (res.ok) {
+        selectedPaths.clear();
+        loadDirectory(currentPath);
+      } else {
+        alert(currentLang === 'en' ? 'Error deleting some items.' : 'שגיאה במחיקת חלק מהפריטים.');
+      }
+    }
+
+    async function deleteSingleItem(path) {
+      if (!confirm(t('confirmSingleDelete'))) return;
+      const res = await fetch('/api/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path })
+      });
+      if (res.ok) loadDirectory(currentPath);
+      else alert(currentLang === 'en' ? 'Delete failed.' : 'המחיקה נכשלה.');
+    }
+
+    async function renameItem(oldPath, oldName) {
+      const newName = prompt(t('promptRename'), oldName);
+      if (!newName || newName === oldName) return;
+
+      const res = await fetch('/api/rename', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldPath, newName })
+      });
+      if (res.ok) loadDirectory(currentPath);
+      else alert(currentLang === 'en' ? 'Rename failed.' : 'שינוי השם נכשל.');
+    }
+
+    async function openNewFolderPrompt() {
+      const name = prompt(t('promptNewFolder'));
+      if (!name) return;
+
+      const res = await fetch('/api/mkdir', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ parentPath: currentPath, name })
+      });
+      if (res.ok) loadDirectory(currentPath);
+      else alert(currentLang === 'en' ? 'Creating folder failed.' : 'יצירת התיקייה נכשלה.');
+    }
+
+    // עורך טקסט וקוד
+    async function openTextEditor(path, name) {
+      activeEditorPath = path;
+      document.getElementById('textEditorTitle').textContent = t('editorTitle', { name });
+      document.getElementById('textEditorStatus').textContent = currentLang === 'en' ? 'Loading content...' : 'טוען תוכן...';
+      document.getElementById('textEditorModal').classList.add('active');
+
+      try {
+        const res = await fetch('/api/file/content?path=' + encodeURIComponent(path));
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('textEditorContent').value = data.content;
+          document.getElementById('textEditorStatus').textContent = `${t('thSize')}: ${formatBytes(data.size)}`;
+        } else {
+          document.getElementById('textEditorStatus').textContent = currentLang === 'en' ? 'Error loading file' : 'שגיאה בטעינת הקובץ';
+        }
+      } catch {
+        document.getElementById('textEditorStatus').textContent = currentLang === 'en' ? 'Network error' : 'שגיאת רשת';
+      }
+    }
+
+    async function saveTextFile() {
+      if (!activeEditorPath) return;
+      const content = document.getElementById('textEditorContent').value;
+      const status = document.getElementById('textEditorStatus');
+      status.textContent = currentLang === 'en' ? 'Saving changes...' : 'שומר שינויים...';
+
+      try {
+        const res = await fetch('/api/file/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: activeEditorPath, content })
+        });
+        if (res.ok) {
+          status.textContent = currentLang === 'en' ? 'File saved successfully! ✔️' : 'הקובץ נשמר בהצלחה! ✔️';
+          setTimeout(() => closeTextEditor(), 800);
+        } else {
+          status.textContent = currentLang === 'en' ? 'Error saving file!' : 'שגיאה בשמירה!';
+        }
+      } catch {
+        status.textContent = currentLang === 'en' ? 'Network error on save!' : 'שגיאת תקשורת בשמירה!';
+      }
+    }
+
+    function closeTextEditor() {
+      document.getElementById('textEditorModal').classList.remove('active');
+      activeEditorPath = '';
+    }
+
+    // נגן מדיה
+    function playMedia(path, name, mime) {
+      document.getElementById('mediaModalTitle').textContent = name;
+      const container = document.getElementById('mediaPlayerContainer');
+      const url = `/api/download?path=${encodeURIComponent(path)}`;
+
+      if (mime.startsWith('video/')) {
+        container.innerHTML = `
+          <video controls autoplay playsinline style="width:100%; max-height:65vh; border-radius:8px; background:black;">
+            <source src="${url}" type="${mime}">
+          </video>
+        `;
+      } else {
+        container.innerHTML = `
+          <audio controls autoplay style="width:100%; margin:2rem 0;">
+            <source src="${url}" type="${mime}">
+          </audio>
+        `;
+      }
+      document.getElementById('mediaModal').classList.add('active');
+    }
+
+    function closeMediaModal() {
+      document.getElementById('mediaModal').classList.remove('active');
+      document.getElementById('mediaPlayerContainer').innerHTML = '';
+    }
+
+    function openLightbox(path) {
+      document.getElementById('lightboxImage').src = `/api/download?path=${encodeURIComponent(path)}`;
+      document.getElementById('lightboxModal').classList.add('active');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightboxModal').classList.remove('active');
+      document.getElementById('lightboxImage').src = '';
+    }
+
+    // מודל הגדרות
+    function openSettingsModal() {
+      document.getElementById('cfgLanguage').value = currentLang;
+      document.getElementById('cfgAccessMode').value = appSettings.accessMode || 'FullComputer';
+      document.getElementById('cfgPort').value = appSettings.serverPort || 2121;
+      document.getElementById('cfgPin').value = appSettings.securityPin || '';
+      document.getElementById('cfgRecycleBin').checked = appSettings.sendToRecycleBin !== false;
+      document.getElementById('cfgReadOnly').checked = appSettings.serverReadOnly || false;
+      document.getElementById('cfgShowHidden').checked = appSettings.showHiddenFiles || false;
+      document.getElementById('cfgFoldersFirst').checked = appSettings.foldersFirst !== false;
+      document.getElementById('cfgTunnel').checked = appSettings.enableCloudflareTunnel || false;
+      document.getElementById('settingsModal').classList.add('active');
+    }
+
+    function closeSettingsModal() {
+      document.getElementById('settingsModal').classList.remove('active');
+    }
+
+    async function saveSettings() {
+      const updated = {
+        accessMode: document.getElementById('cfgAccessMode').value,
+        serverPort: parseInt(document.getElementById('cfgPort').value) || 2121,
+        language: document.getElementById('cfgLanguage').value,
+        securityPin: document.getElementById('cfgPin').value.trim() || null,
+        sendToRecycleBin: document.getElementById('cfgRecycleBin').checked,
+        serverReadOnly: document.getElementById('cfgReadOnly').checked,
+        showHiddenFiles: document.getElementById('cfgShowHidden').checked,
+        foldersFirst: document.getElementById('cfgFoldersFirst').checked,
+        enableCloudflareTunnel: document.getElementById('cfgTunnel').checked
+      };
+
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      });
+
+      if (res.ok) {
+        closeSettingsModal();
+        setLanguage(updated.language, false);
+        await fetchSettingsAndStatus();
+        if (currentPath) loadDirectory(currentPath);
+        else loadOverview();
+      } else {
+        alert(currentLang === 'en' ? 'Error updating settings.' : 'שגיאה בעדכון ההגדרות.');
+      }
+    }
+
+    // מודל קוד QR
+    async function openQrModal() {
+      const res = await fetch('/api/qrcode');
+      if (res.ok) {
+        const data = await res.json();
+        document.getElementById('qrCodeContainer').innerHTML = data.svg;
+        document.getElementById('qrUrlsContainer').innerHTML = `
+          <div style="background:var(--bg-main); padding:0.6rem; border-radius:6px; font-family:monospace; font-size:0.85rem;">
+            <strong>${t('qrLocal')}</strong> <a href="${data.url}" target="_blank" style="color:var(--accent);">${data.url}</a>
+          </div>
+          ${data.tunnelUrl ? `
+          <div style="background:var(--bg-main); padding:0.6rem; border-radius:6px; font-family:monospace; font-size:0.85rem;">
+            <strong>${t('qrTunnel')}</strong> <a href="${data.tunnelUrl}" target="_blank" style="color:var(--accent);">${data.tunnelUrl}</a>
+          </div>` : ''}
+        `;
+        document.getElementById('qrModal').classList.add('active');
+      }
+    }
+
+    function closeQrModal() {
+      document.getElementById('qrModal').classList.remove('active');
+    }
+
+    // העלאת קבצים וגרירה
+    function initDropzone() {
+      const dz = document.getElementById('dropzoneOverlay');
+      window.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        if (!appSettings.serverReadOnly) dz.classList.add('active');
+      });
+      window.addEventListener('dragleave', (e) => {
+        if (e.relatedTarget === null) dz.classList.remove('active');
+      });
+      window.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        dz.classList.remove('active');
+        if (appSettings.serverReadOnly) return;
+
+        const items = e.dataTransfer.items;
+        if (items && items.length > 0 && items[0].webkitGetAsEntry) {
+          const filesWithPaths = [];
+          for (let i = 0; i < items.length; i++) {
+            const entry = items[i].webkitGetAsEntry();
+            if (entry) await traverseEntry(entry, '', filesWithPaths);
+          }
+          if (filesWithPaths.length > 0) {
+            uploadFiles(filesWithPaths);
+            return;
+          }
+        }
+
+        if (e.dataTransfer && e.dataTransfer.files.length > 0) {
+          uploadFiles(Array.from(e.dataTransfer.files));
+        }
+      });
+    }
+
+    async function traverseEntry(entry, pathPrefix, result) {
+      if (entry.isFile) {
+        await new Promise(resolve => {
+          entry.file(f => {
+            f.relativePath = pathPrefix + f.name;
+            result.push(f);
+            resolve();
+          });
+        });
+      } else if (entry.isDirectory) {
+        const reader = entry.createReader();
+        const entries = await new Promise(resolve => {
+          reader.readEntries(entries => resolve(entries || []));
+        });
+        for (const child of entries) {
+          await traverseEntry(child, pathPrefix + entry.name + '/', result);
+        }
+      }
+    }
+
+    async function uploadFiles(files) {
+      if (!files || files.length === 0) return;
+      const fileList = Array.from(files);
+      const drawer = document.getElementById('uploadDrawer');
+      const drawerList = document.getElementById('uploadDrawerList');
+      const summary = document.getElementById('uploadDrawerSummary');
+      const overallPct = document.getElementById('uploadDrawerOverallPct');
+      
+      drawer.classList.add('active');
+      summary.textContent = t('uploadingCount', { count: fileList.length });
+      drawerList.innerHTML = '';
+
+      const totalBytes = fileList.reduce((acc, f) => acc + f.size, 0);
+      let uploadedBytes = 0;
+      const startTime = Date.now();
+
+      const pContainer = document.getElementById('uploadProgressContainer');
+      const pFill = document.getElementById('uploadProgressFill');
+      pContainer.style.display = 'block';
+      pFill.style.width = '0%';
+
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        const row = document.createElement('div');
+        row.className = 'upload-file-row';
+        row.innerHTML = `
+          <div class="upload-file-row-top">
+            <span style="font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:180px;">${escapeHtml(file.name)}</span>
+            <span id="rowStatus_${i}" style="color:var(--text-muted);">${t('statusWaiting')}</span>
+          </div>
+          <div class="upload-file-bar">
+            <div class="upload-file-bar-fill" id="rowBar_${i}"></div>
+          </div>
+        `;
+        drawerList.appendChild(row);
+      }
+
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        const rowStatus = document.getElementById(`rowStatus_${i}`);
+        const rowBar = document.getElementById(`rowBar_${i}`);
+        if (rowStatus) rowStatus.textContent = t('statusUploading');
+
+        const formData = new FormData();
+        if (file.relativePath) {
+          formData.append('files', file, file.relativePath);
+        } else {
+          formData.append('files', file);
+        }
+
+        let filePrevLoaded = 0;
+        await new Promise((resolve) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', `/api/upload?path=${encodeURIComponent(currentPath)}`, true);
+
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable) {
+              const filePct = Math.round((e.loaded / e.total) * 100);
+              if (rowBar) rowBar.style.width = filePct + '%';
+              
+              const diff = e.loaded - filePrevLoaded;
+              filePrevLoaded = e.loaded;
+              uploadedBytes += diff;
+
+              const totalPct = Math.min(100, Math.round((uploadedBytes / (totalBytes || 1)) * 100));
+              pFill.style.width = totalPct + '%';
+              if (overallPct) overallPct.textContent = totalPct + '%';
+
+              const elapsedSec = (Date.now() - startTime) / 1000;
+              const bps = elapsedSec > 0 ? (uploadedBytes / elapsedSec) : 0;
+              const remainingBytes = Math.max(0, totalBytes - uploadedBytes);
+              const etaSec = bps > 0 ? Math.round(remainingBytes / bps) : 0;
+              
+              if (rowStatus) rowStatus.textContent = `${formatBytes(bps)}/s | ETA: ${etaSec}s`;
+            }
+          });
+
+          xhr.addEventListener('load', () => {
+            if (xhr.status === 200) {
+              if (rowBar) rowBar.style.width = '100%';
+              if (rowStatus) {
+                rowStatus.textContent = t('statusDone');
+                rowStatus.style.color = 'var(--success)';
+              }
+            } else {
+              if (rowStatus) {
+                rowStatus.textContent = t('statusFailed');
+                rowStatus.style.color = 'var(--danger)';
+              }
+            }
+            resolve();
+          });
+
+          xhr.addEventListener('error', () => {
+            if (rowStatus) {
+              rowStatus.textContent = currentLang === 'en' ? 'Network error ❌' : 'שגיאת רשת ❌';
+              rowStatus.style.color = 'var(--danger)';
+            }
+            resolve();
+          });
+
+          xhr.send(formData);
+        });
+      }
+
+      summary.textContent = t('uploadComplete', { count: fileList.length });
+      setTimeout(() => {
+        pContainer.style.display = 'none';
+        pFill.style.width = '0%';
+      }, 1000);
+      loadDirectory(currentPath);
+    }
+
+    // פונקציות ניווט ותצוגה
+    function updateBreadcrumbs(fullPath) {
+      const container = document.getElementById('breadcrumbs');
+      container.innerHTML = `<span class="crumb-item" onclick="loadOverview()">${t('thisPc')}</span>`;
+
+      const parts = fullPath.split(/[\/\\]/).filter(p => p.length > 0);
+      let built = '';
+
+      parts.forEach((part, idx) => {
+        if (idx === 0 && fullPath.includes(':')) built = part + '\\';
+        else built += (built.endsWith('\\') || built.endsWith('/') ? '' : '\\') + part;
+
+        const isLast = idx === parts.length - 1;
+        const target = built;
+
+        const sep = document.createElement('span');
+        sep.textContent = ' / ';
+        sep.style.color = 'var(--text-muted)';
+        container.appendChild(sep);
+
+        const span = document.createElement('span');
+        span.className = 'crumb-item' + (isLast ? ' active' : '');
+        const displayPart = (quickFolderTranslations[part] && quickFolderTranslations[part][currentLang]) || part;
+        span.textContent = displayPart;
+        span.onclick = () => loadDirectory(target);
+        container.appendChild(span);
+      });
+    }
+
+    function toggleViewMode() {
+      viewMode = viewMode === 'grid' ? 'list' : 'grid';
+      localStorage.setItem('easyshare_view', viewMode);
+      applyViewMode();
+    }
+
+    function applyViewMode() {
+      const grid = document.getElementById('filesGrid');
+      const list = document.getElementById('filesListContainer');
+      const btn = document.getElementById('btnToggleView');
+
+      if (viewMode === 'grid') {
+        grid.style.display = 'grid';
+        list.style.display = 'none';
+        btn.textContent = '📋';
+      } else {
+        grid.style.display = 'none';
+        list.style.display = 'block';
+        btn.textContent = '🔲';
+      }
+    }
+
+    function applySorting(reRender = true) {
+      const val = document.getElementById('sortSelect').value;
+      const [field, dir] = val.split('_');
+      const asc = dir === 'asc';
+
+      currentFiles.sort((a, b) => {
+        if (appSettings.foldersFirst !== false) {
+          if (a.isDirectory && !b.isDirectory) return -1;
+          if (!a.isDirectory && b.isDirectory) return 1;
+        }
+
+        let res = 0;
+        if (field === 'name') res = a.name.localeCompare(b.name);
+        else if (field === 'size') res = a.size - b.size;
+        else if (field === 'date') res = new Date(a.modifiedDate) - new Date(b.modifiedDate);
+
+        return asc ? res : -res;
+      });
+
+      if (reRender) renderFilesList();
+    }
+
+    function filterFiles() {
+      renderFilesList();
+    }
+
+    function setCategoryFilter(cat, btn) {
+      activeCategory = cat;
+      document.querySelectorAll('#categoryChips .chip').forEach(c => c.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderFilesList();
+    }
+
+    function getFilteredFiles() {
+      const q = document.getElementById('searchFilter').value.toLowerCase().trim();
+      return currentFiles.filter(f => {
+        if (q && !f.name.toLowerCase().includes(q)) return false;
+        if (activeCategory === 'all') return true;
+        if (f.isDirectory) return false;
+
+        const mime = f.mimeType ? f.mimeType.toLowerCase() : '';
+        const name = f.name.toLowerCase();
+
+        if (activeCategory === 'images') return mime.startsWith('image/');
+        if (activeCategory === 'video') return mime.startsWith('video/');
+        if (activeCategory === 'audio') return mime.startsWith('audio/');
+        if (activeCategory === 'docs') {
+          const docExts = ['.pdf', '.txt', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.rtf', '.md', '.csv'];
+          return mime.includes('pdf') || docExts.some(ext => name.endsWith(ext));
+        }
+        if (activeCategory === 'archives') {
+          const arcExts = ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.iso'];
+          return mime.includes('zip') || mime.includes('compressed') || arcExts.some(ext => name.endsWith(ext));
+        }
+        return true;
+      });
+    }
+
+    // מציג מסמכי PDF מובנה
+    function openPdfViewer(path, name) {
+      document.getElementById('pdfViewerTitle').textContent = `📕 ${name}`;
+      const dlUrl = `/api/download?path=${encodeURIComponent(path)}`;
+      document.getElementById('btnPdfDownload').href = dlUrl;
+      document.getElementById('pdfViewerFrame').src = dlUrl;
+      document.getElementById('pdfViewerModal').classList.add('active');
+    }
+
+    function closePdfViewer() {
+      document.getElementById('pdfViewerModal').classList.remove('active');
+      document.getElementById('pdfViewerFrame').src = 'about:blank';
+    }
+
+    // גלריית תמונות מתקדמת עם מחוות החלקה ומצגת
+    function openAdvancedGallery(startPath) {
+      galleryImages = currentFiles.filter(f => !f.isDirectory && f.mimeType && f.mimeType.startsWith('image/'));
+      if (galleryImages.length === 0) {
+        openLightbox(startPath);
+        return;
+      }
+      galleryCurrentIndex = galleryImages.findIndex(f => f.path === startPath);
+      if (galleryCurrentIndex < 0) galleryCurrentIndex = 0;
+      updateGalleryView();
+      document.getElementById('advancedGalleryModal').classList.add('active');
+    }
+
+    function updateGalleryView() {
+      if (galleryImages.length === 0) return;
+      const cur = galleryImages[galleryCurrentIndex];
+      const dlUrl = `/api/download?path=${encodeURIComponent(cur.path)}`;
+      const img = document.getElementById('galleryCurrentImg');
+      img.src = dlUrl;
+      document.getElementById('galleryImageTitle').textContent = cur.name;
+      document.getElementById('galleryCounter').textContent = `(${galleryCurrentIndex + 1} / ${galleryImages.length})`;
+      document.getElementById('btnGalleryDownload').href = dlUrl;
+    }
+
+    function nextGalleryImage() {
+      if (galleryImages.length === 0) return;
+      galleryCurrentIndex = (galleryCurrentIndex + 1) % galleryImages.length;
+      updateGalleryView();
+    }
+
+    function prevGalleryImage() {
+      if (galleryImages.length === 0) return;
+      galleryCurrentIndex = (galleryCurrentIndex - 1 + galleryImages.length) % galleryImages.length;
+      updateGalleryView();
+    }
+
+    function toggleSlideshow() {
+      const btn = document.getElementById('btnSlideshow');
+      if (slideshowInterval) {
+        clearInterval(slideshowInterval);
+        slideshowInterval = null;
+        btn.textContent = '▶️';
+      } else {
+        slideshowInterval = setInterval(nextGalleryImage, 3000);
+        btn.textContent = '⏸️';
+      }
+    }
+
+    function closeAdvancedGallery() {
+      if (slideshowInterval) toggleSlideshow();
+      document.getElementById('advancedGalleryModal').classList.remove('active');
+      document.getElementById('galleryCurrentImg').src = '';
+    }
+
+    let touchStartX = 0;
+    function initGalleryTouchSwipe() {
+      const container = document.getElementById('galleryContainer');
+      if (!container) return;
+      container.addEventListener('touchstart', e => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      container.addEventListener('touchend', e => {
+        const touchEndX = e.changedTouches[0].screenX;
+        const diff = touchEndX - touchStartX;
+        if (diff > 50) prevGalleryImage();
+        else if (diff < -50) nextGalleryImage();
+      }, { passive: true });
+    }
+
+    // לוח שיתוף מהיר (Quick Drop / Clipboard Sync)
+    async function openClipboardModal() {
+      document.getElementById('clipboardModal').classList.add('active');
+      document.getElementById('clipboardCurrentHostText').textContent = t('clipboardLoading');
+      try {
+        const res = await fetch('/api/clipboard');
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('clipboardCurrentHostText').textContent = data.text || t('clipboardEmpty');
+        } else {
+          document.getElementById('clipboardCurrentHostText').textContent = t('clipboardLoadError');
+        }
+      } catch {
+        document.getElementById('clipboardCurrentHostText').textContent = t('clipboardCommError');
+      }
+    }
+
+    function closeClipboardModal() {
+      document.getElementById('clipboardModal').classList.remove('active');
+    }
+
+    async function copyHostClipboard() {
+      const text = document.getElementById('clipboardCurrentHostText').textContent;
+      if (text && text !== t('clipboardEmpty') && text !== t('clipboardCommError') && text !== t('clipboardLoadError') && text !== '(לוח המחשב ריק)' && text !== '(שגיאת תקשורת)') {
+        await navigator.clipboard.writeText(text);
+        alert(t('clipboardCopiedAlert'));
+      }
+    }
+
+    async function sendTextToHostClipboard() {
+      const text = document.getElementById('clipboardInputText').value.trim();
+      if (!text) {
+        alert(t('clipboardEnterTextAlert'));
+        return;
+      }
+      try {
+        const res = await fetch('/api/clipboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        if (res.ok) {
+          document.getElementById('clipboardInputText').value = '';
+          alert(t('clipboardSentSuccessAlert'));
+          openClipboardModal();
+        } else {
+          alert(t('clipboardSendErrorAlert'));
+        }
+      } catch {
+        alert(t('clipboardCommErrorAlert'));
+      }
+    }
+
+    // מגירת העלאות צפה
+    function toggleUploadDrawer() {
+      const drawer = document.getElementById('uploadDrawer');
+      drawer.classList.toggle('active');
+    }
+
+    function minimizeUploadDrawer() {
+      const drawer = document.getElementById('uploadDrawer');
+      drawer.classList.remove('active');
+    }
+
+    // PWA & התקנה למסך הבית
+    function initPwa() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW register failed:', err));
+      }
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPwaPrompt = e;
+        const btn = document.getElementById('btnInstallPwa');
+        if (btn) btn.style.display = 'inline-flex';
+      });
+    }
+
+    async function installPwaApp() {
+      if (!deferredPwaPrompt) return;
+      deferredPwaPrompt.prompt();
+      const { outcome } = await deferredPwaPrompt.userChoice;
+      if (outcome === 'accepted') {
+        const btn = document.getElementById('btnInstallPwa');
+        if (btn) btn.style.display = 'none';
+      }
+      deferredPwaPrompt = null;
+    }
+
+    function toggleTheme() {
+      const b = document.body;
+      const current = b.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      b.setAttribute('data-theme', next);
+      localStorage.setItem('easyshare_theme', next);
+    }
+
+    function initTheme() {
+      const saved = localStorage.getItem('easyshare_theme') || 'dark';
+      document.body.setAttribute('data-theme', saved);
+      applyViewMode();
+    }
+
+    function isTextFile(name) {
+      const textExts = ['.txt', '.log', '.json', '.xml', '.md', '.cs', '.js', '.ts', '.html', '.css', '.py', '.bat', '.cmd', '.sh', '.ini', '.cfg', '.yaml', '.yml'];
+      return textExts.some(ext => name.toLowerCase().endsWith(ext));
+    }
+
+    function getFileIcon(f) {
+      if (f.isDirectory) return '📁';
+      if (f.mimeType.startsWith('video/')) return '🎬';
+      if (f.mimeType.startsWith('audio/')) return '🎵';
+      if (f.mimeType.startsWith('image/')) return '🖼️';
+      if (f.mimeType.includes('zip') || f.mimeType.includes('compressed')) return '📦';
+      if (f.mimeType.includes('pdf')) return '📕';
+      if (isTextFile(f.name)) return '📄';
+      if (f.name.endsWith('.exe') || f.name.endsWith('.apk')) return '⚙️';
+      return '📄';
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function formatShortDate(dStr) {
+      if (!dStr) return '';
+      const d = new Date(dStr);
+      const locale = currentLang === 'en' ? 'en-US' : 'he-IL';
+      return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit' });
+    }
+
+    function formatFullDate(dStr) {
+      if (!dStr) return '';
+      const d = new Date(dStr);
+      const locale = currentLang === 'en' ? 'en-US' : 'he-IL';
+      return d.toLocaleDateString(locale, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function escapeHtml(s) {
+      if (!s) return '';
+      return s.replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m]);
+    }
+
+    function escapeJsString(s) {
+      if (!s) return '';
+      return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+  </script>
+</body>
+</html>
