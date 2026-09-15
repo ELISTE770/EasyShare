@@ -12,7 +12,7 @@ namespace EasyShare.Services;
 public static class ShellContextMenuService
 {
     private const string MenuKeyName = "EasySharePRO";
-    private const string MenuTitle = "שתף באמצעות EasyShare 🚀";
+    private const string MenuTitle = "שתף באמצעות EasyShare PRO";
 
     /// <summary>
     /// בודק האם תפריט ההקשר רשום כעת ברגיסטרי.
@@ -65,7 +65,7 @@ public static class ShellContextMenuService
         {
             if (cmdCloud != null)
             {
-                cmdCloud.SetValue("", "העלאה מהירה לענן (קישור ציבורי ישיר) ☁️");
+                cmdCloud.SetValue("", "העלאה מהירה לענן (קישור ישיר)");
                 using var cmd = cmdCloud.CreateSubKey("command");
                 cmd?.SetValue("", $"\"{exePath}\" --quick-share \"DirectCloud\" \"%1\"");
             }
@@ -76,7 +76,7 @@ public static class ShellContextMenuService
         {
             if (cmdSecure != null)
             {
-                cmdSecure.SetValue("", "שיתוף מאובטח עם קוד PIN מוצפן 🔒");
+                cmdSecure.SetValue("", "שיתוף מאובטח עם אימות PIN");
                 using var cmd = cmdSecure.CreateSubKey("command");
                 cmd?.SetValue("", $"\"{exePath}\" --quick-share \"Tunnel\" \"%1\"");
             }
@@ -87,7 +87,7 @@ public static class ShellContextMenuService
         {
             if (cmdDrive != null)
             {
-                cmdDrive.SetValue("", "העבר לתיקיית סנכרון ענן (OneDrive / Drive) ⛅");
+                cmdDrive.SetValue("", "סנכרון לתיקיית ענן (Google Drive / OneDrive)");
                 using var cmd = cmdDrive.CreateSubKey("command");
                 cmd?.SetValue("", $"\"{exePath}\" --quick-share \"LocalCloud\" \"%1\"");
             }

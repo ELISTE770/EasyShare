@@ -29,6 +29,30 @@ public sealed class HttpRequest
     public string? GetHeader(string name) => Headers.TryGetValue(name, out var val) ? val : null;
 
     /// <summary>
+    /// מחלץ ערך של עוגייה ספציפית מכותרת ה-Cookie.
+    /// </summary>
+    public string? GetCookie(string name)
+    {
+        if (Headers.TryGetValue("Cookie", out string? cookieHeader) && !string.IsNullOrWhiteSpace(cookieHeader))
+        {
+            var parts = cookieHeader.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            foreach (var part in parts)
+            {
+                int eq = part.IndexOf('=');
+                if (eq > 0)
+                {
+                    string key = part[..eq].Trim();
+                    if (string.Equals(key, name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return part[(eq + 1)..].Trim();
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
     /// קורא ומנתח את בקשת ה-HTTP מתוך ה-Stream של ה-Socket.
     /// שומר את ה-Stream פתוח עבור קריאת גוף הבקשה (Payload / Multipart).
     /// </summary>

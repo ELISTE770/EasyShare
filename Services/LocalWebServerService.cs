@@ -6,6 +6,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -204,42 +205,70 @@ public sealed class LocalWebServerService : IDisposable
                 return;
             }
 
-            // CORS Preflight
-            if (request.Method == "OPTIONS")
+            // אימות כותרת Host למניעת DNS Rebinding
+            if (!IsValidHostHeader(request.GetHeader("Host")))
             {
-                await HttpResponse.WriteHeadersAsync(stream, 204, "No Content", "text/plain", 0, null, ct);
+                await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Invalid Host header.", ct);
                 return;
             }
 
             // אימות Basic Auth
             if (!Settings.ServerAnonymous)
             {
-                if (request.BasicAuthUser != Settings.ServerUsername || request.BasicAuthPassword != Settings.ServerPassword)
+                byte[] expectedPass = Encoding.UTF8.GetBytes(Settings.ServerPassword ?? "");
+                byte[] actualPass = Encoding.UTF8.GetBytes(request.BasicAuthPassword ?? "");
+
+                if (string.IsNullOrEmpty(Settings.ServerPassword) ||
+                    request.BasicAuthUser != Settings.ServerUsername ||
+                    !CryptographicOperations.FixedTimeEquals(actualPass, expectedPass))
                 {
+                    SecurityService.RecordFailedAttempt(clientIp);
                     await HttpResponse.WriteUnauthorizedBasicAsync(stream, "EasyShare", ct);
                     return;
                 }
             }
 
-            // אימות PIN
+            // אימות PIN ועוגיית סשן (Session Cookie)
             if (SecurityService.IsPinRequired && request.Path != "/api/auth/pin" && request.Path != "/" && !request.Path.StartsWith("/assets") && !request.Path.StartsWith("/secure"))
             {
-                string? providedPin = request.GetHeader("X-PIN");
-                if (string.IsNullOrEmpty(providedPin) && request.Query.TryGetValue("pin", out var qPin))
-                {
-                    providedPin = qPin;
-                }
+                string? sessionToken = request.GetCookie("es_session");
+                bool sessionValid = SecurityService.IsValidSession(sessionToken);
 
-                if (!SecurityService.ValidatePin(clientIp, providedPin))
+                if (!sessionValid)
                 {
-                    await HttpResponse.WriteStatusAsync(stream, 401, "Unauthorized", "Invalid or missing PIN.", ct);
-                    return;
+                    string? providedPin = request.GetHeader("X-PIN");
+                    if (string.IsNullOrEmpty(providedPin) && request.Query.TryGetValue("pin", out var qPin))
+                    {
+                        providedPin = qPin;
+                    }
+
+                    if (string.IsNullOrEmpty(providedPin) || !SecurityService.ValidatePin(clientIp, providedPin))
+                    {
+                        await HttpResponse.WriteStatusAsync(stream, 401, "Unauthorized", "Invalid or missing PIN.", ct);
+                        return;
+                    }
                 }
+            }
+
+            // טיפול בבקשות OPTIONS
+            if (request.Method == "OPTIONS")
+            {
+                var optionsHeaders = new Dictionary<string, string>
+                {
+                    { "Allow", "GET, POST, HEAD, OPTIONS" }
+                };
+                await HttpResponse.WriteHeadersAsync(stream, 204, "No Content", "text/plain", 0, optionsHeaders, ct);
+                return;
             }
 
             try
             {
                 await RouteRequestAsync(request, stream, ct);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                OnLog?.Invoke($"[FORBIDDEN] {request.Method} {request.Path}: {ex.Message}");
+                await HttpResponse.WriteStatusAsync(stream, 403, "Forbidden", ex.Message, ct);
             }
             catch (Exception ex)
             {
@@ -249,8 +278,94 @@ public sealed class LocalWebServerService : IDisposable
         }
     }
 
+    private bool IsValidHostHeader(string? hostHeader)
+    {
+        if (string.IsNullOrWhiteSpace(hostHeader))
+        {
+            return true;
+        }
+
+        string host = hostHeader.Trim();
+        if (host.StartsWith('['))
+        {
+            int closeBracket = host.IndexOf(']');
+            if (closeBracket > 0)
+            {
+                host = host[1..closeBracket];
+            }
+        }
+        else
+        {
+            int colonIdx = host.IndexOf(':');
+            if (colonIdx > 0)
+            {
+                host = host[..colonIdx];
+            }
+        }
+
+        if (host.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+            host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+            host.Equals("::1", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (!string.IsNullOrEmpty(LocalIpAddress) && host.Equals(LocalIpAddress, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (IPAddress.TryParse(host, out var parsedIp))
+        {
+            if (IPAddress.IsLoopback(parsedIp)) return true;
+            byte[] bytes = parsedIp.GetAddressBytes();
+            if (bytes.Length == 4)
+            {
+                if (bytes[0] == 10) return true; // 10.0.0.0/8
+                if (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31) return true; // 172.16.0.0/12
+                if (bytes[0] == 192 && bytes[1] == 168) return true; // 192.168.0.0/16
+                if (bytes[0] == 169 && bytes[1] == 254) return true; // 169.254.0.0/16
+            }
+        }
+
+        if (host.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (Settings.EnableCloudflareTunnel)
+        {
+            if (host.EndsWith(".trycloudflare.com", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrEmpty(Settings.CloudflareCustomDomain) &&
+                host.Equals(Settings.CloudflareCustomDomain, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrEmpty(TunnelService.CurrentUrl) &&
+                Uri.TryCreate(TunnelService.CurrentUrl, UriKind.Absolute, out var tunnelUri) &&
+                host.Equals(tunnelUri.Host, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private async Task RouteRequestAsync(HttpRequest req, Stream stream, CancellationToken ct)
     {
+        // חסימת פעולות כתיבה במצב Read-Only - נבדק בראש הניתוב
+        if (Settings.ServerReadOnly && req.Method != "GET" && req.Method != "HEAD" && req.Path != "/api/auth/pin" && req.Path != "/api/batch/download" && req.Path != "/api/webrtc/signal")
+        {
+            await HttpResponse.WriteStatusAsync(stream, 403, "Forbidden", "Server is operating in Read-Only mode.", ct);
+            return;
+        }
+
         // ממשק ה-Web המוטמע (SPA)
         if (req.Method == "GET" && (req.Path == "/" || req.Path == "/index.html"))
         {
@@ -404,10 +519,30 @@ public sealed class LocalWebServerService : IDisposable
             return;
         }
 
-        // קריאת הגדרות
+        // קריאת הגדרות (DTO מסונן ומאובטח ללא חשיפת סודות)
         if (req.Method == "GET" && req.Path == "/api/settings")
         {
-            await HttpResponse.WriteJsonAsync(stream, Settings, 200, "OK", ct);
+            var safeSettings = new
+            {
+                serverPort = Settings.ServerPort,
+                serverReadOnly = Settings.ServerReadOnly,
+                isPinRequired = SecurityService.IsPinRequired,
+                hasPin = !string.IsNullOrEmpty(Settings.SecurityPin),
+                sendToRecycleBin = Settings.SendToRecycleBin,
+                showHiddenFiles = Settings.ShowHiddenFiles,
+                foldersFirst = Settings.FoldersFirst,
+                defaultViewMode = Settings.DefaultViewMode,
+                themeMode = Settings.ThemeMode,
+                language = Settings.Language,
+                accessMode = Settings.AccessMode,
+                sharedFolderPath = Settings.SharedFolderPath,
+                serverAnonymous = Settings.ServerAnonymous,
+                serverUsername = Settings.ServerUsername,
+                enableCloudflareTunnel = Settings.EnableCloudflareTunnel,
+                tunnelMode = Settings.TunnelMode,
+                cloudflareCustomDomain = Settings.CloudflareCustomDomain
+            };
+            await HttpResponse.WriteJsonAsync(stream, safeSettings, 200, "OK", ct);
             return;
         }
 
@@ -483,13 +618,6 @@ public sealed class LocalWebServerService : IDisposable
             return;
         }
 
-        // פעולות כתיבה - נחסמות ב-Read Only
-        if (Settings.ServerReadOnly && (req.Path == "/api/upload" || req.Path == "/api/mkdir" || req.Path == "/api/delete" ||
-                                      req.Path == "/api/rename" || req.Path == "/api/file/save" || req.Path == "/api/batch/delete"))
-        {
-            await HttpResponse.WriteStatusAsync(stream, 403, "Forbidden", "Server is operating in Read-Only mode.", ct);
-            return;
-        }
 
         // העלאת קבצים
         if (req.Method == "POST" && req.Path == "/api/upload")
@@ -586,55 +714,60 @@ public sealed class LocalWebServerService : IDisposable
         string body = await req.ReadBodyAsStringAsync(ct);
         try
         {
-            var updated = JsonSerializer.Deserialize<AppSettings>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-            if (updated != null)
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+
+            bool changed = false;
+
+            if (root.TryGetProperty("sendToRecycleBin", out var rb) && (rb.ValueKind == JsonValueKind.True || rb.ValueKind == JsonValueKind.False))
             {
-                Settings.ServerReadOnly = updated.ServerReadOnly;
-                Settings.SendToRecycleBin = updated.SendToRecycleBin;
-                Settings.ShowHiddenFiles = updated.ShowHiddenFiles;
-                Settings.FoldersFirst = updated.FoldersFirst;
-                Settings.DefaultViewMode = updated.DefaultViewMode;
-                Settings.ThemeMode = updated.ThemeMode;
-                Settings.AccessMode = updated.AccessMode;
-                Settings.ServerAnonymous = updated.ServerAnonymous;
-                Settings.ServerUsername = updated.ServerUsername;
-                Settings.ServerPassword = updated.ServerPassword;
-
-                if (!string.IsNullOrWhiteSpace(updated.Language))
-                {
-                    Settings.Language = updated.Language;
-                    LocalizationService.Instance.SetLanguage(updated.Language);
-                }
-
-                if (!string.IsNullOrWhiteSpace(updated.SharedFolderPath) && Directory.Exists(updated.SharedFolderPath))
-                {
-                    Settings.SharedFolderPath = updated.SharedFolderPath;
-                }
-
-                if (!string.IsNullOrEmpty(updated.SecurityPin))
-                {
-                    Settings.SecurityPin = updated.SecurityPin;
-                    SecurityService.SetCustomPin(updated.SecurityPin);
-                }
-                else
-                {
-                    Settings.SecurityPin = null;
-                    SecurityService.SetCustomPin(null);
-                }
-
-                SettingsManager.Save(Settings);
-                OnLog?.Invoke("[SETTINGS] Configuration updated and saved successfully.");
-                await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
-                return;
+                Settings.SendToRecycleBin = rb.GetBoolean();
+                changed = true;
             }
+            if (root.TryGetProperty("showHiddenFiles", out var sh) && (sh.ValueKind == JsonValueKind.True || sh.ValueKind == JsonValueKind.False))
+            {
+                Settings.ShowHiddenFiles = sh.GetBoolean();
+                changed = true;
+            }
+            if (root.TryGetProperty("foldersFirst", out var ff) && (ff.ValueKind == JsonValueKind.True || ff.ValueKind == JsonValueKind.False))
+            {
+                Settings.FoldersFirst = ff.GetBoolean();
+                changed = true;
+            }
+            if (root.TryGetProperty("defaultViewMode", out var vm) && vm.ValueKind == JsonValueKind.String)
+            {
+                Settings.DefaultViewMode = vm.GetString() ?? Settings.DefaultViewMode;
+                changed = true;
+            }
+            if (root.TryGetProperty("themeMode", out var tm) && tm.ValueKind == JsonValueKind.String)
+            {
+                Settings.ThemeMode = tm.GetString() ?? Settings.ThemeMode;
+                changed = true;
+            }
+            if (root.TryGetProperty("language", out var lang) && lang.ValueKind == JsonValueKind.String)
+            {
+                string? l = lang.GetString();
+                if (!string.IsNullOrWhiteSpace(l))
+                {
+                    Settings.Language = l;
+                    LocalizationService.Instance.SetLanguage(l);
+                    changed = true;
+                }
+            }
+
+            if (changed)
+            {
+                SettingsManager.Save(Settings);
+                OnLog?.Invoke("[SETTINGS] Client preferences updated and saved successfully.");
+            }
+
+            await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+            return;
         }
         catch (Exception ex)
         {
-            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", ex.Message, ct);
-            return;
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", $"Invalid settings payload: {ex.Message}", ct);
         }
-
-        await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Invalid settings JSON", ct);
     }
 
     private async Task HandleBrowseAsync(HttpRequest req, Stream stream, CancellationToken ct)
@@ -747,7 +880,26 @@ public sealed class LocalWebServerService : IDisposable
             try
             {
                 string mime = MimeTypes.GetMimeType(fullPath);
-                await HttpResponse.WriteFileAsync(stream, fullPath, mime, req.ByteRange, ct);
+                var fileHeaders = new Dictionary<string, string>();
+
+                bool inlineRequested = req.Query.TryGetValue("inline", out var inl) && inl == "true";
+                bool isSafeInlineMime = mime.StartsWith("image/", StringComparison.OrdinalIgnoreCase)
+                                     || mime.StartsWith("video/", StringComparison.OrdinalIgnoreCase)
+                                     || mime.StartsWith("audio/", StringComparison.OrdinalIgnoreCase)
+                                     || mime == "application/pdf"
+                                     || mime.StartsWith("text/plain", StringComparison.OrdinalIgnoreCase);
+
+                string encodedName = Uri.EscapeDataString(fi.Name);
+                if (inlineRequested && isSafeInlineMime && !fi.Extension.Equals(".html", StringComparison.OrdinalIgnoreCase) && !fi.Extension.Equals(".htm", StringComparison.OrdinalIgnoreCase) && !fi.Extension.Equals(".svg", StringComparison.OrdinalIgnoreCase))
+                {
+                    fileHeaders["Content-Disposition"] = $@"inline; filename=""{encodedName}""; filename*=UTF-8''{encodedName}";
+                }
+                else
+                {
+                    fileHeaders["Content-Disposition"] = $@"attachment; filename=""{encodedName}""; filename*=UTF-8''{encodedName}";
+                }
+
+                await HttpResponse.WriteFileAsync(stream, fullPath, mime, req.ByteRange, fileHeaders, ct);
             }
             finally
             {
@@ -918,7 +1070,12 @@ public sealed class LocalWebServerService : IDisposable
         bool valid = SecurityService.ValidatePin(req.ClientIp, pin);
         if (valid)
         {
-            await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+            string sessionToken = SecurityService.CreateSession();
+            var authHeaders = new Dictionary<string, string>
+            {
+                { "Set-Cookie", $"es_session={sessionToken}; Path=/; HttpOnly; SameSite=Strict; Max-Age=86400" }
+            };
+            await HttpResponse.WriteJsonAsync(stream, new { success = true, token = sessionToken }, 200, "OK", authHeaders, ct);
         }
         else
         {
@@ -1099,28 +1256,41 @@ public sealed class LocalWebServerService : IDisposable
 
     private string SafeResolvePath(string? path)
     {
+        string normRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(RootDirectory)) + Path.DirectorySeparatorChar;
+
         if (string.IsNullOrWhiteSpace(path))
         {
-            return RootDirectory;
+            return normRoot;
         }
 
+        string full;
         if (Path.IsPathRooted(path))
         {
-            string full = Path.GetFullPath(path);
-            if (Settings.AccessMode == "FullComputer" || full.StartsWith(RootDirectory, StringComparison.OrdinalIgnoreCase))
-            {
-                return full;
-            }
-            return RootDirectory;
+            full = Path.GetFullPath(path);
+        }
+        else
+        {
+            string rel = path.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+            full = Path.GetFullPath(Path.Combine(normRoot, rel));
         }
 
-        string rel = path.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
-        string combined = Path.GetFullPath(Path.Combine(RootDirectory, rel));
-        if (Settings.AccessMode != "FullComputer" && !combined.StartsWith(RootDirectory, StringComparison.OrdinalIgnoreCase))
+        if (Settings.AccessMode == "FullComputer")
         {
-            return RootDirectory;
+            return full;
         }
-        return combined;
+
+        // בדיקה קפדנית של גבולות הספריה המשותפת כולל מפריד נתיב למניעת גישה לתיקיות אחיות
+        string checkPath = Path.TrimEndingDirectorySeparator(full);
+        string rootWithoutSep = Path.TrimEndingDirectorySeparator(normRoot);
+
+        if (!checkPath.Equals(rootWithoutSep, StringComparison.OrdinalIgnoreCase) &&
+            !full.StartsWith(normRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            OnLog?.Invoke($"[SECURITY] Path traversal blocked: {path} attempting to escape {normRoot}");
+            throw new UnauthorizedAccessException("Access outside shared root is forbidden.");
+        }
+
+        return full;
     }
 
     private async Task HandleSecurePageAsync(HttpRequest req, Stream stream, CancellationToken ct)
@@ -1230,16 +1400,26 @@ public sealed class LocalWebServerService : IDisposable
             return;
         }
 
-        // הגדלת מונה ההורדות
-        item.DownloadCount++;
-        OnLog?.Invoke($"[SECURE DOWNLOAD] {req.ClientIp} downloaded {item.FileName} (Count: {item.DownloadCount}/{item.MaxDownloads})");
+        // הגדלת מונה ההורדות באופן אטומי
+        int currentCount = item.IncrementDownloadCount();
+        if (item.MaxDownloads > 0 && currentCount > item.MaxDownloads)
+        {
+            await HttpResponse.WriteStatusAsync(stream, 410, "Gone", "Link has expired or download limit reached.", ct);
+            return;
+        }
+        OnLog?.Invoke($"[SECURE DOWNLOAD] {req.ClientIp} downloaded {item.FileName} (Count: {currentCount}/{item.MaxDownloads})");
 
         var fi = new FileInfo(item.FilePath);
         var activeConn = LiveNetworkMonitorService.Instance.RegisterConnection(req.ClientIp, item.FileName, fi.Length);
         try
         {
             string contentType = MimeTypes.GetMimeType(item.FileName);
-            await HttpResponse.WriteFileAsync(stream, item.FilePath, contentType, req.ByteRange, ct);
+            string encodedName = Uri.EscapeDataString(item.FileName);
+            var secureDlHeaders = new Dictionary<string, string>
+            {
+                { "Content-Disposition", $@"attachment; filename=""{encodedName}""; filename*=UTF-8''{encodedName}" }
+            };
+            await HttpResponse.WriteFileAsync(stream, item.FilePath, contentType, req.ByteRange, secureDlHeaders, ct);
         }
         finally
         {

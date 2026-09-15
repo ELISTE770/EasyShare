@@ -1317,7 +1317,7 @@
         <button class="btn btn-icon" onclick="closeTextEditor()">✕</button>
       </div>
       <div class="modal-body" style="padding:0.75rem;">
-        <textarea id="textEditorContent" class="text-editor-textarea" spellcheck="false"></textarea>
+        <textarea id="textEditorContent" class="text-editor-textarea" spellcheck="false" dir="ltr"></textarea>
       </div>
       <div class="modal-footer">
         <span id="textEditorStatus" style="margin-left:auto; font-size:0.8rem; color:var(--text-muted);"></span>
@@ -1439,6 +1439,27 @@
             🚀 שלח מיד ללוח המחשב
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודל אימות PIN מאובטח (PIN Authentication Modal) -->
+  <div class="modal-overlay" id="pinModal" style="z-index:9999;">
+    <div class="modal-card" style="max-width:420px; text-align:center;">
+      <div class="modal-header" style="justify-content:center;">
+        <h3 id="pinModalTitle">🔒 נדרש קוד אימות PIN</h3>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:1.2rem; padding:1rem 0.5rem;">
+        <p id="pinModalDesc" style="font-size:0.875rem; color:var(--text-muted); margin:0;">
+          שרת השיתוף מאובטח בקוד PIN. אנא הזן את הקוד שהוגדר במחשב כדי לגשת לקבצים:
+        </p>
+        <div>
+          <input type="password" id="pinModalInput" class="form-control" placeholder="••••••••" style="width:100%; text-align:center; font-size:1.4rem; letter-spacing:4px; font-weight:bold; height:48px;" autocomplete="current-password">
+          <div id="pinModalError" style="color:var(--danger); font-size:0.85rem; margin-top:0.6rem; display:none; font-weight:600;"></div>
+        </div>
+        <button class="btn btn-primary" id="btnSubmitPin" style="width:100%; height:46px; font-size:1rem;" onclick="submitPinAuth()">
+          🔓 כניסה לשרת
+        </button>
       </div>
     </div>
   </div>
@@ -1930,12 +1951,92 @@
     let slideshowInterval = null;
     let activeUploads = [];
 
+    // יירוט אוטומטי של קריאות fetch להזרקת PIN והצגת מודאל אימות ב-401
+    const _origFetch = window.fetch;
+    window.fetch = async function(url, options = {}) {
+      options.headers = options.headers || {};
+      const pin = sessionStorage.getItem('es_pin');
+      if (pin) {
+        if (options.headers instanceof Headers) {
+          if (!options.headers.has('X-PIN')) options.headers.set('X-PIN', pin);
+        } else if (Array.isArray(options.headers)) {
+          options.headers.push(['X-PIN', pin]);
+        } else {
+          options.headers['X-PIN'] = pin;
+        }
+      }
+      const response = await _origFetch(url, options);
+      if (response.status === 401 && !url.toString().includes('/api/auth/pin')) {
+        showPinPrompt();
+      }
+      return response;
+    };
+
+    function showPinPrompt() {
+      const modal = document.getElementById('pinModal');
+      const input = document.getElementById('pinModalInput');
+      const errorDiv = document.getElementById('pinModalError');
+      if (errorDiv) errorDiv.style.display = 'none';
+      if (input) input.value = '';
+      if (modal) modal.classList.add('active');
+      setTimeout(() => input?.focus(), 150);
+    }
+
+    async function submitPinAuth() {
+      const pinInput = document.getElementById('pinModalInput');
+      const errorDiv = document.getElementById('pinModalError');
+      const pin = pinInput ? pinInput.value.trim() : '';
+      if (!pin) {
+        if (errorDiv) {
+          errorDiv.textContent = currentLang === 'en' ? 'Please enter PIN code.' : 'אנא הזן קוד PIN.';
+          errorDiv.style.display = 'block';
+        }
+        return;
+      }
+
+      try {
+        const res = await _origFetch('/api/auth/pin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+
+        if (res.ok) {
+          if (errorDiv) errorDiv.style.display = 'none';
+          document.getElementById('pinModal')?.classList.remove('active');
+          sessionStorage.setItem('es_pin', pin);
+          await fetchSettingsAndStatus();
+          if (currentPath) loadDirectory(currentPath);
+          else loadOverview();
+        } else {
+          if (errorDiv) {
+            errorDiv.textContent = currentLang === 'en' ? 'Invalid PIN code.' : 'קוד PIN שגוי, נסה שוב.';
+            errorDiv.style.display = 'block';
+          }
+          if (pinInput) {
+            pinInput.value = '';
+            pinInput.focus();
+          }
+        }
+      } catch (err) {
+        if (errorDiv) {
+          errorDiv.textContent = currentLang === 'en' ? 'Connection error.' : 'שגיאת תקשורת עם השרת.';
+          errorDiv.style.display = 'block';
+        }
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       initTheme();
       initDropzone();
       initPwa();
       initGalleryTouchSwipe();
       setLanguage(currentLang, false);
+
+      document.getElementById('pinModalInput')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitPinAuth();
+      });
+
       await fetchSettingsAndStatus();
       await loadOverview();
     });
@@ -1954,7 +2055,7 @@
             document.getElementById('btnNewFolder').style.display = 'none';
             document.getElementById('btnBatchDelete').style.display = 'none';
           }
-          if (appSettings.securityPin) {
+          if (appSettings.isPinRequired || appSettings.hasPin || appSettings.securityPin) {
             document.getElementById('pinBadge').style.display = 'inline-block';
           }
         }
@@ -2189,10 +2290,11 @@
     }
 
     function toggleSelectAll(checked) {
+      const filtered = getFilteredFiles();
       if (checked) {
-        currentFiles.forEach(f => selectedPaths.add(f.path));
+        filtered.forEach(f => selectedPaths.add(f.path));
       } else {
-        selectedPaths.clear();
+        filtered.forEach(f => selectedPaths.delete(f.path));
       }
       updateBatchBar();
       renderFilesList();
@@ -2622,6 +2724,8 @@
     // פונקציות ניווט ותצוגה
     function updateBreadcrumbs(fullPath) {
       const container = document.getElementById('breadcrumbs');
+      container.style.direction = 'ltr';
+      container.style.textAlign = currentLang === 'he' ? 'right' : 'left';
       container.innerHTML = `<span class="crumb-item" onclick="loadOverview()">${t('thisPc')}</span>`;
 
       const parts = fullPath.split(/[\/\\]/).filter(p => p.length > 0);
@@ -2960,7 +3064,12 @@
 
     function escapeJsString(s) {
       if (!s) return '';
-      return s.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return s.replace(/&/g, '&amp;')
+              .replace(/\\/g, '\\\\')
+              .replace(/'/g, "\\'")
+              .replace(/"/g, '&quot;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;');
     }
   </script>
 </body>

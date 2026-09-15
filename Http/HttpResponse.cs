@@ -20,29 +20,48 @@ public static class HttpResponse
         WriteIndented = false
     };
 
-    public static async Task WriteTextAsync(
+    public static Task WriteTextAsync(
         Stream stream,
         string content,
         string contentType = "text/plain; charset=utf-8",
         int statusCode = 200,
         string statusText = "OK",
         CancellationToken ct = default)
+        => WriteTextAsync(stream, content, contentType, statusCode, statusText, null, ct);
+
+    public static async Task WriteTextAsync(
+        Stream stream,
+        string content,
+        string contentType,
+        int statusCode,
+        string statusText,
+        Dictionary<string, string>? customHeaders,
+        CancellationToken ct = default)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(content);
-        await WriteHeadersAsync(stream, statusCode, statusText, contentType, bytes.Length, null, ct);
+        await WriteHeadersAsync(stream, statusCode, statusText, contentType, bytes.Length, customHeaders, ct);
         await stream.WriteAsync(bytes, ct);
         await stream.FlushAsync(ct);
     }
 
-    public static async Task WriteJsonAsync<T>(
+    public static Task WriteJsonAsync<T>(
         Stream stream,
         T data,
         int statusCode = 200,
         string statusText = "OK",
         CancellationToken ct = default)
+        => WriteJsonAsync(stream, data, statusCode, statusText, null, ct);
+
+    public static async Task WriteJsonAsync<T>(
+        Stream stream,
+        T data,
+        int statusCode,
+        string statusText,
+        Dictionary<string, string>? customHeaders,
+        CancellationToken ct = default)
     {
         string json = JsonSerializer.Serialize(data, JsonOpts);
-        await WriteTextAsync(stream, json, "application/json; charset=utf-8", statusCode, statusText, ct);
+        await WriteTextAsync(stream, json, "application/json; charset=utf-8", statusCode, statusText, customHeaders, ct);
     }
 
     public static async Task WriteStatusAsync(
@@ -53,7 +72,7 @@ public static class HttpResponse
         CancellationToken ct = default)
     {
         string body = message ?? $"{statusCode} {statusText}";
-        await WriteTextAsync(stream, body, "text/plain; charset=utf-8", statusCode, statusText, ct);
+        await WriteTextAsync(stream, body, "text/plain; charset=utf-8", statusCode, statusText, null, ct);
     }
 
     public static async Task WriteUnauthorizedBasicAsync(Stream stream, string realm = "EasyShare", CancellationToken ct = default)
@@ -68,6 +87,14 @@ public static class HttpResponse
         await stream.FlushAsync(ct);
     }
 
+    public static Task WriteFileAsync(
+        Stream stream,
+        string filePath,
+        string contentType,
+        (long Start, long? End)? rangeRequest,
+        CancellationToken ct = default)
+        => WriteFileAsync(stream, filePath, contentType, rangeRequest, null, ct);
+
     /// <summary>
     /// משדר קובץ מלא או קטע מקובץ (HTTP 206 Partial Content) בהתאם לדרישת ה-Range של הדפדפן.
     /// קריטי עבור Seeking / Scrubbing בקובצי וידאו ואודיו.
@@ -77,6 +104,7 @@ public static class HttpResponse
         string filePath,
         string contentType,
         (long Start, long? End)? rangeRequest,
+        Dictionary<string, string>? additionalHeaders,
         CancellationToken ct = default)
     {
         var fileInfo = new FileInfo(filePath);
@@ -112,6 +140,14 @@ public static class HttpResponse
                 { "Accept-Ranges", "bytes" }
             };
 
+            if (additionalHeaders != null)
+            {
+                foreach (var kvp in additionalHeaders)
+                {
+                    rangeHeaders[kvp.Key] = kvp.Value;
+                }
+            }
+
             await WriteHeadersAsync(stream, 206, "Partial Content", contentType, rangeLength, rangeHeaders, ct);
 
             // הזרמת הטווח המבוקש ישירות מהדיסק ל-Socket
@@ -140,6 +176,14 @@ public static class HttpResponse
             {
                 { "Accept-Ranges", "bytes" }
             };
+
+            if (additionalHeaders != null)
+            {
+                foreach (var kvp in additionalHeaders)
+                {
+                    headers[kvp.Key] = kvp.Value;
+                }
+            }
 
             await WriteHeadersAsync(stream, 200, "OK", contentType, totalLength, headers, ct);
 

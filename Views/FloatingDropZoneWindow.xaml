@@ -60,7 +60,7 @@
             <Grid>
                 <!-- תצוגה רגילה -->
                 <StackPanel x:Name="PnlNormal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtIcon" Text="🚀" FontSize="24" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="TxtIcon" Text="↑" FontSize="22" FontWeight="Bold" Foreground="{StaticResource BrushAccentCyan}" HorizontalAlignment="Center" />
                     <TextBlock x:Name="TxtDropLabel" Text="גרור לכאן" FontSize="8.5" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0" />
                 </StackPanel>
 

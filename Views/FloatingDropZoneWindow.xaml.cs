@@ -47,7 +47,7 @@ public partial class FloatingDropZoneWindow : Window
         var menu = new System.Windows.Controls.ContextMenu();
 
         bool isHe = LocalizationService.Instance.CurrentLanguage == LocalizationService.LanguageHebrew;
-        var mnuOpen = new System.Windows.Controls.MenuItem { Header = isHe ? "פתח את החלון הראשי 💻" : "Open Main Window 💻" };
+        var mnuOpen = new System.Windows.Controls.MenuItem { Header = isHe ? "פתח את החלון הראשי" : "Open Main Window" };
         mnuOpen.Click += (s, e) =>
         {
             var win = System.Windows.Application.Current.MainWindow;
@@ -59,10 +59,10 @@ public partial class FloatingDropZoneWindow : Window
             }
         };
 
-        var mnuSnap = new System.Windows.Controls.MenuItem { Header = isHe ? "הצמד לפינת המסך 📌" : "Snap to Corner 📌" };
+        var mnuSnap = new System.Windows.Controls.MenuItem { Header = isHe ? "הצמד לפינת המסך" : "Snap to Corner" };
         mnuSnap.Click += (s, e) => SnapToCorner();
 
-        var mnuHide = new System.Windows.Controls.MenuItem { Header = isHe ? "הסתר ווידג'ט ❌" : "Hide Widget ❌" };
+        var mnuHide = new System.Windows.Controls.MenuItem { Header = isHe ? "הסתר ווידג'ט" : "Hide Widget" };
         mnuHide.Click += (s, e) => Hide();
 
         menu.Items.Add(mnuOpen);
@@ -88,7 +88,7 @@ public partial class FloatingDropZoneWindow : Window
         {
             _pulseAnim?.Begin();
             OuterGlow.Fill = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Green
-            TxtIcon.Text = "📥";
+            TxtIcon.Text = "↓";
         }
     }
 
@@ -120,13 +120,13 @@ public partial class FloatingDropZoneWindow : Window
             if (!string.IsNullOrEmpty(url))
             {
                 Clipboard.SetText(url);
-                TxtIcon.Text = "✅";
+                TxtIcon.Text = "✓";
                 PnlNormal.Visibility = Visibility.Visible;
                 PrgBusy.Visibility = Visibility.Collapsed;
 
                 OuterGlow.Fill = new SolidColorBrush(Color.FromRgb(16, 185, 129));
                 await Task.Delay(1800);
-                TxtIcon.Text = "🚀";
+                TxtIcon.Text = "↑";
             }
         }
         catch (Exception ex)

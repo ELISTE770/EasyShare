@@ -25,7 +25,13 @@ public class SecureTransferItem
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public DateTime ExpiresAt { get; set; }
     public int MaxDownloads { get; set; } = 1; // 1 = חד פעמי (השמדה עצמית), 0 = ללא הגבלה
-    public int DownloadCount { get; set; } = 0;
+    private int _downloadCount = 0;
+    public int DownloadCount
+    {
+        get => Volatile.Read(ref _downloadCount);
+        set => Interlocked.Exchange(ref _downloadCount, value);
+    }
+    public int IncrementDownloadCount() => Interlocked.Increment(ref _downloadCount);
     public bool IsCancelled { get; set; } = false;
 
     public bool IsFolder { get; set; } = false;
@@ -63,7 +69,7 @@ public class SecureTransferItem
                 ? (isHe ? $" | נותרו {Math.Max(0, MaxDownloads - DownloadCount)} הורדות" : $" | {Math.Max(0, MaxDownloads - DownloadCount)} downloads remaining") 
                 : (isHe ? " | הורדות ללא הגבלה" : " | Unlimited downloads");
             if (ExpiresAt == DateTime.MaxValue) 
-                return isHe ? $"פעיל לתמיד (ללא תפוגה ♾️{dlInfo})" : $"Active permanently (No expiration ♾️{dlInfo})";
+                return isHe ? $"פעיל לתמיד (ללא תפוגה{dlInfo})" : $"Active permanently (No expiration{dlInfo})";
             var remaining = ExpiresAt - DateTime.Now;
             return isHe ? $"פעיל (נותרו {Math.Max(1, (int)remaining.TotalMinutes)} דקות{dlInfo})" : $"Active ({Math.Max(1, (int)remaining.TotalMinutes)} mins left{dlInfo})";
         }
@@ -78,6 +84,8 @@ public sealed class SecureTransferService
 {
     private static readonly ConcurrentDictionary<string, SecureTransferItem> _transfers = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IpAttemptRecord> _generalIpAttempts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, DateTime> _activeSessions = new(StringComparer.Ordinal);
+    private readonly TimeSpan _sessionDuration = TimeSpan.FromHours(24);
     private readonly TimeSpan _lockoutDuration = TimeSpan.FromMinutes(15);
     private const int MaxFailedAttempts = 6;
 
@@ -92,7 +100,31 @@ public sealed class SecureTransferService
         ActivePin = initialPin;
     }
 
-    public void SetCustomPin(string? pin) => ActivePin = string.IsNullOrWhiteSpace(pin) ? null : pin.Trim();
+    public void SetCustomPin(string? pin)
+    {
+        ActivePin = string.IsNullOrWhiteSpace(pin) ? null : pin.Trim();
+        RevokeAllSessions();
+    }
+
+    public string CreateSession()
+    {
+        string token = GenerateRandomToken(32);
+        _activeSessions[token] = DateTime.UtcNow.Add(_sessionDuration);
+        return token;
+    }
+
+    public bool IsValidSession(string? token)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return false;
+        if (_activeSessions.TryGetValue(token, out var expiry))
+        {
+            if (DateTime.UtcNow < expiry) return true;
+            _activeSessions.TryRemove(token, out _);
+        }
+        return false;
+    }
+
+    public void RevokeAllSessions() => _activeSessions.Clear();
 
     public string GenerateNewRandomPin()
     {

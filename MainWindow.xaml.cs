@@ -109,11 +109,11 @@ public partial class MainWindow : Window
             bool isHe = LocalizationService.Instance.CurrentLanguage == LocalizationService.LanguageHebrew;
 
             string od = oneDrive.IsAvailableLocally 
-                ? (isHe ? "⛅ OneDrive: מסונכרן מקומית במחשב" : "⛅ OneDrive: Locally synced on PC")
-                : (isHe ? "⛅ OneDrive: זמין ב-Web" : "⛅ OneDrive: Available on Web");
+                ? (isHe ? "OneDrive: מסונכרן מקומית" : "OneDrive: Locally synced")
+                : (isHe ? "OneDrive: זמין ב-Web" : "OneDrive: Available on Web");
             string gd = gdrive.IsAvailableLocally 
-                ? (isHe ? "📁 Google Drive: כונן מקומי פעיל" : "📁 Google Drive: Local drive active")
-                : (isHe ? "📁 Google Drive: זמין ב-Web" : "📁 Google Drive: Available on Web");
+                ? (isHe ? "Google Drive: כונן מקומי פעיל" : "Google Drive: Local drive active")
+                : (isHe ? "Google Drive: זמין ב-Web" : "Google Drive: Available on Web");
 
             TxtCloudServicesStatus.Text = $"{od}  |  {gd}";
         }
@@ -214,7 +214,16 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        if (!_isExplicitExit)
+        if (_isExplicitExit)
+        {
+            _server.Dispose();
+            _notifyIcon?.Dispose();
+            base.OnClosing(e);
+            return;
+        }
+
+        bool minimizeToTray = !string.Equals(_server.Settings.CloseAction, "ExitApplication", StringComparison.OrdinalIgnoreCase);
+        if (minimizeToTray)
         {
             // מזעור למגש המערכת במקום סגירה מלאה שמפילה את השרת
             e.Cancel = true;
@@ -224,9 +233,8 @@ public partial class MainWindow : Window
         }
         else
         {
-            _server.Dispose();
-            _notifyIcon?.Dispose();
-            base.OnClosing(e);
+            // סגירה מלאה ויציאה מהתוכנה (מכבה את השרת לחלוטין)
+            ExitApplication();
         }
     }
 
@@ -251,7 +259,10 @@ public partial class MainWindow : Window
             TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Emerald Green
             StatusDot.Fill = new SolidColorBrush(Color.FromRgb(16, 185, 129));
             BtnToggleServerTop.Content = LocalizationService.Instance["StopServer"];
-            BtnToggleServerTop.Background = new SolidColorBrush(Color.FromRgb(220, 38, 38)); // Red
+            BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 239, 68, 68));
+            BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 239, 68, 68));
+            BtnToggleServerTop.BorderThickness = new Thickness(1);
+            BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(254, 202, 202));
 
             TxtLocalUrl.Text = _server.LocalUrl;
             UpdateQrCodeImage(_server.LocalUrl);
@@ -263,7 +274,10 @@ public partial class MainWindow : Window
             TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(239, 68, 68));
             StatusDot.Fill = new SolidColorBrush(Color.FromRgb(239, 68, 68));
             BtnToggleServerTop.Content = LocalizationService.Instance["StartServer"];
-            BtnToggleServerTop.Background = new SolidColorBrush(Color.FromRgb(16, 185, 129));
+            BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 16, 185, 129));
+            BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 16, 185, 129));
+            BtnToggleServerTop.BorderThickness = new Thickness(1);
+            BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(167, 243, 208));
 
             AppendLog($"[SERVER ERROR] {ex.Message}");
             MessageBox.Show($"Error starting server on port {_server.Port}:\n{ex.Message}", LocalizationService.Instance["MsgErrorTitle"], MessageBoxButton.OK, MessageBoxImage.Error);
@@ -278,7 +292,10 @@ public partial class MainWindow : Window
         TxtServerStatus.Foreground = new SolidColorBrush(Color.FromRgb(148, 163, 184)); // Gray Muted
         StatusDot.Fill = new SolidColorBrush(Color.FromRgb(148, 163, 184));
         BtnToggleServerTop.Content = LocalizationService.Instance["StartServer"];
-        BtnToggleServerTop.Background = new SolidColorBrush(Color.FromRgb(16, 185, 129)); // Green
+        BtnToggleServerTop.Background = new SolidColorBrush(Color.FromArgb(40, 16, 185, 129));
+        BtnToggleServerTop.BorderBrush = new SolidColorBrush(Color.FromArgb(180, 16, 185, 129));
+        BtnToggleServerTop.BorderThickness = new Thickness(1);
+        BtnToggleServerTop.Foreground = new SolidColorBrush(Color.FromRgb(167, 243, 208));
 
         AppendLog("[SERVER] Server was stopped by user.");
     }
@@ -746,7 +763,7 @@ public partial class MainWindow : Window
             _lastSharedCloudPath = result.SavedPath;
 
             BorderShareResult.Visibility = Visibility.Visible;
-            TxtResultHeader.Text = $"🎉 {result.Message}";
+            TxtResultHeader.Text = result.Message;
             TxtResultUrl.Text = !string.IsNullOrEmpty(result.SavedPath) ? result.SavedPath : result.WebUrl;
             TxtResultPinDisplay.Text = string.Format(loc["SecuredInAccount"], result.ProviderName);
 
@@ -895,6 +912,19 @@ public partial class MainWindow : Window
             ChkEnableTunnel.IsChecked = true;
         }
 
+        // פעולת כפתור סגירה (X)
+        if (CmbSettingsCloseAction != null)
+        {
+            foreach (ComboBoxItem item in CmbSettingsCloseAction.Items)
+            {
+                if (string.Equals(item.Tag?.ToString(), settings.CloseAction, StringComparison.OrdinalIgnoreCase))
+                {
+                    CmbSettingsCloseAction.SelectedItem = item;
+                    break;
+                }
+            }
+        }
+
         // טעינת שפה ולוקליזציה
         LocalizationService.Instance.SetLanguage(settings.Language ?? LocalizationService.LanguageHebrew);
         ApplyLocalization();
@@ -926,7 +956,7 @@ public partial class MainWindow : Window
         Title = loc["AppTitle"];
 
         if (BtnLanguageToggleTop != null)
-            BtnLanguageToggleTop.Content = isHe ? "🌐 English" : "🌐 עברית";
+            BtnLanguageToggleTop.Content = isHe ? "English" : "עברית";
 
         if (TxtAppTitle != null) TxtAppTitle.Text = loc["HeaderTitle"];
         if (TxtAppSubtitle != null) TxtAppSubtitle.Text = loc["HeaderSubtitle"];
@@ -960,8 +990,8 @@ public partial class MainWindow : Window
         if (LblTunnelTitle != null) LblTunnelTitle.Text = loc["TunnelTitle"];
         if (LblTunnelSubtitle != null) LblTunnelSubtitle.Text = loc["TunnelSubtitle"];
         if (ChkEnableTunnel != null) ChkEnableTunnel.Content = loc["EnableTunnel"];
-        if (RbTunnelRandom != null) RbTunnelRandom.Content = isHe ? "מנהור אקראי (Quick Tunnel - ללא הגדרה)" : "Random Tunnel (Quick Tunnel - No config)";
-        if (RbTunnelCustom != null) RbTunnelCustom.Content = isHe ? "דומיין אישי קבוע (Custom Domain עם Token)" : "Custom Domain (with Cloudflare Token)";
+        if (RbTunnelRandom != null) RbTunnelRandom.Content = isHe ? "מנהור מהיר (Cloudflare Quick Tunnel)" : "Quick Tunnel (Cloudflare)";
+        if (RbTunnelCustom != null) RbTunnelCustom.Content = isHe ? "דומיין אישי (Cloudflare Token)" : "Custom Domain (with Cloudflare Token)";
         if (LblCustomDomainUrl != null) LblCustomDomainUrl.Text = loc["LblCustomDomainUrl"];
         if (LblTunnelToken != null) LblTunnelToken.Text = loc["LblTunnelToken"];
         if (TxtCustomDomainUrl != null) TxtCustomDomainUrl.ToolTip = loc["TipCustomDomainUrl"];
@@ -976,26 +1006,26 @@ public partial class MainWindow : Window
         if (LblEventLogTitle != null) LblEventLogTitle.Text = loc["ConsoleLogTitle"];
         if (LblQrTitle != null) LblQrTitle.Text = loc["QrScanTitle"];
         if (LblQrSubtitle != null) LblQrSubtitle.Text = loc["QrScanSubtitle"];
-        if (LblQrFooter != null) LblQrFooter.Text = isHe ? "שיתוף מלא | נגני מדיה | העלאה והורדה" : "Full Sharing | Media Players | Upload & Download";
+        if (LblQrFooter != null) LblQrFooter.Text = isHe ? "חיבור רשת ישיר | נגני מדיה | העלאה והורדה" : "Direct Network Link | Media Players | Upload & Download";
 
         // Tab 2: Secure Share
-        if (LblSecureShareTitle != null) LblSecureShareTitle.Text = isHe ? "🔒 יצירת קישור שיתוף מאובטח לקובץ או תיקייה" : "🔒 Create Secure Share Link for File or Folder";
-        if (LblSecureShareSubtitle != null) LblSecureShareSubtitle.Text = isHe ? "שתף קבצים ברשת, באינטרנט, בענן מוצפן, או ישירות דרך Google Drive ו-OneDrive" : "Share files over LAN, Internet, encrypted Cloud, or directly via Google Drive & OneDrive";
+        if (LblSecureShareTitle != null) LblSecureShareTitle.Text = isHe ? "יצירת קישור שיתוף מאובטח לקובץ או תיקייה" : "Create Secure Share Link for File or Folder";
+        if (LblSecureShareSubtitle != null) LblSecureShareSubtitle.Text = isHe ? "שתף קבצים ברשת המקומית, באינטרנט, בענן מוצפן, או ישירות דרך Google Drive ו-OneDrive" : "Share files over LAN, Internet, encrypted Cloud, or directly via Google Drive & OneDrive";
         if (TxtSecureTarget != null && (TxtSecureTarget.Text == "בחר קובץ או תיקייה לשיתוף..." || TxtSecureTarget.Text == "Select file or folder to share..."))
         {
             TxtSecureTarget.Text = loc["ChoosePlaceholder"];
         }
         if (BtnSelectFile != null) BtnSelectFile.Content = loc["BtnChooseFile"];
         if (BtnSelectFolder != null) BtnSelectFolder.Content = loc["BtnChooseFolder"];
-        if (LblCloudDirectTitle != null) LblCloudDirectTitle.Text = isHe ? "☁️ שיתוף ישיר לשירותי הענן האישיים (Google Drive & OneDrive)" : "☁️ Direct Share to Personal Cloud (Google Drive & OneDrive)";
+        if (LblCloudDirectTitle != null) LblCloudDirectTitle.Text = isHe ? "שיתוף ישיר לשירותי ענן (Google Drive & OneDrive)" : "Direct Share to Cloud Services (Google Drive & OneDrive)";
         if (BtnShareGoogleDriveDirect != null)
         {
-            BtnShareGoogleDriveDirect.Content = isHe ? "📁 שתף ב-Google Drive" : "📁 Share to Google Drive";
+            BtnShareGoogleDriveDirect.Content = isHe ? "שיתוף ב-Google Drive" : "Share to Google Drive";
             BtnShareGoogleDriveDirect.ToolTip = loc["TipShareGoogleDrive"];
         }
         if (BtnShareOneDriveDirect != null)
         {
-            BtnShareOneDriveDirect.Content = isHe ? "⛅ שתף ב-OneDrive" : "⛅ Share to OneDrive";
+            BtnShareOneDriveDirect.Content = isHe ? "שיתוף ב-OneDrive" : "Share to OneDrive";
             BtnShareOneDriveDirect.ToolTip = loc["TipShareOneDrive"];
         }
         if (LblChannel != null) LblChannel.Text = loc["ChannelTitle"];
@@ -1046,6 +1076,9 @@ public partial class MainWindow : Window
         if (ChkSettingsContextMenu != null) ChkSettingsContextMenu.Content = loc["ChkContextMenu"];
         if (ChkSettingsDropZone != null) ChkSettingsDropZone.Content = loc["ChkDropZone"];
         if (ChkSettingsAutoStartTunnel != null) ChkSettingsAutoStartTunnel.Content = isHe ? "הפעל מנהור Cloudflare אוטומטית בהפעלת השרת" : "Auto-start Cloudflare Tunnel on server start";
+        if (LblSettingsCloseAction != null) LblSettingsCloseAction.Text = loc["CloseActionLabel"];
+        if (CmbItemCloseTray != null) CmbItemCloseTray.Content = loc["CloseActionTray"];
+        if (CmbItemCloseExit != null) CmbItemCloseExit.Content = loc["CloseActionExit"];
         if (BtnSaveSettings != null) BtnSaveSettings.Content = loc["BtnSaveSettings"];
 
         if (CmbSettingsLanguage != null)
@@ -1129,6 +1162,7 @@ public partial class MainWindow : Window
         settings.TunnelMode = (RbTunnelCustom.IsChecked == true) ? "CustomDomain" : "Random";
         settings.CloudflareCustomDomain = TxtCustomDomainUrl.Text.Trim();
         settings.CloudflareTunnelToken = TxtTunnelToken.Text.Trim();
+        settings.CloseAction = (CmbSettingsCloseAction.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "MinimizeToTray";
 
         bool shouldRegisterContext = ChkSettingsContextMenu.IsChecked ?? false;
         if (shouldRegisterContext != ShellContextMenuService.IsContextMenuRegistered())
