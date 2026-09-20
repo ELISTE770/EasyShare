@@ -50,6 +50,56 @@ public class SecureTransferItem
 
     public string CancelButtonText => Core.LocalizationService.Instance.CurrentLanguage == Core.LocalizationService.LanguageHebrew ? "בטל קישור ✕" : "Cancel Link ✕";
 
+    public string FileIcon => IsFolder ? "📁" : (FileName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase) ? "📦" : (FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase) ? "📕" : (FileName.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase) || FileName.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase) ? "🎬" : (FileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) || FileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ? "🖼️" : "📄"))));
+
+    public string FormattedSize
+    {
+        get
+        {
+            if (FileSizeBytes <= 0) return "—";
+            if (FileSizeBytes > 1024 * 1024 * 1024) return $"{FileSizeBytes / (1024.0 * 1024 * 1024):F2} GB";
+            if (FileSizeBytes > 1024 * 1024) return $"{FileSizeBytes / (1024.0 * 1024):F1} MB";
+            return $"{Math.Max(1, FileSizeBytes / 1024)} KB";
+        }
+    }
+
+    public string FormattedCreatedAt => CreatedAt.ToString("dd/MM/yyyy HH:mm");
+
+    public string FormattedExpiresAt => ExpiresAt == DateTime.MaxValue ? (Core.LocalizationService.Instance.CurrentLanguage == Core.LocalizationService.LanguageHebrew ? "ללא תפוגה" : "No Expiration") : ExpiresAt.ToString("dd/MM/yyyy HH:mm");
+
+    public string SecurityDisplay => string.IsNullOrWhiteSpace(PinCode) ? (Core.LocalizationService.Instance.CurrentLanguage == Core.LocalizationService.LanguageHebrew ? "🔓 פתוח" : "🔓 Open") : $"🔒 PIN: {PinCode}";
+
+    public string EffectiveUrl => !string.IsNullOrWhiteSpace(ShareUrl) ? ShareUrl : (!string.IsNullOrWhiteSpace(CloudDirectUrl) ? CloudDirectUrl : "—");
+
+    public string ChannelDisplay
+    {
+        get
+        {
+            bool isHe = Core.LocalizationService.Instance.CurrentLanguage == Core.LocalizationService.LanguageHebrew;
+            return Channel switch
+            {
+                "LAN" => isHe ? "🏠 רשת מקומית (LAN)" : "🏠 Local Network (LAN)",
+                "Tunnel" => isHe ? "🌐 מנהרת Cloudflare" : "🌐 Cloudflare Tunnel",
+                "DirectCloud" => isHe ? "⚡ ענן ציבורי מהיר" : "⚡ Direct Cloud",
+                "Cloud" => isHe ? "☁️ ענן מוצפן אפמראלי" : "☁️ Ephemeral Cloud Relay",
+                "OneDrive" => "📁 OneDrive",
+                "GoogleDrive" => "📁 Google Drive",
+                _ => Channel
+            };
+        }
+    }
+
+    public string StatusBadgeColor
+    {
+        get
+        {
+            if (IsCancelled) return "#EF4444"; // Red
+            if (ExpiresAt != DateTime.MaxValue && DateTime.Now > ExpiresAt) return "#F59E0B"; // Amber
+            if (MaxDownloads > 0 && DownloadCount >= MaxDownloads) return "#F59E0B";
+            return "#10B981"; // Green
+        }
+    }
+
     public string StatusDescription
     {
         get
@@ -84,15 +134,22 @@ public sealed class SecureTransferService
 {
     private static readonly ConcurrentDictionary<string, SecureTransferItem> _transfers = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, IpAttemptRecord> _generalIpAttempts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, string> _manuallyBlockedIps = new(StringComparer.OrdinalIgnoreCase);
     private readonly ConcurrentDictionary<string, DateTime> _activeSessions = new(StringComparer.Ordinal);
     private readonly TimeSpan _sessionDuration = TimeSpan.FromHours(24);
     private readonly TimeSpan _lockoutDuration = TimeSpan.FromMinutes(15);
     private const int MaxFailedAttempts = 6;
     private static readonly System.Threading.Timer _cleanupTimer = new(_ => CleanExpiredTransfersAndTempFiles(), null, TimeSpan.FromSeconds(10), TimeSpan.FromMinutes(15));
 
+    public static event Action? OnTransfersChanged;
+    private static readonly ConcurrentDictionary<string, DateTime> _revokedTokens = new(StringComparer.OrdinalIgnoreCase);
+
+    public static bool IsTokenRevoked(string token) => !string.IsNullOrWhiteSpace(token) && _revokedTokens.ContainsKey(token);
+
     public static SecureTransferService Instance { get; } = new();
 
     public event Action<string, string>? OnIpBlocked;
+    public event Action? OnBlockedListChanged;
     public string? ActivePin { get; private set; }
     public bool IsPinRequired => !string.IsNullOrEmpty(ActivePin);
 
@@ -248,6 +305,7 @@ public sealed class SecureTransferService
         }
 
         _transfers[token] = item;
+        OnTransfersChanged?.Invoke();
         return item;
     }
 
@@ -262,16 +320,58 @@ public sealed class SecureTransferService
         return _transfers.Values.OrderByDescending(t => t.CreatedAt).ToList();
     }
 
-    public static void CancelTransfer(string token)
+    /// <summary>
+    /// מבטל ומשמיד קישור שיתוף וטוקן גישה באופן מיידי.
+    /// קריטי: הפעולה משמידה אך ורק את קישור השיתוף, טוקן הגישה וקובצי ה-ZIP הזמניים של ההעברה.
+    /// הקובץ או התיקייה המקוריים על גבי המחשב (FilePath) נשארים שלמים ובטוחים לחלוטין ולעולם אינם נמחקים!
+    /// </summary>
+    public static bool RevokeTransfer(string token, bool removeFromList = false)
     {
+        if (string.IsNullOrWhiteSpace(token)) return false;
+
+        _revokedTokens[token] = DateTime.UtcNow;
+
         if (_transfers.TryGetValue(token, out var item))
         {
             item.IsCancelled = true;
+
+            // אם נוצר קובץ זיפ זמני עבור תיקייה בתיקיית ה-TEMP - נגרס באבטחה
             if (!string.IsNullOrEmpty(item.TempZipFilePath) && File.Exists(item.TempZipFilePath))
             {
                 SecureZeroFillShred(item.TempZipFilePath);
+                item.TempZipFilePath = null;
             }
+
+            // שים לב: item.FilePath (הקובץ המקורי במחשב) אינו נמחק לעולם!
+            if (removeFromList)
+            {
+                _transfers.TryRemove(token, out _);
+            }
+
+            OnTransfersChanged?.Invoke();
+            return true;
         }
+
+        return false;
+    }
+
+    /// <summary>
+    /// משמיד את כל קישורי השיתוף הפעילים בבת אחת, מבלי לפגוע כלל בקבצים המקוריים במחשב.
+    /// </summary>
+    public static int RevokeAllTransfers(bool removeFromList = false)
+    {
+        int count = 0;
+        var keys = _transfers.Keys.ToList();
+        foreach (var k in keys)
+        {
+            if (RevokeTransfer(k, removeFromList)) count++;
+        }
+        return count;
+    }
+
+    public static void CancelTransfer(string token)
+    {
+        RevokeTransfer(token, removeFromList: false);
     }
 
     /// <summary>
@@ -370,6 +470,7 @@ public sealed class SecureTransferService
             ShareUrl = shareUrl
         };
         _transfers[token] = item;
+        OnTransfersChanged?.Invoke();
         return item;
     }
 
@@ -544,6 +645,12 @@ public sealed class SecureTransferService
 
     public bool IsIpBlocked(string ip, out string reason)
     {
+        if (_manuallyBlockedIps.TryGetValue(ip, out var manualReason))
+        {
+            reason = $"כתובת IP {ip} נחסמה על ידי מנהל המערכת: {manualReason}";
+            return true;
+        }
+
         if (_generalIpAttempts.TryGetValue(ip, out var record))
         {
             if (record.LockedUntil.HasValue)
@@ -562,6 +669,39 @@ public sealed class SecureTransferService
         }
         reason = string.Empty;
         return false;
+    }
+
+    /// <summary>
+    /// חוסם כתובת IP באופן יזום וקבוע (Kick &amp; Block).
+    /// </summary>
+    public void BlockIpManually(string ip, string reason = "נחסם ידנית על ידי מנהל המערכת")
+    {
+        if (string.IsNullOrWhiteSpace(ip)) return;
+        string cleanIp = ip.Trim();
+        _manuallyBlockedIps[cleanIp] = reason;
+        OnIpBlocked?.Invoke(cleanIp, $"[MANUAL BLOCK] {reason}");
+        OnBlockedListChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// מסיר חסימה מכתובת IP.
+    /// </summary>
+    public bool UnblockIp(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip)) return false;
+        string cleanIp = ip.Trim();
+        bool removed = _manuallyBlockedIps.TryRemove(cleanIp, out _);
+        _generalIpAttempts.TryRemove(cleanIp, out _);
+        if (removed) OnBlockedListChanged?.Invoke();
+        return removed;
+    }
+
+    /// <summary>
+    /// מחזיר את כל כתובות ה-IP החסומות כעת במערכת.
+    /// </summary>
+    public List<KeyValuePair<string, string>> GetBlockedIpsWithReason()
+    {
+        return _manuallyBlockedIps.Select(kvp => new KeyValuePair<string, string>(kvp.Key, kvp.Value)).ToList();
     }
 
     public void RecordFailedAttempt(string ip)

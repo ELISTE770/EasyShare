@@ -151,5 +151,62 @@ public class AppSettings
     /// פעולה בעת לחיצה על כפתור הסגירה (X): "MinimizeToTray" (מזעור למגש המערכת) או "ExitApplication" (סגירה מלאה ויציאה)
     /// </summary>
     public string CloseAction { get; set; } = "MinimizeToTray";
+
+    /// <summary>
+    /// רשימת כתובות IP חסומות (Blacklist) לגישה לשרת
+    /// </summary>
+    public System.Collections.Generic.List<string> BlacklistedIps { get; set; } = new();
+
+    /// <summary>
+    /// הגבלת מהירות תעבורה והורדה בקילובייט לשנייה (0 = ללא הגבלה)
+    /// </summary>
+    public int MaxDownloadSpeedKbps { get; set; } = 0;
+
+    /// <summary>
+    /// האם לסנכרן אוטומטית את ערכת הנושא עם מערכת ההפעלה Windows (בהיר/כהה)
+    /// </summary>
+    public bool AutoSyncThemeWithWindows { get; set; } = false;
+    #endregion
+
+    #region 6. מזהה התקנה וקישור ישיר בין עמיתים (Peer ID & Direct Connect)
+    /// <summary>
+    /// מזהה התקנה ייחודי וקבוע (Peer ID) כדוגמת SB-482-910
+    /// </summary>
+    public string PeerId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// שם המכשיר המוצג לעמיתים ברשת (ברירת מחדל: שם המחשב)
+    /// </summary>
+    public string DeviceName { get; set; } = Environment.MachineName;
+
+    /// <summary>
+    /// האם לאפשר גילוי עמיתים אוטומטי ברשת המקומית (UDP Beacon)
+    /// </summary>
+    public bool EnablePeerDiscovery { get; set; } = true;
+
+    /// <summary>
+    /// האם לאפשר גילוי וחיפוש עמיתים דרך האינטרנט (WAN Internet Discovery)
+    /// </summary>
+    public bool EnableInternetDiscovery { get; set; } = true;
+
+    /// <summary>
+    /// מצב נראות באינטרנט: "Hidden" (מצב מוסתר - ניתן לאיתור רק בהזנת מזהה מדויק) או "Visible" (מצב גלוי - מופיע בחיפוש ציבורי)
+    /// </summary>
+    public string InternetVisibilityMode { get; set; } = "Hidden";
+
+    /// <summary>
+    /// שרת איתור ותקשורת פתוח באינטרנט (MQTT Broker ציבורי)
+    /// </summary>
+    public string InternetRelayBroker { get; set; } = "broker.hivemq.com";
+
+    /// <summary>
+    /// האם לקבל קבצים המועברים מעמיתים (Drop Files) באופן אוטומטי לתיקיית השיתוף
+    /// </summary>
+    public bool AutoAcceptPeerDrops { get; set; } = true;
+
+    /// <summary>
+    /// רשימת עמיתים שמורים / היסטוריית התחברויות
+    /// </summary>
+    public System.Collections.Generic.List<PeerDevice> SavedPeers { get; set; } = new();
     #endregion
 }

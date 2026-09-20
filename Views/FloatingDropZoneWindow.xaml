@@ -38,7 +38,7 @@
         <!-- הילה זוהרת מסביב (Obsidian Cyan/Indigo Glow) -->
         <Ellipse x:Name="OuterGlow"
                  Width="84" Height="84"
-                 Fill="{StaticResource BrushAccentCyan}"
+                 Fill="{DynamicResource BrushAccentCyan}"
                  Opacity="0.3">
             <Ellipse.Effect>
                 <BlurEffect Radius="16" />
@@ -49,8 +49,8 @@
         <Border x:Name="MainCircle"
                 Width="70" Height="70"
                 CornerRadius="35"
-                Background="{StaticResource BrushCard}"
-                BorderBrush="{StaticResource BrushPrimary}"
+                Background="{DynamicResource BrushCard}"
+                BorderBrush="{DynamicResource BrushPrimary}"
                 BorderThickness="2"
                 Cursor="SizeAll">
             <Border.Effect>
@@ -60,8 +60,8 @@
             <Grid>
                 <!-- תצוגה רגילה -->
                 <StackPanel x:Name="PnlNormal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <TextBlock x:Name="TxtIcon" Text="↑" FontSize="22" FontWeight="Bold" Foreground="{StaticResource BrushAccentCyan}" HorizontalAlignment="Center" />
-                    <TextBlock x:Name="TxtDropLabel" Text="גרור לכאן" FontSize="8.5" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0" />
+                    <TextBlock x:Name="TxtIcon" Text="↑" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource BrushAccentCyan}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="TxtDropLabel" Text="גרור לכאן" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" HorizontalAlignment="Center" Margin="0,2,0,0" />
                 </StackPanel>
 
                 <!-- חיווי התקדמות -->
@@ -69,8 +69,8 @@
                              IsIndeterminate="True"
                              Width="46" Height="4"
                              Visibility="Collapsed"
-                             Foreground="{StaticResource BrushAccentCyan}"
-                             Background="{StaticResource BrushSurface}"
+                             Foreground="{DynamicResource BrushAccentCyan}"
+                             Background="{DynamicResource BrushSurface}"
                              HorizontalAlignment="Center"
                              VerticalAlignment="Center" />
             </Grid>

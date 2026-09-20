@@ -8,7 +8,12 @@
         MinHeight="680" MinWidth="940"
         WindowStartupLocation="CenterScreen"
         FlowDirection="RightToLeft"
-        Background="{StaticResource BrushBackground}">
+        Background="{DynamicResource BrushBackground}"
+        AllowDrop="True"
+        DragEnter="RootWindow_DragEnter"
+        DragOver="RootWindow_DragOver"
+        DragLeave="RootWindow_DragLeave"
+        Drop="RootWindow_Drop">
 
     <Window.Resources>
         <!-- ===================================================================
@@ -30,8 +35,8 @@
 
                             <!-- סרגל טאבים מקצועי ומאופק -->
                             <Border Grid.Row="0"
-                                    Background="{StaticResource BrushSurface}"
-                                    BorderBrush="{StaticResource BrushBorder}"
+                                    Background="{DynamicResource BrushSurface}"
+                                    BorderBrush="{DynamicResource BrushBorder}"
                                     BorderThickness="1"
                                     CornerRadius="8"
                                     Padding="4"
@@ -60,7 +65,7 @@
             <Setter Property="FocusVisualStyle" Value="{x:Null}" />
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{StaticResource BrushTextMuted}" />
+            <Setter Property="Foreground" Value="{DynamicResource BrushTextMuted}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Padding" Value="22,9" />
@@ -84,13 +89,13 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource BrushCardHover}" />
-                                <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource BrushCardHover}" />
+                                <Setter Property="Foreground" Value="{DynamicResource BrushText}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource BrushCard}" />
-                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource BrushBorderHighlight}" />
-                                <Setter Property="Foreground" Value="#FFFFFF" />
+                                <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource BrushCard}" />
+                                <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource BrushBorderHighlight}" />
+                                <Setter Property="Foreground" Value="{DynamicResource BrushPrimary}" />
                                 <Setter Property="FontWeight" Value="Bold" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -135,10 +140,10 @@
                                 </Setter>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="{StaticResource BrushSurface}" />
-                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{DynamicResource BrushSurface}" />
+                                <Setter TargetName="BtnBorder" Property="BorderBrush" Value="{DynamicResource BrushBorder}" />
                                 <Setter TargetName="BtnBorder" Property="BorderThickness" Value="1" />
-                                <Setter Property="Foreground" Value="{StaticResource BrushTextSubtle}" />
+                                <Setter Property="Foreground" Value="{DynamicResource BrushTextSubtle}" />
                                 <Setter Property="Cursor" Value="No" />
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -151,12 +156,12 @@
              סגנון שדות קלט TextBox במצב כהה מהודק
              =================================================================== -->
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource BrushSurface}" />
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
-            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}" />
+            <Setter Property="Background" Value="{DynamicResource BrushSurface}" />
+            <Setter Property="Foreground" Value="{DynamicResource BrushText}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BrushBorder}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CaretBrush" Value="{StaticResource BrushAccentCyan}" />
-            <Setter Property="SelectionBrush" Value="{StaticResource BrushPrimary}" />
+            <Setter Property="CaretBrush" Value="{DynamicResource BrushAccentCyan}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource BrushPrimary}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="Template">
@@ -173,10 +178,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource BrushBorderHighlight}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BrushBorderHighlight}" />
                             </Trigger>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource BrushAccentCyan}" />
+                                <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BrushAccentCyan}" />
                                 <Setter TargetName="Border" Property="BorderThickness" Value="1.5" />
                             </Trigger>
                             <Trigger Property="IsReadOnly" Value="True">
@@ -200,8 +205,8 @@
                     <ToggleButton.Template>
                         <ControlTemplate TargetType="ToggleButton">
                             <Border x:Name="Border"
-                                    Background="{StaticResource BrushSurface}"
-                                    BorderBrush="{StaticResource BrushBorder}"
+                                    Background="{DynamicResource BrushSurface}"
+                                    BorderBrush="{DynamicResource BrushBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6">
                                 <Grid>
@@ -214,16 +219,16 @@
                                           HorizontalAlignment="Center"
                                           VerticalAlignment="Center"
                                           Data="M 0 0 L 4 4 L 8 0 Z"
-                                          Fill="{StaticResource BrushTextMuted}" />
+                                          Fill="{DynamicResource BrushTextMuted}" />
                                 </Grid>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource BrushAccentCyan}" />
-                                    <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource BrushAccentCyan}" />
+                                    <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BrushAccentCyan}" />
+                                    <Setter TargetName="Arrow" Property="Fill" Value="{DynamicResource BrushAccentCyan}" />
                                 </Trigger>
                                 <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource BrushPrimary}" />
+                                    <Setter TargetName="Border" Property="BorderBrush" Value="{DynamicResource BrushPrimary}" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -250,8 +255,8 @@
                           MinWidth="{TemplateBinding ActualWidth}"
                           MaxHeight="{TemplateBinding MaxDropDownHeight}">
                         <Border x:Name="DropDownBorder"
-                                Background="{StaticResource BrushCard}"
-                                BorderBrush="{StaticResource BrushBorder}"
+                                Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
                                 BorderThickness="1"
                                 CornerRadius="6"
                                 Margin="0,3,0,6"
@@ -260,7 +265,7 @@
                                 <DropShadowEffect BlurRadius="16" ShadowDepth="4" Opacity="0.6" Color="#000000" />
                             </Border.Effect>
                             <ScrollViewer SnapsToDevicePixels="True">
-                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Circular" />
+                                <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
                             </ScrollViewer>
                         </Border>
                     </Grid>
@@ -269,7 +274,7 @@
         </ControlTemplate>
 
         <Style TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="Foreground" Value="{DynamicResource BrushText}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Height" Value="38" />
             <Setter Property="Template" Value="{StaticResource ModernDarkComboBoxTemplate}" />
@@ -278,7 +283,7 @@
         <Style TargetType="ComboBoxItem">
             <Setter Property="SnapsToDevicePixels" Value="True" />
             <Setter Property="OverridesDefaultStyle" Value="True" />
-            <Setter Property="Foreground" Value="{StaticResource BrushText}" />
+            <Setter Property="Foreground" Value="{DynamicResource BrushText}" />
             <Setter Property="FontSize" Value="13" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="Cursor" Value="Hand" />
@@ -290,15 +295,15 @@
                                 CornerRadius="4"
                                 Padding="{TemplateBinding Padding}"
                                 Margin="0,1">
-                            <ContentPresenter TextElement.Foreground="{StaticResource BrushText}" />
+                            <ContentPresenter TextElement.Foreground="{DynamicResource BrushText}" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="{StaticResource BrushPrimary}" />
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BrushPrimary}" />
                                 <Setter Property="Foreground" Value="#FFFFFF" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="{StaticResource BrushPrimaryHover}" />
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BrushPrimaryHover}" />
                                 <Setter Property="Foreground" Value="#FFFFFF" />
                                 <Setter Property="FontWeight" Value="Bold" />
                             </Trigger>
@@ -322,10 +327,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="{StaticResource BrushCardHover}" />
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BrushCardHover}" />
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Border" Property="Background" Value="{StaticResource BrushBorder}" />
+                                <Setter TargetName="Border" Property="Background" Value="{DynamicResource BrushBorder}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -346,8 +351,8 @@
              כולל סמליל וקטורי מודרני, טיפוגרפיה מהודקת, אינדיקטור שרת שקט ובקרות
              =================================================================== -->
         <Border Grid.Row="0"
-                Background="{StaticResource BrushSurface}"
-                BorderBrush="{StaticResource BrushBorder}"
+                Background="{DynamicResource BrushSurface}"
+                BorderBrush="{DynamicResource BrushBorder}"
                 BorderThickness="0,0,0,1"
                 Padding="20,12"
                 SnapsToDevicePixels="True">
@@ -363,8 +368,8 @@
                     <!-- סמליל גיאומטרי אלגנטי (Network Data Monogram) -->
                     <Border Width="40" Height="40"
                             CornerRadius="8"
-                            Background="#111827"
-                            BorderBrush="{StaticResource BrushBorderHighlight}"
+                            Background="{DynamicResource BrushSurface}"
+                            BorderBrush="{DynamicResource BrushBorderHighlight}"
                             BorderThickness="1"
                             Margin="0,0,14,0">
                         <Border.Effect>
@@ -382,30 +387,61 @@
                     </Border>
                     <StackPanel VerticalAlignment="Center">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock x:Name="TxtAppTitle" Text="EasyShare" FontSize="17" FontWeight="Bold" Foreground="{StaticResource BrushText}" />
-                            <Border Background="#1E293B" BorderBrush="#334155" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="PRO" FontSize="10" FontWeight="Bold" Foreground="#E2E8F0" />
+                            <TextBlock x:Name="TxtAppTitle" Text="EasyShare" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource BrushText}" />
+                            <Border Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="PRO" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource BrushPrimary}" />
                             </Border>
                         </StackPanel>
-                        <TextBlock x:Name="TxtAppSubtitle" Text="Enterprise File Sharing &amp; Cloud Streaming Suite" FontSize="11" Foreground="{StaticResource BrushTextSubtle}" Margin="0,2,0,0" />
+                        <TextBlock x:Name="TxtAppSubtitle" Text="Enterprise File Sharing &amp; Cloud Streaming Suite" FontSize="11" Foreground="{DynamicResource BrushTextSubtle}" Margin="0,2,0,0" />
                     </StackPanel>
                 </StackPanel>
 
-                <!-- בקרות ימניות: בחירת שפה, אינדיקטור שרת וכפתור הפעלה/עצירה מאופק -->
+                <!-- בקרות ימניות: בחירת ערכת נושא, בחירת שפה, אינדיקטור שרת וכפתור הפעלה/עצירה מאופק -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- מתג החלפת ערכת נושא מהיר (Dark / Light) -->
+                    <Button x:Name="BtnThemeToggleTop"
+                            Content="☀️ בהיר"
+                            Padding="10,6"
+                            FontWeight="SemiBold"
+                            FontSize="12"
+                            Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorder}"
+                            BorderThickness="1"
+                            Foreground="{DynamicResource BrushTextMuted}"
+                            Cursor="Hand"
+                            Margin="0,0,10,0"
+                            ToolTip="החלף בין מצב כהה למצב בהיר"
+                            Click="BtnThemeToggleTop_Click" />
+
                     <!-- מתג החלפת שפה עדין -->
                     <Button x:Name="BtnLanguageToggleTop"
                             Content="English"
                             Padding="12,6"
                             FontWeight="SemiBold"
                             FontSize="12"
-                            Background="{StaticResource BrushCard}"
-                            BorderBrush="{StaticResource BrushBorder}"
+                            Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorder}"
                             BorderThickness="1"
-                            Foreground="{StaticResource BrushTextMuted}"
+                            Foreground="{DynamicResource BrushTextMuted}"
                             Cursor="Hand"
                             Margin="0,0,14,0"
                             Click="BtnLanguageToggleTop_Click" />
+
+                    <!-- קפסולת מזהה התקנה (Peer ID Capsule) -->
+                    <Border Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorderHighlight}"
+                            BorderThickness="1"
+                            CornerRadius="16"
+                            Padding="10,4"
+                            Margin="0,0,12,0"
+                            VerticalAlignment="Center"
+                            ToolTip="מזהה ההתקנה הייחודי שלך לחיבור ישיר ודרופ קבצים (לחץ להעתקה)">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="מזהה:" FontSize="11.5" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                            <TextBlock x:Name="TxtMyPeerIdHeader" Text="ES-..." FontSize="12" FontWeight="Bold" Foreground="{DynamicResource BrushAccentCyan}" VerticalAlignment="Center" />
+                            <Button x:Name="BtnCopyPeerIdTop" Content="העתק" Padding="6,2" Margin="6,0,0,0" FontSize="11" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushPrimary}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Cursor="Hand" Click="BtnCopyPeerId_Click" />
+                        </StackPanel>
+                    </Border>
 
                     <!-- קפסולת סטטוס שרת מאופקת (Status Capsule) -->
                     <Border Background="#0C1F18"
@@ -418,7 +454,7 @@
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <Ellipse x:Name="StatusDot"
                                      Width="8" Height="8"
-                                     Fill="{StaticResource BrushSuccess}"
+                                     Fill="{DynamicResource BrushSuccess}"
                                      Margin="0,0,8,0">
                                 <Ellipse.Effect>
                                     <DropShadowEffect BlurRadius="6" ShadowDepth="0" Color="#10B981" Opacity="0.7" />
@@ -428,7 +464,7 @@
                                        Text="פעיל ומאזין"
                                        FontSize="12"
                                        FontWeight="SemiBold"
-                                       Foreground="{StaticResource BrushSuccess}"
+                                       Foreground="{DynamicResource BrushSuccess}"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
@@ -458,107 +494,44 @@
             <TabItem x:Name="TabServer" Header="רשת ומדיה">
                 <Grid Margin="0,10,0,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.7*" />
+                        <ColumnDefinition Width="1.5*" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
-                    <!-- עמודה ימנית: כרטיסי רשת מקומית, מנהור ולוג פעילות -->
+                    <!-- עמודה 1: כרטיסי רשת מקומית Wi-Fi ומנהור מאובטח Cloudflare -->
                     <StackPanel Grid.Column="0" Margin="0,0,14,0">
                         <!-- כרטיס רשת מקומית Wi-Fi / LAN -->
-                        <Border Background="{StaticResource BrushCard}"
-                                BorderBrush="{StaticResource BrushBorder}"
+                        <Border Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
                                 BorderThickness="1"
                                 CornerRadius="8"
                                 Padding="16"
                                 Margin="0,0,0,12"
                                 SnapsToDevicePixels="True">
                             <StackPanel>
-                                <Grid>
+                                <Grid Margin="0,0,0,8">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0">
-                                        <TextBlock x:Name="LblLocalNetworkTitle" Text="כתובת ברשת המקומית (Wi-Fi / LAN)" FontWeight="Bold" FontSize="13.5" Foreground="{StaticResource BrushText}" />
-                                        <TextBlock x:Name="LblLocalNetworkSubtitle" Text="התחבר מכל מכשיר המחובר לאותה הרשת המקומית" FontSize="11.5" Foreground="{StaticResource BrushTextMuted}" Margin="0,3,0,8" />
-                                        <!-- שדה URL עם בידוד LTR מוחלט -->
-                                        <TextBox x:Name="TxtLocalUrl"
-                                                 IsReadOnly="True"
-                                                 FontSize="14"
-                                                 FontWeight="Bold"
-                                                 Foreground="{StaticResource BrushAccentCyan}"
-                                                 Background="{StaticResource BrushSurface}"
-                                                 BorderBrush="{StaticResource BrushBorder}"
-                                                 BorderThickness="1"
-                                                 Padding="10,7"
-                                                 Margin="0,0,0,10"
-                                                 FlowDirection="LeftToRight"
-                                                 TextAlignment="Left" />
+                                        <TextBlock x:Name="LblLocalNetworkTitle" Text="כתובת ברשת המקומית (Wi-Fi / LAN)" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource BrushText}" />
+                                        <TextBlock x:Name="LblLocalNetworkSubtitle" Text="התחבר מכל מכשיר המחובר לאותה הרשת המקומית" FontSize="11.5" Foreground="{DynamicResource BrushTextMuted}" Margin="0,3,0,0" />
                                     </StackPanel>
-                                </Grid>
-                                <StackPanel Orientation="Horizontal">
-                                    <Button x:Name="BtnOpenLocalBrowser" Content="פתח בדפדפן" Padding="14,7" Background="{StaticResource BrushPrimary}" Foreground="White" FontWeight="Bold" BorderThickness="0" Margin="0,0,10,0" Cursor="Hand" Click="BtnOpenLocalBrowser_Click" />
-                                    <Button x:Name="BtnCopyLocalUrl" Content="העתק כתובת" Padding="14,7" Background="{StaticResource BrushSurface}" Foreground="{StaticResource BrushText}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" Click="BtnCopyLocalUrl_Click" />
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- כרטיס מנהור אינטרנט עולמי Cloudflare HTTPS -->
-                        <Border Background="{StaticResource BrushCard}"
-                                BorderBrush="{StaticResource BrushBorder}"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="16"
-                                Margin="0,0,0,12"
-                                SnapsToDevicePixels="True">
-                            <StackPanel>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Grid.Column="0">
-                                        <TextBlock x:Name="LblTunnelTitle" Text="מנהור גלובלי מאובטח (Cloudflare Tunnel)" FontWeight="Bold" FontSize="13.5" Foreground="{StaticResource BrushText}" />
-                                        <TextBlock x:Name="LblTunnelSubtitle" Text="שיתוף קבצים מאובטח ב-HTTPS מכל מקום בעולם ללא פתיחת פורטים" FontSize="11.5" Foreground="{StaticResource BrushTextMuted}" Margin="0,3,0,8" />
-                                    </StackPanel>
-                                    <CheckBox x:Name="ChkEnableTunnel" Grid.Column="1" Content="הפעל מנהור" Foreground="{StaticResource BrushText}" FontWeight="Bold" VerticalAlignment="Center" Checked="ChkEnableTunnel_Checked" Unchecked="ChkEnableTunnel_Unchecked" />
+                                    <!-- תגית סטטוס mDNS פעיל -->
+                                    <Border Grid.Column="1" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorderHighlight}" BorderThickness="1" CornerRadius="10" Padding="7,2" VerticalAlignment="Top">
+                                        <TextBlock Text="mDNS פעיל" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource BrushPrimary}" />
+                                    </Border>
                                 </Grid>
 
-                                <!-- בחירת סוג מנהור -->
-                                <StackPanel Orientation="Horizontal" Margin="0,2,0,10">
-                                    <RadioButton x:Name="RbTunnelRandom" Content="מנהור מהיר (Cloudflare Quick Tunnel)" GroupName="TunnelModeGroup" IsChecked="True" Foreground="{StaticResource BrushText}" FontWeight="SemiBold" Margin="0,0,24,0" Checked="RbTunnelMode_Changed" Unchecked="RbTunnelMode_Changed" />
-                                    <RadioButton x:Name="RbTunnelCustom" Content="דומיין אישי (Cloudflare Token)" GroupName="TunnelModeGroup" Foreground="{StaticResource BrushText}" FontWeight="SemiBold" Checked="RbTunnelMode_Changed" Unchecked="RbTunnelMode_Changed" />
-                                </StackPanel>
-
-                                <!-- פאנל הגדרות דומיין אישי וטוקן -->
-                                <Border x:Name="PnlCustomDomainConfig" Background="{StaticResource BrushSurface}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10" Visibility="Collapsed">
-                                    <StackPanel>
-                                        <Grid Margin="0,0,0,8">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="130" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock x:Name="LblCustomDomainUrl" Text="כתובת דומיין אישי:" Foreground="{StaticResource BrushTextMuted}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                            <TextBox x:Name="TxtCustomDomainUrl" Grid.Column="1" Height="34" VerticalContentAlignment="Center" Background="{StaticResource BrushCard}" Foreground="{StaticResource BrushAccentCyan}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" Padding="8,0" FlowDirection="LeftToRight" TextAlignment="Left" ToolTip="למשל: https://share.smartbinary.org או share.mydomain.com" />
-                                        </Grid>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="130" />
-                                                <ColumnDefinition Width="*" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock x:Name="LblTunnelToken" Text="טוקן (Tunnel Token):" Foreground="{StaticResource BrushTextMuted}" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                            <TextBox x:Name="TxtTunnelToken" Grid.Column="1" Height="34" VerticalContentAlignment="Center" Background="{StaticResource BrushCard}" Foreground="{StaticResource BrushAccentCyan}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" Padding="8,0" FlowDirection="LeftToRight" TextAlignment="Left" ToolTip="הדבק כאן את מפתח ה-Token של ה-Tunnel מ-Cloudflare Zero Trust" />
-                                        </Grid>
-                                    </StackPanel>
-                                </Border>
-
-                                <TextBox x:Name="TxtTunnelUrl"
-                                         Text="המנהור כבוי (סמן 'הפעל מנהור' לפתיחת כתובת ציבורית)"
+                                <!-- שדה URL עם בידוד LTR מוחלט -->
+                                <TextBox x:Name="TxtLocalUrl"
                                          IsReadOnly="True"
-                                         FontSize="13"
-                                         Foreground="{StaticResource BrushWarning}"
-                                         Background="{StaticResource BrushSurface}"
-                                         BorderBrush="{StaticResource BrushBorder}"
+                                         FontSize="13.5"
+                                         FontWeight="Bold"
+                                         Foreground="{DynamicResource BrushAccentCyan}"
+                                         Background="{DynamicResource BrushSurface}"
+                                         BorderBrush="{DynamicResource BrushBorder}"
                                          BorderThickness="1"
                                          Padding="10,7"
                                          Margin="0,0,0,10"
@@ -566,68 +539,757 @@
                                          TextAlignment="Left" />
 
                                 <StackPanel Orientation="Horizontal">
-                                    <Button x:Name="BtnOpenTunnelBrowser" Content="פתח כתובת ציבורית" Padding="14,7" Background="{StaticResource BrushSuccess}" Foreground="White" FontWeight="Bold" BorderThickness="0" Margin="0,0,10,0" Cursor="Hand" IsEnabled="False" Click="BtnOpenTunnelBrowser_Click" />
-                                    <Button x:Name="BtnCopyTunnelUrl" Content="העתק קישור" Padding="14,7" Background="{StaticResource BrushSurface}" Foreground="{StaticResource BrushText}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" IsEnabled="False" Click="BtnCopyTunnelUrl_Click" />
+                                    <Button x:Name="BtnOpenLocalBrowser" Content="פתח בדפדפן" Padding="14,7" Background="{DynamicResource BrushPrimary}" Foreground="White" FontWeight="Bold" BorderThickness="0" Margin="0,0,10,0" Cursor="Hand" Click="BtnOpenLocalBrowser_Click" />
+                                    <Button x:Name="BtnCopyLocalUrl" Content="העתק כתובת" Padding="14,7" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" Click="BtnCopyLocalUrl_Click" />
                                 </StackPanel>
                             </StackPanel>
                         </Border>
 
-                        <!-- לוג אירועים ופעילות שרת -->
-                        <Border Background="{StaticResource BrushCard}"
-                                BorderBrush="{StaticResource BrushBorder}"
+                        <!-- כרטיס מנהור אינטרנט עולמי Cloudflare HTTPS -->
+                        <Border Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
                                 BorderThickness="1"
                                 CornerRadius="8"
-                                Padding="12"
+                                Padding="16"
+                                Margin="0,0,0,12"
                                 SnapsToDevicePixels="True">
                             <StackPanel>
-                                <TextBlock x:Name="LblEventLogTitle" Text="יומן פעילות ושרת (Activity Stream)" FontWeight="Bold" FontSize="12.5" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,6" />
-                                <TextBox x:Name="TxtEventLog"
-                                         Height="105"
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock x:Name="LblTunnelTitle" Text="מנהור גלובלי מאובטח (Cloudflare Tunnel)" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource BrushText}" />
+                                        <TextBlock x:Name="LblTunnelSubtitle" Text="שיתוף קבצים מאובטח ב-HTTPS מכל מקום בעולם ללא פתיחת פורטים" FontSize="11.5" Foreground="{DynamicResource BrushTextMuted}" Margin="0,3,0,0" />
+                                    </StackPanel>
+                                    <!-- תגית אבטחת HTTPS -->
+                                    <Border Grid.Column="1" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorderHighlight}" BorderThickness="1" CornerRadius="10" Padding="7,2" VerticalAlignment="Center" Margin="0,0,10,0">
+                                        <TextBlock Text="HTTPS TLS 1.3" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource BrushAccentCyan}" />
+                                    </Border>
+                                    <CheckBox x:Name="ChkEnableTunnel" Grid.Column="2" Content="הפעל מנהור" Foreground="{DynamicResource BrushText}" FontWeight="Bold" VerticalAlignment="Center" Checked="ChkEnableTunnel_Checked" Unchecked="ChkEnableTunnel_Unchecked" />
+                                </Grid>
+
+                                <!-- בחירת סוג מנהור -->
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,10">
+                                    <RadioButton x:Name="RbTunnelRandom" GroupName="TunnelModeGroup" IsChecked="True" Foreground="{DynamicResource BrushText}" FontWeight="SemiBold" Margin="0,0,24,0" Checked="RbTunnelMode_Changed" Unchecked="RbTunnelMode_Changed">
+                                        <TextBlock>
+                                            <Run Text="מנהור מהיר " /><Run Text="(Cloudflare Quick Tunnel)" FlowDirection="LeftToRight" />
+                                        </TextBlock>
+                                    </RadioButton>
+                                    <RadioButton x:Name="RbTunnelCustom" GroupName="TunnelModeGroup" Foreground="{DynamicResource BrushText}" FontWeight="SemiBold" Checked="RbTunnelMode_Changed" Unchecked="RbTunnelMode_Changed">
+                                        <TextBlock>
+                                            <Run Text="דומיין אישי " /><Run Text="(Cloudflare Token)" FlowDirection="LeftToRight" />
+                                        </TextBlock>
+                                    </RadioButton>
+                                </StackPanel>
+
+                                <!-- פאנל הגדרות דומיין אישי וטוקן -->
+                                <Border x:Name="PnlCustomDomainConfig" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,10" Visibility="Collapsed">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="130" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="LblCustomDomainUrl" Text="כתובת דומיין אישי:" Foreground="{DynamicResource BrushTextMuted}" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <TextBox x:Name="TxtCustomDomainUrl" Grid.Column="1" Height="34" VerticalContentAlignment="Center" Background="{DynamicResource BrushCard}" Foreground="{DynamicResource BrushAccentCyan}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Padding="8,0" FlowDirection="LeftToRight" TextAlignment="Left" ToolTip="למשל: https://share.smartbinary.org או share.mydomain.com" />
+                                        </Grid>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="130" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="LblTunnelToken" Foreground="{DynamicResource BrushTextMuted}" FontWeight="SemiBold" VerticalAlignment="Center">
+                                                <Run Text="טוקן " /><Run Text="(Tunnel Token):" FlowDirection="LeftToRight" />
+                                            </TextBlock>
+                                            <TextBox x:Name="TxtTunnelToken" Grid.Column="1" Height="34" VerticalContentAlignment="Center" Background="{DynamicResource BrushCard}" Foreground="{DynamicResource BrushAccentCyan}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Padding="8,0" FlowDirection="LeftToRight" TextAlignment="Left" ToolTip="הדבק כאן את מפתח ה-Token של ה-Tunnel מ-Cloudflare Zero Trust" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+
+                                <TextBox x:Name="TxtTunnelUrl"
+                                         Text="המנהור כבוי (סמן 'הפעל מנהור' לפתיחת כתובת ציבורית)&#x200F;"
                                          IsReadOnly="True"
-                                         VerticalScrollBarVisibility="Auto"
-                                         Background="#06090F"
-                                         Foreground="{StaticResource BrushAccentCyan}"
-                                         FontFamily="Consolas, Cascadia Code, monospace"
-                                         FontSize="11"
-                                         BorderBrush="{StaticResource BrushBorder}"
-                                         Padding="8"
-                                         FlowDirection="LeftToRight"
-                                         TextAlignment="Left" />
+                                         FontSize="13"
+                                         Foreground="{DynamicResource BrushWarning}"
+                                         Background="{DynamicResource BrushSurface}"
+                                         BorderBrush="{DynamicResource BrushBorder}"
+                                         BorderThickness="1"
+                                         Padding="10,7"
+                                         Margin="0,0,0,10"
+                                         FlowDirection="RightToLeft"
+                                         TextAlignment="Right" />
+
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="BtnOpenTunnelBrowser" Content="פתח כתובת ציבורית" Padding="14,7" Background="{DynamicResource BrushSuccess}" Foreground="White" FontWeight="Bold" BorderThickness="0" Margin="0,0,10,0" Cursor="Hand" IsEnabled="False" Click="BtnOpenTunnelBrowser_Click" />
+                                    <Button x:Name="BtnCopyTunnelUrl" Content="העתק קישור" Padding="14,7" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" IsEnabled="False" Click="BtnCopyTunnelUrl_Click" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- כרטיס מידע וסטטיסטיקת רשת בזמן אמת (Realtime Traffic & System Info) -->
+                        <Border Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="16"
+                                SnapsToDevicePixels="True">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock x:Name="LblRealtimeTrafficTitle" Text="תעבורת רשת ונתוני מערכת בזמן אמת" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource BrushText}" />
+                                        <TextBlock x:Name="LblRealtimeTrafficSubtitle" Text="ניטור חי של מהירות שידור, חיבורים פעילים ונפח תעבורה" FontSize="11.5" Foreground="{DynamicResource BrushTextMuted}" Margin="0,3,0,0" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorderHighlight}" BorderThickness="1" CornerRadius="10" Padding="8,3" VerticalAlignment="Center">
+                                        <TextBlock Text="Zero Lag • 4MB Buffer" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource BrushPrimary}" />
+                                    </Border>
+                                </Grid>
+
+                                <!-- רשת כרטיסי נתונים (Stats Grid) -->
+                                <UniformGrid Columns="3" Margin="0,4,0,0">
+                                    <!-- מדד 1: מהירות העלאה חיה -->
+                                    <Border Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="0,0,8,0">
+                                        <StackPanel>
+                                            <TextBlock Text="מהירות העלאה חיה" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource BrushTextMuted}" />
+                                            <TextBlock x:Name="TxtHomeUploadSpeed" Text="0.00 Mbps" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource BrushPrimary}" Margin="0,4,0,0" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- מדד 2: מכשירים מחוברים -->
+                                    <Border Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="4,0,4,0">
+                                        <StackPanel>
+                                            <TextBlock Text="מכשירים מחוברים" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource BrushTextMuted}" />
+                                            <TextBlock x:Name="TxtHomeConnectedClients" Text="0 פעילים" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource BrushAccentCyan}" Margin="0,4,0,0" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- מדד 3: סה״כ נתונים שנמסרו -->
+                                    <Border Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="6" Padding="12,10" Margin="8,0,0,0">
+                                        <StackPanel>
+                                            <TextBlock Text="סה״כ תעבורה היום" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource BrushTextMuted}" />
+                                            <TextBlock x:Name="TxtHomeTotalTransferred" Text="0.0 MB" FontSize="16" FontWeight="Bold" Foreground="{DynamicResource BrushText}" Margin="0,4,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </UniformGrid>
                             </StackPanel>
                         </Border>
                     </StackPanel>
 
                     <!-- עמודה שמאלית: חיבור מהיר באמצעות QR Code מעוצב ומאוזן -->
                     <Border Grid.Column="1"
-                            Background="{StaticResource BrushCard}"
-                            BorderBrush="{StaticResource BrushBorder}"
+                            Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorder}"
                             BorderThickness="1"
                             CornerRadius="8"
-                            Padding="20"
+                            Padding="18,16"
                             SnapsToDevicePixels="True">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock x:Name="LblQrTitle" Text="חיבור מהיר באמצעות QR" FontWeight="Bold" FontSize="15" Foreground="{StaticResource BrushText}" HorizontalAlignment="Center" Margin="0,0,0,4" />
-                            <TextBlock x:Name="LblQrSubtitle" Text="סרוק במצלמת הנייד לחיבור ישיר" FontSize="12" Foreground="{StaticResource BrushTextMuted}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,16" />
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
 
-                            <!-- כרטיס QR פרופורציונלי ומדויק בגודל 160x160 -->
-                            <Border Background="White"
-                                    CornerRadius="10"
-                                    Padding="10"
-                                    HorizontalAlignment="Center"
-                                    Width="160" Height="160">
-                                <Border.Effect>
-                                    <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.25" Color="#000000" />
-                                </Border.Effect>
-                                <Image x:Name="ImgQrCode" Width="140" Height="140" Stretch="Uniform" />
+                            <StackPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock x:Name="LblQrTitle" Text="חיבור מהיר מהסמארטפון" FontWeight="Bold" FontSize="15" Foreground="{DynamicResource BrushText}" HorizontalAlignment="Center" Margin="0,0,0,4" />
+                                <TextBlock x:Name="LblQrSubtitle" Text="סרוק במצלמת הנייד לפתיחה ישירה בטלפון" FontSize="11.5" Foreground="{DynamicResource BrushTextMuted}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,0,0,12" />
+
+                                <!-- כרטיס QR פרופורציונלי ומדויק בגודל 160x160 -->
+                                <Border Background="White"
+                                        CornerRadius="10"
+                                        Padding="10"
+                                        HorizontalAlignment="Center"
+                                        Width="160" Height="160">
+                                    <Border.Effect>
+                                        <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.25" Color="#000000" />
+                                    </Border.Effect>
+                                    <Image x:Name="ImgQrCode" Width="140" Height="140" Stretch="Uniform" />
+                                </Border>
+
+                                <TextBlock x:Name="LblQrDesc" Text="כוון את מצלמת הסמארטפון כדי לגלוש לקבצים, לנגן וידאו ולהעלות תמונות מיידית." FontSize="11" Foreground="{DynamicResource BrushTextMuted}" HorizontalAlignment="Center" TextAlignment="Center" Margin="0,12,0,10" TextWrapping="Wrap" MaxWidth="240" />
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button x:Name="BtnCopyQrImage" Content="העתק תמונת QR" Padding="12,5" FontSize="11.5" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" Margin="0,0,8,0" Click="BtnCopyQrImage_Click" />
+                                    <Button x:Name="BtnSaveQrImage" Content="שמור קוד QR" Padding="12,5" FontSize="11.5" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="SemiBold" Cursor="Hand" Click="BtnSaveQrImage_Click" />
+                                </StackPanel>
+                            </StackPanel>
+
+                            <!-- בלוק אבטחה וגישה בתחתית כרטיס ה-QR כמו ב-HTML -->
+                            <Border Grid.Row="1" Margin="0,14,0,0" Padding="0,12,0,0" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="0,1,0,0">
+                                <StackPanel>
+                                    <TextBlock Text="אבטחה והרשאות גישה" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,6" />
+                                    <Grid Margin="0,0,0,4">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="מצב גישה:" FontSize="11.5" Foreground="{DynamicResource BrushTextMuted}" />
+                                        <TextBlock x:Name="TxtHomeAccessMode" Grid.Column="1" Text="גישה מלאה (Full)" FontSize="11.5" FontWeight="Bold" Foreground="{DynamicResource BrushText}" />
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="קוד PIN:" FontSize="11.5" Foreground="{DynamicResource BrushTextMuted}" />
+                                        <TextBlock x:Name="TxtHomePinStatus" Grid.Column="1" Text="ללא PIN" FontSize="11.5" FontWeight="Bold" Foreground="{DynamicResource BrushPrimary}" />
+                                    </Grid>
+
+                                    <!-- סנכרון לוח עריכה מהיר (Universal Clipboard) -->
+                                    <Border Margin="0,10,0,0" Padding="10,8" Background="{DynamicResource BrushSurface}" CornerRadius="6" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                <TextBlock Text="לוח שיתוף מהיר (Clipboard)" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource BrushText}" />
+                                                <TextBlock x:Name="TxtClipboardPreview" Text="(הלוח ריק)" FontSize="10" Foreground="{DynamicResource BrushTextMuted}" TextTrimming="CharacterEllipsis" MaxWidth="160" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button x:Name="BtnSendClipboard" Content="שלח" Padding="8,3" FontSize="10.5" Background="{DynamicResource BrushPrimary}" Foreground="White" FontWeight="Bold" Margin="0,0,4,0" Cursor="Hand" ToolTip="שלח את תוכן הלוח של המחשב למכשירים המחוברים" Click="BtnSendClipboard_Click" />
+                                                <Button x:Name="BtnGetClipboard" Content="קבל" Padding="8,3" FontSize="10.5" Background="{DynamicResource BrushCard}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="Bold" Cursor="Hand" ToolTip="העתק את הטקסט האחרון שנשלח מהנייד ללוח המחשב" Click="BtnGetClipboard_Click" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </StackPanel>
                             </Border>
-
-                            <TextBlock x:Name="LblQrFooter" Text="חיבור רשת ישיר | נגני מדיה | העלאה והורדה" FontSize="11" Foreground="{StaticResource BrushTextSubtle}" HorizontalAlignment="Center" Margin="0,16,0,0" />
-                        </StackPanel>
+                        </Grid>
                     </Border>
                 </Grid>
             </TabItem>
 
-            <!-- טאב 2: שיתוף מאובטח והעלאה לשירותי ענן -->
+            <!-- טאב 2: משתמשים וצ'אט ישיר (P2P Peer Discovery & Interactive Chat Room) -->
+            <TabItem x:Name="TabPeers" Header="משתמשים וצ'אט">
+                <Grid Margin="0,6,0,0">
+                    <Grid.ColumnDefinitions>
+                        <!-- עמודה 1: אנשי קשר ועמיתים שזוהו ברשת (Contacts & Peers Sidebar) -->
+                        <ColumnDefinition Width="320" />
+                        <!-- עמודה 2: חדר צ'אט חי ודרופ קבצים אינטראקטיבי (Interactive Chat Room) -->
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- ===================================================================
+                         עמודה 1: כרטיס המזהה שלי ורשימת עמיתים שזוהו
+                         =================================================================== -->
+                    <Grid Grid.Column="0" Margin="0,0,10,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- כרטיס המזהה שלי והגדרות איתור (My Peer ID & Settings) -->
+                        <Border Grid.Row="0"
+                                Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12"
+                                Margin="0,0,0,8"
+                                SnapsToDevicePixels="True">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="מזהה ההתקנה שלי" FontWeight="Bold" FontSize="12.5" Foreground="{DynamicResource BrushText}" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorderHighlight}" BorderThickness="1" CornerRadius="10" Padding="6,2">
+                                        <TextBlock Text="UDP 2122 פעיל" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource BrushSuccess}" />
+                                    </Border>
+                                </Grid>
+
+                                <!-- שורת מזהה וכפתור העתקה -->
+                                <Grid Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtLocalPeerIdDisplay"
+                                             IsReadOnly="True"
+                                             FontSize="15"
+                                             FontWeight="Bold"
+                                             Foreground="{DynamicResource BrushAccentCyan}"
+                                             Background="{DynamicResource BrushSurface}"
+                                             BorderBrush="{DynamicResource BrushBorder}"
+                                             BorderThickness="1"
+                                             Padding="8,6"
+                                             FlowDirection="LeftToRight"
+                                             TextAlignment="Center" />
+                                    <Button x:Name="BtnCopyPeerIdCard"
+                                             Grid.Column="1"
+                                             Content="העתק"
+                                             Padding="12,6"
+                                             Margin="6,0,0,0"
+                                             Background="{DynamicResource BrushPrimary}"
+                                             Foreground="White"
+                                             FontWeight="Bold"
+                                             BorderThickness="0"
+                                             Cursor="Hand"
+                                             Click="BtnCopyPeerId_Click" />
+                                </Grid>
+
+                                <!-- שם מכשיר -->
+                                <Grid Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="65" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="שם מכשיר:" Foreground="{DynamicResource BrushTextMuted}" FontSize="11.5" VerticalAlignment="Center" />
+                                    <TextBox x:Name="TxtLocalDeviceName" Grid.Column="1" Height="28" VerticalContentAlignment="Center" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Padding="6,0" FontSize="11.5" />
+                                    <Button x:Name="BtnSaveDeviceName" Grid.Column="2" Content="שמור" Padding="8,0" Height="28" Margin="4,0,0,0" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontSize="11" Cursor="Hand" Click="BtnSaveDeviceName_Click" />
+                                </Grid>
+
+                                <!-- נראות באינטרנט (גלוי מול מוסתר) -->
+                                <Grid Margin="0,2,0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="65" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="נראות:" Foreground="{DynamicResource BrushTextMuted}" FontSize="11.5" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                        <RadioButton x:Name="RbVisibilityHidden" Content="מוסתר 🔒" IsChecked="True" Foreground="{DynamicResource BrushText}" FontSize="11" FontWeight="SemiBold" Margin="0,0,10,0" Checked="RbVisibility_Changed" ToolTip="מוסתר: ניתן להתחבר אליך רק בהזנת מזהה מדויק" />
+                                        <RadioButton x:Name="RbVisibilityVisible" Content="גלוי 🌐" Foreground="{DynamicResource BrushText}" FontSize="11" FontWeight="SemiBold" Checked="RbVisibility_Changed" ToolTip="גלוי: מופיע בחיפוש משתמשים באינטרנט" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <CheckBox x:Name="ChkPeerDiscoveryActive" Content="איתור אוטומטי" FontSize="10.5" Foreground="{DynamicResource BrushText}" Margin="0,0,10,0" Checked="ChkPeerDiscoveryActive_Changed" Unchecked="ChkPeerDiscoveryActive_Changed" />
+                                    <CheckBox x:Name="ChkAutoAcceptDrops" Content="קבלת קבצים אוטומטית" FontSize="10.5" Foreground="{DynamicResource BrushText}" Checked="ChkAutoAcceptDrops_Changed" Unchecked="ChkAutoAcceptDrops_Changed" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- רשימת משתמשים ואנשי קשר (Contacts & Discovered Peers) -->
+                        <Border Grid.Row="1"
+                                Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <!-- שדה איתור משתמש לפי מזהה ישיר -->
+                                <Grid Grid.Row="0" Margin="0,0,0,6">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtTargetPeerId"
+                                             Height="30"
+                                             VerticalContentAlignment="Center"
+                                             Background="{DynamicResource BrushSurface}"
+                                             Foreground="{DynamicResource BrushAccentCyan}"
+                                             BorderBrush="{DynamicResource BrushBorder}"
+                                             BorderThickness="1"
+                                             Padding="6,0"
+                                             FlowDirection="LeftToRight"
+                                             TextAlignment="Left"
+                                             ToolTip="הזן מזהה משתמש (למשל: SB-482-910)" />
+                                    <Button x:Name="BtnQueryPeer"
+                                            Grid.Column="1"
+                                            Content="אתר 🔍"
+                                            Padding="10,0"
+                                            Height="30"
+                                            Margin="4,0,0,0"
+                                            Background="{DynamicResource BrushSurface}"
+                                            Foreground="{DynamicResource BrushText}"
+                                            BorderBrush="{DynamicResource BrushBorder}"
+                                            BorderThickness="1"
+                                            FontSize="11"
+                                            FontWeight="SemiBold"
+                                            Cursor="Hand"
+                                            Click="BtnQueryPeer_Click"
+                                            ToolTip="איתור משתמש ברשת המקומית או באינטרנט" />
+                                </Grid>
+
+                                <!-- כפתורי סריקה ורענון -->
+                                <Grid Grid.Row="1" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="BtnSearchInternetPeers"
+                                            Grid.Column="0"
+                                            Content="חפש באינטרנט 🌐"
+                                            Padding="6,4"
+                                            FontSize="11"
+                                            Background="{DynamicResource BrushSurface}"
+                                            Foreground="{DynamicResource BrushAccentCyan}"
+                                            BorderBrush="{DynamicResource BrushBorder}"
+                                            BorderThickness="1"
+                                            FontWeight="SemiBold"
+                                            Cursor="Hand"
+                                            Margin="0,0,4,0"
+                                            Click="BtnSearchInternetPeers_Click" />
+                                    <Button x:Name="BtnRefreshPeers"
+                                            Grid.Column="1"
+                                            Content="רענן משתמשים 🔄"
+                                            Padding="6,4"
+                                            FontSize="11"
+                                            Background="{DynamicResource BrushSurface}"
+                                            Foreground="{DynamicResource BrushText}"
+                                            BorderBrush="{DynamicResource BrushBorder}"
+                                            BorderThickness="1"
+                                            FontWeight="SemiBold"
+                                            Cursor="Hand"
+                                            Margin="4,0,0,0"
+                                            Click="BtnRefreshPeers_Click" />
+                                </Grid>
+
+                                <!-- רשימת עמיתים (Contacts List) -->
+                                <ListBox x:Name="LstDiscoveredPeers"
+                                         Grid.Row="2"
+                                         Background="{DynamicResource BrushSurface}"
+                                         BorderBrush="{DynamicResource BrushBorder}"
+                                         BorderThickness="1"
+                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                         SelectionChanged="LstDiscoveredPeers_SelectionChanged">
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Background="{DynamicResource BrushCard}"
+                                                    BorderBrush="{DynamicResource BrushBorder}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="6"
+                                                    Padding="8,6"
+                                                    Margin="0,2,0,4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <StackPanel Grid.Column="0">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Width="7" Height="7" Fill="{DynamicResource BrushSuccess}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding DeviceName}" FontWeight="Bold" FontSize="12.5" Foreground="{DynamicResource BrushText}" />
+                                                            <Border Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" CornerRadius="4" Padding="4,1" Margin="6,0,0,0">
+                                                                <TextBlock Text="{Binding SourceBadge}" FontSize="9.5" FontWeight="SemiBold" Foreground="{DynamicResource BrushTextMuted}" />
+                                                            </Border>
+                                                        </StackPanel>
+                                                        <StackPanel Orientation="Horizontal" Margin="13,2,0,0">
+                                                            <Border Background="{DynamicResource BrushSurface}" CornerRadius="3" Padding="4,1" Margin="0,0,6,0">
+                                                                <TextBlock Text="{Binding PeerId}" FontSize="10.5" FontWeight="Bold" Foreground="{DynamicResource BrushAccentCyan}" />
+                                                            </Border>
+                                                            <TextBlock Text="{Binding AddressText}" FontSize="10" Foreground="{DynamicResource BrushTextMuted}" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+
+                                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Button Content="דרופ 📁"
+                                                                Padding="6,3"
+                                                                FontSize="10.5"
+                                                                FontWeight="SemiBold"
+                                                                Background="{DynamicResource BrushPrimary}"
+                                                                Foreground="White"
+                                                                BorderThickness="0"
+                                                                Cursor="Hand"
+                                                                Tag="{Binding}"
+                                                                Click="BtnPeerItemDrop_Click" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+                            </Grid>
+                        </Border>
+                    </Grid>
+
+                    <!-- ===================================================================
+                         עמודה 2: חדר צ'אט חי, דרופ קבצים ישיר והיסטוריית שיחה
+                         =================================================================== -->
+                    <Border Grid.Column="1"
+                            Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorder}"
+                            BorderThickness="1"
+                            CornerRadius="8"
+                            SnapsToDevicePixels="True">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <!-- כותרת צ'אט עם העמית הנבחר -->
+                                <RowDefinition Height="Auto" />
+                                <!-- זרם הודעות השיחה (Chat Feed) -->
+                                <RowDefinition Height="*" />
+                                <!-- שורת קלט הודעה, צרף קובץ ושליחה -->
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <!-- סרגל כותרת צ'אט (Chat Room Header) -->
+                            <Border Grid.Row="0"
+                                    Background="{DynamicResource BrushSurface}"
+                                    BorderBrush="{DynamicResource BrushBorder}"
+                                    BorderThickness="0,0,0,1"
+                                    Padding="14,10"
+                                    CornerRadius="8,8,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- פרטי העמית הפעיל בצ'אט -->
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Border Width="38" Height="38" CornerRadius="19" Background="{DynamicResource BrushPrimary}" Margin="0,0,10,0" VerticalAlignment="Center">
+                                            <TextBlock Text="💬" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock x:Name="TxtActiveChatName" Text="בחר משתמש מהרשימה להתחלת שיחה" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource BrushText}" />
+                                                <Border x:Name="BadgeActiveChatId" Background="{DynamicResource BrushCard}" BorderBrush="{DynamicResource BrushBorderHighlight}" BorderThickness="1" CornerRadius="4" Padding="6,1" Margin="8,0,0,0" Visibility="Collapsed">
+                                                    <TextBlock x:Name="TxtActiveChatId" Text="SB-..." FontSize="11" FontWeight="Bold" Foreground="{DynamicResource BrushAccentCyan}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock x:Name="TxtActiveChatStatus" Text="בחר משתמש משמאל או הקלד מזהה כדי לשוחח ולהעביר קבצים בזמן אמת" FontSize="11" Foreground="{DynamicResource BrushTextMuted}" Margin="0,2,0,0" />
+                                        </StackPanel>
+                                    </StackPanel>
+
+                                    <!-- פעולות מהירות בכותרת -->
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                        <Button x:Name="BtnChatDropFiles"
+                                                Content="דרופ קבצים 📁"
+                                                Padding="12,6"
+                                                Background="{DynamicResource BrushPrimary}"
+                                                Foreground="White"
+                                                FontWeight="Bold"
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                Margin="0,0,6,0"
+                                                Click="BtnDropFilesToTarget_Click"
+                                                ToolTip="שלח קבצים ישירות למשתמש זה" />
+                                        <Button x:Name="BtnOpenDropsFolder"
+                                                Content="תיקיית קבצים 📂"
+                                                Padding="10,6"
+                                                Background="{DynamicResource BrushSurface}"
+                                                Foreground="{DynamicResource BrushSuccess}"
+                                                BorderBrush="{DynamicResource BrushBorder}"
+                                                BorderThickness="1"
+                                                FontWeight="SemiBold"
+                                                Cursor="Hand"
+                                                Margin="0,0,6,0"
+                                                Click="BtnOpenDropsFolder_Click"
+                                                ToolTip="פתח את תיקיית הקבצים שהתקבלו ממשתמשים" />
+                                        <Button x:Name="BtnClearChat"
+                                                Content="נקה שיחה 🗑️"
+                                                Padding="10,6"
+                                                Background="{DynamicResource BrushSurface}"
+                                                Foreground="{DynamicResource BrushTextMuted}"
+                                                BorderBrush="{DynamicResource BrushBorder}"
+                                                BorderThickness="1"
+                                                FontWeight="SemiBold"
+                                                Cursor="Hand"
+                                                Margin="0,0,6,0"
+                                                Click="BtnClearChat_Click"
+                                                ToolTip="מחק את היסטוריית השיחה עם משתמש זה" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+
+                            <!-- זרם הודעות צ'אט (Chat Messages Stream) -->
+                            <ListBox x:Name="LstChatMessages"
+                                     Grid.Row="1"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     Padding="12,8"
+                                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                                        <Setter Property="Background" Value="Transparent" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="Margin" Value="0,3" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="Template">
+                                            <Setter.Value>
+                                                <ControlTemplate TargetType="ListBoxItem">
+                                                    <ContentPresenter />
+                                                </ControlTemplate>
+                                            </Setter.Value>
+                                        </Setter>
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Border x:Name="MsgBubble"
+                                                    CornerRadius="10"
+                                                    Padding="12,8"
+                                                    MaxWidth="520"
+                                                    Margin="4,1"
+                                                    Background="#1E293B"
+                                                    BorderBrush="#334155"
+                                                    BorderThickness="1"
+                                                    HorizontalAlignment="Left">
+                                                <StackPanel>
+                                                    <!-- כותרת הודעה: שם השולח וזמן -->
+                                                    <Grid Margin="0,0,0,4">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock x:Name="TxtMsgSender"
+                                                                   Text="{Binding DisplaySender}"
+                                                                   FontSize="11"
+                                                                   FontWeight="Bold"
+                                                                   Foreground="{DynamicResource BrushAccentCyan}" />
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding TimeFormatted}"
+                                                                   FontSize="10.5"
+                                                                   Foreground="{DynamicResource BrushTextSubtle}"
+                                                                   Margin="8,0,0,0" />
+                                                    </Grid>
+
+                                                    <!-- תוכן טקסט של ההודעה -->
+                                                    <TextBlock x:Name="TxtMsgBody"
+                                                               Text="{Binding Text}"
+                                                               TextWrapping="Wrap"
+                                                               FontSize="13"
+                                                               Foreground="{DynamicResource BrushText}" />
+
+                                                    <!-- כרטיס קובץ מצורף / דרופ (מוצג אם יש קובץ מצורף) -->
+                                                    <Border x:Name="PnlAttachment"
+                                                            Visibility="Collapsed"
+                                                            Background="{DynamicResource BrushSurface}"
+                                                            BorderBrush="{DynamicResource BrushBorder}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="6"
+                                                            Padding="10,8"
+                                                            Margin="0,6,0,0">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Grid.Column="0" Text="📎" FontSize="16" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding AttachedFileName}" FontWeight="Bold" FontSize="12" Foreground="{DynamicResource BrushText}" TextTrimming="CharacterEllipsis" MaxWidth="280" />
+                                                                <TextBlock Text="{Binding AttachedFileSizeFormatted}" FontSize="10.5" Foreground="{DynamicResource BrushTextMuted}" Margin="0,2,0,0" />
+                                                            </StackPanel>
+                                                            <Button Grid.Column="2"
+                                                                    Content="פתח קובץ 📂"
+                                                                    Padding="10,4"
+                                                                    FontSize="11"
+                                                                    FontWeight="SemiBold"
+                                                                    Background="{DynamicResource BrushCard}"
+                                                                    Foreground="{DynamicResource BrushPrimary}"
+                                                                    BorderBrush="{DynamicResource BrushBorder}"
+                                                                    BorderThickness="1"
+                                                                    Cursor="Hand"
+                                                                    Margin="8,0,0,0"
+                                                                    Tag="{Binding AttachedFilePath}"
+                                                                    Click="BtnOpenChatAttachment_Click" />
+                                                        </Grid>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Border>
+                                        </Grid>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsOutgoing}" Value="True">
+                                                <Setter TargetName="MsgBubble" Property="HorizontalAlignment" Value="Right" />
+                                                <Setter TargetName="MsgBubble" Property="Background" Value="#0F3832" />
+                                                <Setter TargetName="MsgBubble" Property="BorderBrush" Value="#00D2B4" />
+                                                <Setter TargetName="TxtMsgSender" Property="Foreground" Value="#00D2B4" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding HasAttachment}" Value="True">
+                                                <Setter TargetName="PnlAttachment" Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding HasText}" Value="False">
+                                                <Setter TargetName="TxtMsgBody" Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+
+                            <!-- סרגל קלט הודעה וצירוף קובץ (Chat Input & Attachment Bar) -->
+                            <Border Grid.Row="2"
+                                    Background="{DynamicResource BrushSurface}"
+                                    BorderBrush="{DynamicResource BrushBorder}"
+                                    BorderThickness="0,1,0,0"
+                                    Padding="10,8"
+                                    CornerRadius="0,0,8,8">
+                                <StackPanel>
+                                    <!-- שורת סטטוס הודעות/דרופ אחרון -->
+                                    <TextBlock x:Name="TxtLastDropStatus" Text="מוכן לשליחת הודעות ודרופ קבצים" FontSize="10.5" Foreground="{DynamicResource BrushTextMuted}" Margin="4,0,0,6" TextTrimming="CharacterEllipsis" />
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- כפתור צירוף קובץ ישיר -->
+                                        <Button x:Name="BtnChatAttachFile"
+                                                Grid.Column="0"
+                                                Content="📎 צרף קובץ"
+                                                Padding="10,0"
+                                                Height="36"
+                                                Background="{DynamicResource BrushCard}"
+                                                Foreground="{DynamicResource BrushText}"
+                                                BorderBrush="{DynamicResource BrushBorder}"
+                                                BorderThickness="1"
+                                                FontWeight="SemiBold"
+                                                Cursor="Hand"
+                                                Margin="0,0,8,0"
+                                                Click="BtnChatAttachFile_Click"
+                                                ToolTip="בחר קובץ ושלח ישירות בצ'אט" />
+
+                                        <!-- שדה הקלדת הודעה עם תמיכה ב-Enter -->
+                                        <TextBox x:Name="TxtChatInput"
+                                                 Grid.Column="1"
+                                                 Height="36"
+                                                 VerticalContentAlignment="Center"
+                                                 Background="{DynamicResource BrushCard}"
+                                                 Foreground="{DynamicResource BrushText}"
+                                                 BorderBrush="{DynamicResource BrushBorder}"
+                                                 BorderThickness="1"
+                                                 Padding="10,0"
+                                                 FontSize="13"
+                                                 KeyDown="TxtChatInput_KeyDown"
+                                                 ToolTip="הקלד הודעה... לחץ Enter לשליחה מהירה" />
+
+                                        <!-- כפתור שליחה -->
+                                        <Button x:Name="BtnSendChatMsg"
+                                                Grid.Column="2"
+                                                Content="שלח 🚀"
+                                                Padding="18,0"
+                                                Height="36"
+                                                Margin="8,0,0,0"
+                                                Background="{DynamicResource BrushPrimary}"
+                                                Foreground="White"
+                                                FontWeight="Bold"
+                                                BorderThickness="0"
+                                                Cursor="Hand"
+                                                Click="BtnSendChatMsg_Click" />
+                                    </Grid>
+
+                                    <!-- אלמנטים ישנים מוסתרים לתאימות קוד מלאה -->
+                                    <TextBox x:Name="TxtTargetPeerMsg" Visibility="Collapsed" />
+                                    <Button x:Name="BtnSendMessageToTarget" Visibility="Collapsed" Click="BtnSendMessageToTarget_Click" />
+                                    <Button x:Name="BtnDropFilesToTarget" Visibility="Collapsed" Click="BtnDropFilesToTarget_Click" />
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </TabItem>
+
+            <!-- טאב 3: שיתוף מאובטח והעלאה לשירותי ענן -->
             <TabItem x:Name="TabSecureShare" Header="שיתוף מאובטח">
                 <Grid Margin="0,10,0,0">
                     <Grid.RowDefinitions>
@@ -636,16 +1298,16 @@
                     </Grid.RowDefinitions>
 
                     <Border Grid.Row="0"
-                            Background="{StaticResource BrushCard}"
-                            BorderBrush="{StaticResource BrushBorder}"
+                            Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorder}"
                             BorderThickness="1"
                             CornerRadius="8"
                             Padding="18"
                             Margin="0,0,0,12"
                             SnapsToDevicePixels="True">
                         <StackPanel>
-                            <TextBlock x:Name="LblSecureShareTitle" Text="יצירת קישור שיתוף מאובטח לקובץ או תיקייה" FontSize="15" FontWeight="Bold" Foreground="{StaticResource BrushText}" Margin="0,0,0,3" />
-                            <TextBlock x:Name="LblSecureShareSubtitle" Text="שתף קבצים ברשת המקומית, באינטרנט, בענן מוצפן, או ישירות דרך Google Drive ו-OneDrive" FontSize="12" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,14" />
+                            <TextBlock x:Name="LblSecureShareTitle" Text="יצירת קישור שיתוף מאובטח לקובץ או תיקייה" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource BrushText}" Margin="0,0,0,3" />
+                            <TextBlock x:Name="LblSecureShareSubtitle" Text="שתף קבצים ברשת המקומית, באינטרנט, בענן מוצפן, או ישירות דרך Google Drive ו-OneDrive" FontSize="12" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,14" />
 
                             <!-- שורת בחירת קובץ/תיקייה -->
                             <Grid Margin="0,0,0,12">
@@ -659,19 +1321,19 @@
                                          VerticalContentAlignment="Center"
                                          IsReadOnly="True"
                                          FontSize="13"
-                                         Background="{StaticResource BrushSurface}"
-                                         Foreground="{StaticResource BrushText}"
-                                         BorderBrush="{StaticResource BrushBorder}"
+                                         Background="{DynamicResource BrushSurface}"
+                                         Foreground="{DynamicResource BrushText}"
+                                         BorderBrush="{DynamicResource BrushBorder}"
                                          BorderThickness="1"
                                          Padding="10,0"
                                          Text="בחר קובץ או תיקייה לשיתוף..." />
-                                <Button x:Name="BtnSelectFile" Content="בחר קובץ" Height="38" Margin="8,0,0,0" Padding="16,0" Background="{StaticResource BrushPrimary}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnSelectFile_Click" />
-                                <Button x:Name="BtnSelectFolder" Content="בחר תיקייה" Height="38" Margin="6,0,0,0" Padding="16,0" Background="{StaticResource BrushSurface}" Foreground="{StaticResource BrushText}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" FontWeight="Bold" Cursor="Hand" Click="BtnSelectFolder_Click" />
+                                <Button x:Name="BtnSelectFile" Content="בחר קובץ" Height="38" Margin="8,0,0,0" Padding="16,0" Background="{DynamicResource BrushPrimary}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnSelectFile_Click" />
+                                <Button x:Name="BtnSelectFolder" Content="בחר תיקייה" Height="38" Margin="6,0,0,0" Padding="16,0" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="Bold" Cursor="Hand" Click="BtnSelectFolder_Click" />
                             </Grid>
 
                             <!-- שורת שירותי ענן מזוהים -->
-                            <Border Background="{StaticResource BrushSurface}"
-                                    BorderBrush="{StaticResource BrushBorder}"
+                            <Border Background="{DynamicResource BrushSurface}"
+                                    BorderBrush="{DynamicResource BrushBorder}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="14,10"
@@ -683,8 +1345,8 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                        <TextBlock x:Name="LblCloudDirectTitle" Text="שיתוף ישיר לשירותי ענן (Google Drive &amp; OneDrive)" FontWeight="Bold" FontSize="13" Foreground="{StaticResource BrushText}" />
-                                        <TextBlock x:Name="TxtCloudServicesStatus" Text="מזהה שירותי ענן מסונכרנים במחשב..." FontSize="11" Foreground="{StaticResource BrushTextMuted}" Margin="0,3,0,0" />
+                                        <TextBlock x:Name="LblCloudDirectTitle" Text="שיתוף ישיר לשירותי ענן (Google Drive &amp; OneDrive)" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource BrushText}" />
+                                        <TextBlock x:Name="TxtCloudServicesStatus" Text="מזהה שירותי ענן מסונכרנים במחשב..." FontSize="11" Foreground="{DynamicResource BrushTextMuted}" Margin="0,3,0,0" />
                                     </StackPanel>
                                     <Button x:Name="BtnShareGoogleDriveDirect" Grid.Column="1" Content="שיתוף ב-Google Drive" Height="34" Padding="14,0" Background="#0D9488" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Margin="8,0,0,0" ToolTip="מעתיק את הקובץ ללוח (Ctrl+V) ופותח את Google Drive" Click="BtnShareGoogleDriveDirect_Click" />
                                     <Button x:Name="BtnShareOneDriveDirect" Grid.Column="2" Content="שיתוף ב-OneDrive" Height="34" Padding="14,0" Background="#0284C7" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Margin="6,0,0,0" ToolTip="סנכרון מקומי אוטומטי ל-OneDrive" Click="BtnShareOneDriveDirect_Click" />
@@ -702,7 +1364,7 @@
 
                                 <!-- ערוץ שיתוף -->
                                 <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                    <TextBlock x:Name="LblChannel" Text="ערוץ הפצה:" FontSize="12" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
+                                    <TextBlock x:Name="LblChannel" Text="ערוץ הפצה:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
                                     <ComboBox x:Name="CmbShareChannel" SelectedIndex="0">
                                         <ComboBoxItem x:Name="CmbChanLan" Content="רשת מקומית (LAN Wi-Fi)" Tag="LAN" />
                                         <ComboBoxItem x:Name="CmbChanTunnel" Content="אינטרנט עולמי (Cloudflare HTTPS)" Tag="Tunnel" />
@@ -715,7 +1377,7 @@
 
                                 <!-- קוד PIN לאבטחה -->
                                 <StackPanel Grid.Column="1" Margin="4,0,4,0">
-                                    <TextBlock x:Name="LblPinCode" Text="קוד PIN לאימות:" FontSize="12" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
+                                    <TextBlock x:Name="LblPinCode" Text="קוד PIN לאימות:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -728,19 +1390,19 @@
                                                  Text="12345678"
                                                  Padding="8,0"
                                                  VerticalContentAlignment="Center"
-                                                 Background="{StaticResource BrushSurface}"
-                                                 Foreground="{StaticResource BrushAccentCyan}"
-                                                 BorderBrush="{StaticResource BrushBorder}"
+                                                 Background="{DynamicResource BrushSurface}"
+                                                 Foreground="{DynamicResource BrushAccentCyan}"
+                                                 BorderBrush="{DynamicResource BrushBorder}"
                                                  BorderThickness="1"
                                                  FlowDirection="LeftToRight"
                                                  TextAlignment="Left" />
-                                        <Button x:Name="BtnGenPin" Grid.Column="1" Content="הגרל" Height="38" Padding="10,0" Background="{StaticResource BrushCard}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" Foreground="{StaticResource BrushText}" Cursor="Hand" Margin="5,0,0,0" ToolTip="הגרל קוד PIN חדש" Click="BtnGenPin_Click" />
+                                        <Button x:Name="BtnGenPin" Grid.Column="1" Content="הגרל" Height="38" Padding="10,0" Background="{DynamicResource BrushCard}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Foreground="{DynamicResource BrushText}" Cursor="Hand" Margin="5,0,0,0" ToolTip="הגרל קוד PIN חדש" Click="BtnGenPin_Click" />
                                     </Grid>
                                 </StackPanel>
 
                                 <!-- זמן תפוגה -->
                                 <StackPanel Grid.Column="2" Margin="4,0,4,0">
-                                    <TextBlock x:Name="LblExpiration" Text="זמן תפוגה:" FontSize="12" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
+                                    <TextBlock x:Name="LblExpiration" Text="זמן תפוגה:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
                                     <ComboBox x:Name="CmbExpiration" SelectedIndex="0">
                                         <ComboBoxItem x:Name="CmbExpUnlimited" Content="ללא הגבלת זמן" Tag="0" />
                                         <ComboBoxItem x:Name="CmbExp15Min" Content="15 דקות" Tag="15" />
@@ -752,7 +1414,7 @@
 
                                 <!-- הגבלת הורדות -->
                                 <StackPanel Grid.Column="3" Margin="8,0,0,0">
-                                    <TextBlock x:Name="LblMaxDownloads" Text="הגבלת הורדות:" FontSize="12" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
+                                    <TextBlock x:Name="LblMaxDownloads" Text="הגבלת הורדות:" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
                                     <ComboBox x:Name="CmbMaxDownloads" SelectedIndex="0">
                                         <ComboBoxItem x:Name="CmbMaxDl1" Content="הורדה אחת (חד-פעמי)" Tag="1" />
                                         <ComboBoxItem x:Name="CmbMaxDl3" Content="עד 3 הורדות" Tag="3" />
@@ -768,7 +1430,7 @@
                                     Height="42"
                                     FontSize="14"
                                     FontWeight="Bold"
-                                    Background="{StaticResource BrushPrimaryGradient}"
+                                    Background="{DynamicResource BrushPrimaryGradient}"
                                     Foreground="White"
                                     BorderThickness="0"
                                     Cursor="Hand"
@@ -777,14 +1439,14 @@
                             <!-- כרטיס תוצאה של הקישור שנוצר -->
                             <Border x:Name="BorderShareResult"
                                     Visibility="Collapsed"
-                                    Background="{StaticResource BrushSurface}"
-                                    BorderBrush="{StaticResource BrushPrimary}"
+                                    Background="{DynamicResource BrushSurface}"
+                                    BorderBrush="{DynamicResource BrushPrimary}"
                                     BorderThickness="1"
                                     CornerRadius="6"
                                     Padding="14"
                                     Margin="0,14,0,0">
                                 <StackPanel>
-                                    <TextBlock x:Name="TxtResultHeader" Text="קישור השיתוף מוכן לפעולה" FontSize="14" FontWeight="Bold" Foreground="{StaticResource BrushSuccess}" Margin="0,0,0,6" />
+                                    <TextBlock x:Name="TxtResultHeader" Text="קישור השיתוף מוכן לפעולה" FontSize="14" FontWeight="Bold" Foreground="{DynamicResource BrushSuccess}" Margin="0,0,0,6" />
                                     <Grid Margin="0,4,0,8">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
@@ -798,21 +1460,21 @@
                                                  IsReadOnly="True"
                                                  FontSize="13"
                                                  FontWeight="Bold"
-                                                 Foreground="{StaticResource BrushAccentCyan}"
-                                                 Background="{StaticResource BrushCard}"
-                                                 BorderBrush="{StaticResource BrushBorder}"
+                                                 Foreground="{DynamicResource BrushAccentCyan}"
+                                                 Background="{DynamicResource BrushCard}"
+                                                 BorderBrush="{DynamicResource BrushBorder}"
                                                  BorderThickness="1"
                                                  Padding="10,0"
                                                  FlowDirection="LeftToRight"
                                                  TextAlignment="Left" />
-                                        <Button x:Name="BtnCopyShareUrl" Grid.Column="1" Content="העתק קישור" Height="36" Margin="6,0,0,0" Padding="14,0" Background="{StaticResource BrushPrimary}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnCopyShareUrl_Click" />
-                                        <Button x:Name="BtnResultOpenBrowser" Grid.Column="2" Content="פתח בדפדפן" Height="36" Margin="5,0,0,0" Padding="14,0" Background="{StaticResource BrushSuccess}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnResultOpenBrowser_Click" />
-                                        <Button x:Name="BtnResultShowExplorer" Grid.Column="3" Content="הצג בסייר" Height="36" Margin="5,0,0,0" Padding="14,0" Background="{StaticResource BrushSurface}" Foreground="{StaticResource BrushText}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" FontWeight="Bold" Cursor="Hand" Click="BtnResultShowExplorer_Click" />
+                                        <Button x:Name="BtnCopyShareUrl" Grid.Column="1" Content="העתק קישור" Height="36" Margin="6,0,0,0" Padding="14,0" Background="{DynamicResource BrushPrimary}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnCopyShareUrl_Click" />
+                                        <Button x:Name="BtnResultOpenBrowser" Grid.Column="2" Content="פתח בדפדפן" Height="36" Margin="5,0,0,0" Padding="14,0" Background="{DynamicResource BrushSuccess}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnResultOpenBrowser_Click" />
+                                        <Button x:Name="BtnResultShowExplorer" Grid.Column="3" Content="הצג בסייר" Height="36" Margin="5,0,0,0" Padding="14,0" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="Bold" Cursor="Hand" Click="BtnResultShowExplorer_Click" />
                                     </Grid>
                                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                        <TextBlock x:Name="LblPinVerification" Text="קוד אימות PIN / אבטחה:" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center" Margin="0,0,8,0" />
-                                        <TextBlock x:Name="TxtResultPinDisplay" Text="12345678" FontWeight="Bold" FontSize="14" Foreground="{StaticResource BrushWarning}" VerticalAlignment="Center" Margin="0,0,16,0" />
-                                        <Button x:Name="BtnCopyShareFullMessage" Content="העתק הודעת שיתוף מלאה" Height="32" Padding="14,0" Background="{StaticResource BrushSuccess}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnCopyShareFullMessage_Click" />
+                                        <TextBlock x:Name="LblPinVerification" Text="קוד אימות PIN / אבטחה:" Foreground="{DynamicResource BrushTextMuted}" VerticalAlignment="Center" Margin="0,0,8,0" />
+                                        <TextBlock x:Name="TxtResultPinDisplay" Text="12345678" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource BrushWarning}" VerticalAlignment="Center" Margin="0,0,16,0" />
+                                        <Button x:Name="BtnCopyShareFullMessage" Content="העתק הודעת שיתוף מלאה" Height="32" Padding="14,0" Background="{DynamicResource BrushSuccess}" Foreground="White" FontWeight="Bold" BorderThickness="0" Cursor="Hand" Click="BtnCopyShareFullMessage_Click" />
                                     </StackPanel>
                                 </StackPanel>
                             </Border>
@@ -821,15 +1483,15 @@
 
                     <!-- רשימת קישורים פעילים -->
                     <Border Grid.Row="1"
-                            Background="{StaticResource BrushCard}"
-                            BorderBrush="{StaticResource BrushBorder}"
+                            Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorder}"
                             BorderThickness="1"
                             CornerRadius="8"
                             Padding="16"
                             SnapsToDevicePixels="True">
                         <StackPanel>
-                            <TextBlock x:Name="LblActiveTransfersTitle" Text="קישורי שיתוף פעילים" FontWeight="Bold" FontSize="13.5" Foreground="{StaticResource BrushText}" Margin="0,0,0,8" />
-                            <ListBox x:Name="LstActiveTransfers" Height="150" Background="{StaticResource BrushSurface}" BorderBrush="{StaticResource BrushBorder}" Foreground="{StaticResource BrushText}">
+                            <TextBlock x:Name="LblActiveTransfersTitle" Text="קישורי שיתוף פעילים" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource BrushText}" Margin="0,0,0,8" />
+                            <ListBox x:Name="LstActiveTransfers" Height="150" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" Foreground="{DynamicResource BrushText}">
                                 <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <Grid Margin="4,4">
@@ -839,10 +1501,10 @@
                                                 <ColumnDefinition Width="2*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding FileName}" FontWeight="Bold" Foreground="{StaticResource BrushAccentCyan}" VerticalAlignment="Center" />
-                                            <TextBlock Grid.Column="1" Text="{Binding Channel}" Foreground="{StaticResource BrushWarning}" VerticalAlignment="Center" />
-                                            <TextBlock Grid.Column="2" Text="{Binding StatusDescription}" Foreground="{StaticResource BrushTextMuted}" VerticalAlignment="Center" />
-                                            <Button Grid.Column="3" Content="{Binding CancelButtonText}" Padding="8,3" Background="{StaticResource BrushDanger}" Foreground="White" BorderThickness="0" Cursor="Hand" Tag="{Binding Token}" Click="BtnCancelTransfer_Click" />
+                                            <TextBlock Grid.Column="0" Text="{Binding FileName}" FontWeight="Bold" Foreground="{DynamicResource BrushAccentCyan}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding Channel}" Foreground="{DynamicResource BrushWarning}" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2" Text="{Binding StatusDescription}" Foreground="{DynamicResource BrushTextMuted}" VerticalAlignment="Center" />
+                                            <Button Grid.Column="3" Content="{Binding CancelButtonText}" Padding="8,3" Background="{DynamicResource BrushDanger}" Foreground="White" BorderThickness="0" Cursor="Hand" Tag="{Binding Token}" Click="BtnCancelTransfer_Click" />
                                         </Grid>
                                     </DataTemplate>
                                 </ListBox.ItemTemplate>
@@ -854,93 +1516,162 @@
 
             <!-- טאב 3: הגדרות מתקדמות -->
             <TabItem x:Name="TabSettings" Header="הגדרות">
-                <Border Background="{StaticResource BrushCard}"
-                        BorderBrush="{StaticResource BrushBorder}"
-                        BorderThickness="1"
-                        CornerRadius="8"
-                        Padding="20"
-                        Margin="0,10,0,0"
-                        SnapsToDevicePixels="True">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Margin="0,10,0,0">
                     <StackPanel>
-                        <TextBlock x:Name="LblSettingsHeader" Text="הגדרות שרת ואבטחה מתקדמות" FontSize="15.5" FontWeight="Bold" Foreground="{StaticResource BrushText}" Margin="0,0,0,16" />
+                        <Border Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="20"
+                                Margin="0,0,0,12"
+                                SnapsToDevicePixels="True">
+                            <StackPanel>
+                                <TextBlock x:Name="LblSettingsHeader" Text="הגדרות שרת ואבטחה מתקדמות" FontSize="15.5" FontWeight="Bold" Foreground="{DynamicResource BrushText}" Margin="0,0,0,16" />
 
-                        <Grid Margin="0,0,0,14">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="0.8*" />
-                                <ColumnDefinition Width="1.2*" />
-                                <ColumnDefinition Width="1.2*" />
-                                <ColumnDefinition Width="0.8*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                                <TextBlock x:Name="LblSettingsPort" Text="יציאת שרת (Server Port):" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
-                                <TextBox x:Name="TxtSettingsPort" Height="36" Text="2121" Padding="10,0" VerticalContentAlignment="Center" Background="{StaticResource BrushSurface}" Foreground="{StaticResource BrushText}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" FlowDirection="LeftToRight" TextAlignment="Left" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="4,0,4,0">
-                                <TextBlock x:Name="LblSettingsAccessMode" Text="מצב גישה למחשב:" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
-                                <ComboBox x:Name="CmbSettingsAccessMode" SelectedIndex="0">
-                                    <ComboBoxItem x:Name="CmbItemAccessFull" Content="גישה מלאה לכל הכוננים והמחשב (Full Computer)" Tag="FullComputer" />
-                                    <ComboBoxItem x:Name="CmbItemAccessSingle" Content="הגבלה לתיקייה ייעודית בלבד (Single Folder)" Tag="SingleFolder" />
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Margin="4,0,4,0">
-                                <TextBlock x:Name="LblSettingsCloseAction" Text="פעולת סגירת חלון (X):" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
-                                <ComboBox x:Name="CmbSettingsCloseAction" SelectedIndex="0">
-                                    <ComboBoxItem x:Name="CmbItemCloseTray" Content="מזעור למגש המערכת (השרת ממשיך לפעול ברקע)" Tag="MinimizeToTray" />
-                                    <ComboBoxItem x:Name="CmbItemCloseExit" Content="יציאה מלאה וסגירת התוכנה" Tag="ExitApplication" />
-                                </ComboBox>
-                            </StackPanel>
-                            <StackPanel Grid.Column="3" Margin="8,0,0,0">
-                                <TextBlock x:Name="LblSettingsLanguage" Text="שפת ממשק (Language):" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
-                                <ComboBox x:Name="CmbSettingsLanguage" SelectedIndex="0" SelectionChanged="CmbSettingsLanguage_SelectionChanged">
-                                    <ComboBoxItem Content="עברית (Hebrew)" Tag="he" />
-                                    <ComboBoxItem Content="English" Tag="en" />
-                                </ComboBox>
-                            </StackPanel>
-                        </Grid>
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="0.7*" />
+                                        <ColumnDefinition Width="1.1*" />
+                                        <ColumnDefinition Width="1.1*" />
+                                        <ColumnDefinition Width="0.8*" />
+                                        <ColumnDefinition Width="0.9*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                        <TextBlock x:Name="LblSettingsPort" Text="יציאת שרת (Server Port):" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
+                                        <TextBox x:Name="TxtSettingsPort" Height="36" Text="2121" Padding="10,0" VerticalContentAlignment="Center" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FlowDirection="LeftToRight" TextAlignment="Left" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" Margin="3,0,3,0">
+                                        <TextBlock x:Name="LblSettingsAccessMode" Text="מצב גישה למחשב:" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
+                                        <ComboBox x:Name="CmbSettingsAccessMode" SelectedIndex="0">
+                                            <ComboBoxItem x:Name="CmbItemAccessFull" Content="גישה מלאה לכל הכוננים והמחשב (Full Computer)" Tag="FullComputer" />
+                                            <ComboBoxItem x:Name="CmbItemAccessSingle" Content="הגבלה לתיקייה ייעודית בלבד (Single Folder)" Tag="SingleFolder" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Margin="3,0,3,0">
+                                        <TextBlock x:Name="LblSettingsCloseAction" Text="פעולת סגירת חלון (X):" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
+                                        <ComboBox x:Name="CmbSettingsCloseAction" SelectedIndex="0">
+                                            <ComboBoxItem x:Name="CmbItemCloseTray" Content="מזעור למגש המערכת (השרת ממשיך לפעול ברקע)" Tag="MinimizeToTray" />
+                                            <ComboBoxItem x:Name="CmbItemCloseExit" Content="יציאה מלאה וסגירת התוכנה" Tag="ExitApplication" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="3" Margin="3,0,3,0">
+                                        <TextBlock x:Name="LblSettingsLanguage" Text="שפת ממשק (Language):" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
+                                        <ComboBox x:Name="CmbSettingsLanguage" SelectedIndex="0" SelectionChanged="CmbSettingsLanguage_SelectionChanged">
+                                            <ComboBoxItem Content="עברית (Hebrew)" Tag="he" />
+                                            <ComboBoxItem Content="English" Tag="en" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="4" Margin="6,0,0,0">
+                                        <TextBlock x:Name="LblSettingsTheme" Text="ערכת נושא (Theme):" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
+                                        <ComboBox x:Name="CmbSettingsTheme" SelectedIndex="0" SelectionChanged="CmbSettingsTheme_SelectionChanged">
+                                            <ComboBoxItem x:Name="CmbItemThemeDark" Content="כהה (Dark)" Tag="dark" />
+                                            <ComboBoxItem x:Name="CmbItemThemeLight" Content="בהיר (Light)" Tag="light" />
+                                            <ComboBoxItem x:Name="CmbItemThemeAuto" Content="אוטומטי (לפי Windows)" Tag="system" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
 
-                        <StackPanel Margin="0,0,0,14">
-                            <TextBlock x:Name="LblSettingsSharedFolder" Text="תיקיית שיתוף ייעודית (במצב Single Folder):" FontWeight="Bold" Foreground="{StaticResource BrushTextMuted}" Margin="0,0,0,5" />
+                                <!-- שורת הגדרת הגבלת מהירות תעבורה -->
+                                <Grid Margin="0,0,0,14">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Margin="0,0,6,0">
+                                        <TextBlock x:Name="LblSettingsBandwidth" Text="הגבלת מהירות תעבורה (Bandwidth Limit):" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
+                                        <ComboBox x:Name="CmbSettingsBandwidthLimit" SelectedIndex="0">
+                                            <ComboBoxItem x:Name="CmbBwUnlimited" Content="ללא הגבלה (מהירות מקסימלית)" Tag="0" />
+                                            <ComboBoxItem x:Name="CmbBw5MB" Content="5 MB/s (מתאים ל-Wi-Fi ביתי)" Tag="5120" />
+                                            <ComboBoxItem x:Name="CmbBw10MB" Content="10 MB/s (מהיר ומאוזן)" Tag="10240" />
+                                            <ComboBoxItem x:Name="CmbBw25MB" Content="25 MB/s (מהירות גבוהה)" Tag="25600" />
+                                            <ComboBoxItem x:Name="CmbBw50MB" Content="50 MB/s (רשת עסקית)" Tag="51200" />
+                                        </ComboBox>
+                                    </StackPanel>
+                                </Grid>
+
+                                <StackPanel Margin="0,0,0,14">
+                                    <TextBlock x:Name="LblSettingsSharedFolder" Text="תיקיית שיתוף ייעודית (במצב Single Folder):" FontWeight="Bold" Foreground="{DynamicResource BrushTextMuted}" Margin="0,0,0,5" />
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="TxtSettingsSharedFolder" Height="36" VerticalContentAlignment="Center" IsReadOnly="True" Padding="10,0" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FlowDirection="LeftToRight" TextAlignment="Left" />
+                                        <Button x:Name="BtnSettingsBrowseFolder" Grid.Column="1" Content="עיון תיקייה" Height="36" Padding="16,0" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="Bold" Margin="8,0,0,0" Cursor="Hand" Click="BtnSettingsBrowseFolder_Click" />
+                                    </Grid>
+                                </StackPanel>
+
+                                <StackPanel Margin="0,4,0,16">
+                                    <CheckBox x:Name="ChkSettingsRecycleBin" Content="השתמש בסל המחזור של Windows (Recycle Bin) בעת מחיקת קבצים" FontWeight="SemiBold" Foreground="{DynamicResource BrushText}" Margin="0,0,0,9" IsChecked="True" />
+                                    <CheckBox x:Name="ChkSettingsReadOnly" Content="מצב קריאה בלבד (Read-Only Mode) - חוסם מחיקה והעלאה" FontWeight="SemiBold" Foreground="{DynamicResource BrushText}" Margin="0,0,0,9" />
+                                    <CheckBox x:Name="ChkSettingsHidden" Content="הצג קבצים ותיקיות מוסתרים" FontWeight="SemiBold" Foreground="{DynamicResource BrushText}" Margin="0,0,0,9" />
+                                    <CheckBox x:Name="ChkSettingsHotkey" Content="קיצור מקשים גלובלי (Alt+S) - שיתוף מהיר מהלוח או צילום מסך" FontWeight="SemiBold" Foreground="{DynamicResource BrushAccentCyan}" Margin="0,0,0,9" IsChecked="True" />
+                                    <CheckBox x:Name="ChkSettingsContextMenu" Content="תפריט קליק ימני בסייר הקבצים של Windows (שתף באמצעות EasyShare PRO)" FontWeight="SemiBold" Foreground="{DynamicResource BrushAccentCyan}" Margin="0,0,0,9" />
+                                    <CheckBox x:Name="ChkSettingsDropZone" Content="ווידג'ט צף שולחני (Floating Drop-Zone) לגרירה מהירה של קבצים" FontWeight="SemiBold" Foreground="{DynamicResource BrushAccentCyan}" Margin="0,0,0,9" />
+                                    <CheckBox x:Name="ChkSettingsAutoStartTunnel" Content="הפעל מנהור Cloudflare אוטומטית בהפעלת השרת" FontWeight="SemiBold" Foreground="{DynamicResource BrushWarning}" Margin="0,0,0,9" />
+                                </StackPanel>
+
+                                <Button x:Name="BtnSaveSettings" Content="שמור הגדרות" Padding="20,10" FontSize="13.5" FontWeight="Bold" Background="{DynamicResource BrushPrimary}" Foreground="White" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" Click="BtnSaveSettings_Click" />
+                            </StackPanel>
+                        </Border>
+
+                        <!-- יומן אירועים ופעילות שרת (Activity Stream) -->
+                        <Border Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="16"
+                                Margin="0,0,0,10"
+                                SnapsToDevicePixels="True">
                             <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtSettingsSharedFolder" Height="36" VerticalContentAlignment="Center" IsReadOnly="True" Padding="10,0" Background="{StaticResource BrushSurface}" Foreground="{StaticResource BrushText}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" FlowDirection="LeftToRight" TextAlignment="Left" />
-                                <Button x:Name="BtnSettingsBrowseFolder" Grid.Column="1" Content="עיון תיקייה" Height="36" Padding="16,0" Background="{StaticResource BrushSurface}" Foreground="{StaticResource BrushText}" BorderBrush="{StaticResource BrushBorder}" BorderThickness="1" FontWeight="Bold" Margin="8,0,0,0" Cursor="Hand" Click="BtnSettingsBrowseFolder_Click" />
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" Margin="0,0,0,8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="LblEventLogTitle" Grid.Column="0" Text="יומן פעילות ושרת (Activity Stream)" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource BrushTextMuted}" VerticalAlignment="Center" />
+                                    <Button x:Name="BtnClearLog" Grid.Column="1" Content="נקה יומן" Padding="12,4" FontSize="11.5" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Cursor="Hand" Click="BtnClearLog_Click" />
+                                </Grid>
+                                <TextBox x:Name="TxtEventLog"
+                                         Grid.Row="1"
+                                         Height="180"
+                                         IsReadOnly="True"
+                                         VerticalScrollBarVisibility="Auto"
+                                         Background="{DynamicResource BrushSurface}"
+                                         Foreground="{DynamicResource BrushAccentCyan}"
+                                         FontFamily="Consolas, Cascadia Code, monospace"
+                                         FontSize="11"
+                                         BorderBrush="{DynamicResource BrushBorder}"
+                                         Padding="8"
+                                         FlowDirection="LeftToRight"
+                                         TextAlignment="Left" />
                             </Grid>
-                        </StackPanel>
-
-                        <StackPanel Margin="0,4,0,16">
-                            <CheckBox x:Name="ChkSettingsRecycleBin" Content="השתמש בסל המחזור של Windows (Recycle Bin) בעת מחיקת קבצים" FontWeight="SemiBold" Foreground="{StaticResource BrushText}" Margin="0,0,0,9" IsChecked="True" />
-                            <CheckBox x:Name="ChkSettingsReadOnly" Content="מצב קריאה בלבד (Read-Only Mode) - חוסם מחיקה והעלאה" FontWeight="SemiBold" Foreground="{StaticResource BrushText}" Margin="0,0,0,9" />
-                            <CheckBox x:Name="ChkSettingsHidden" Content="הצג קבצים ותיקיות מוסתרים" FontWeight="SemiBold" Foreground="{StaticResource BrushText}" Margin="0,0,0,9" />
-                            <CheckBox x:Name="ChkSettingsHotkey" Content="קיצור מקשים גלובלי (Alt+S) - שיתוף מהיר מהלוח או צילום מסך" FontWeight="SemiBold" Foreground="{StaticResource BrushAccentCyan}" Margin="0,0,0,9" IsChecked="True" />
-                            <CheckBox x:Name="ChkSettingsContextMenu" Content="תפריט קליק ימני בסייר הקבצים של Windows (שתף באמצעות EasyShare PRO)" FontWeight="SemiBold" Foreground="{StaticResource BrushAccentCyan}" Margin="0,0,0,9" />
-                            <CheckBox x:Name="ChkSettingsDropZone" Content="ווידג'ט צף שולחני (Floating Drop-Zone) לגרירה מהירה של קבצים" FontWeight="SemiBold" Foreground="{StaticResource BrushAccentCyan}" Margin="0,0,0,9" />
-                            <CheckBox x:Name="ChkSettingsAutoStartTunnel" Content="הפעל מנהור Cloudflare אוטומטית בהפעלת השרת" FontWeight="SemiBold" Foreground="{StaticResource BrushWarning}" Margin="0,0,0,9" />
-                        </StackPanel>
-
-                        <Button x:Name="BtnSaveSettings" Content="שמור הגדרות" Padding="20,10" FontSize="13.5" FontWeight="Bold" Background="{StaticResource BrushPrimary}" Foreground="White" BorderThickness="0" Cursor="Hand" HorizontalAlignment="Right" Click="BtnSaveSettings_Click" />
+                        </Border>
                     </StackPanel>
-                </Border>
+                </ScrollViewer>
             </TabItem>
 
             <!-- טאב 4: ניטור ובקרה חי -->
             <TabItem x:Name="TabMonitor" Header="ניטור ובקרה">
                 <Grid Margin="0,10,0,0">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="180" />
-                        <RowDefinition Height="*" />
+                        <RowDefinition Height="105" />
+                        <RowDefinition Height="1.35*" MinHeight="210" />
+                        <RowDefinition Height="1*" MinHeight="165" />
                     </Grid.RowDefinitions>
 
                     <!-- כרטיס גרף מהירות רשת בזמן אמת -->
                     <Border Grid.Row="0"
-                            Background="{StaticResource BrushCard}"
-                            BorderBrush="{StaticResource BrushBorder}"
+                            Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorder}"
                             BorderThickness="1"
                             CornerRadius="8"
-                            Padding="14"
-                            Margin="0,0,0,12"
+                            Padding="12,8"
+                            Margin="0,0,0,10"
                             SnapsToDevicePixels="True">
                         <Grid>
                             <Grid.RowDefinitions>
@@ -948,60 +1679,103 @@
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
-                            <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,8">
-                                <TextBlock x:Name="LblBandwidthTitle" Text="תעבורת רשת בזמן אמת (Upload Bandwidth):" FontWeight="Bold" FontSize="13.5" Foreground="{StaticResource BrushAccentCyan}" />
-                                <TextBlock x:Name="TxtCurrentSpeedDisplay" Text="0.00 Mbps" FontWeight="Bold" FontSize="15" Foreground="{StaticResource BrushSuccess}" Margin="14,0,0,0" />
-                                <TextBlock x:Name="LblBandwidthDetails" Text="• פורט 2121 • mDNS פעיל (easyshare.local)" FontSize="11.5" Foreground="{StaticResource BrushTextMuted}" Margin="16,2,0,0" />
+                            <StackPanel Orientation="Horizontal" Grid.Row="0" Margin="0,0,0,4">
+                                <TextBlock x:Name="LblBandwidthTitle" Text="תעבורת רשת בזמן אמת (Upload Bandwidth):" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource BrushAccentCyan}" />
+                                <TextBlock x:Name="TxtCurrentSpeedDisplay" Text="0.00 Mbps" FontWeight="Bold" FontSize="14" Foreground="{DynamicResource BrushSuccess}" Margin="12,0,0,0" />
+                                <TextBlock x:Name="LblBandwidthDetails" Text="• פורט 2121 • mDNS פעיל (easyshare.local)" FontSize="11" Foreground="{DynamicResource BrushTextMuted}" Margin="14,2,0,0" />
                             </StackPanel>
 
-                            <Canvas x:Name="BandwidthCanvas" Grid.Row="1" ClipToBounds="True" Background="#06090F">
-                                <Polyline x:Name="SpeedLine" Stroke="{StaticResource BrushAccentCyan}" StrokeThickness="2" />
+                            <Canvas x:Name="BandwidthCanvas" Grid.Row="1" ClipToBounds="True" Background="{DynamicResource BrushSurface}">
+                                <Polyline x:Name="SpeedLine" Stroke="{DynamicResource BrushAccentCyan}" StrokeThickness="2" />
                             </Canvas>
                         </Grid>
                     </Border>
 
-                    <!-- רשימת חיבורים פעילים -->
+                    <!-- כרטיס ניטור קישורים וקבצים משותפים פעילים -->
                     <Border Grid.Row="1"
-                            Background="{StaticResource BrushCard}"
-                            BorderBrush="{StaticResource BrushBorder}"
+                            Background="{DynamicResource BrushCard}"
+                            BorderBrush="{DynamicResource BrushBorder}"
                             BorderThickness="1"
                             CornerRadius="8"
-                            Padding="16"
+                            Padding="14,10"
+                            Margin="0,0,0,10"
                             SnapsToDevicePixels="True">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
 
-                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-                                <TextBlock x:Name="LblLiveConnectionsTitle" Text="חיבורים והורדות אקטיביים בזמן אמת" FontWeight="Bold" FontSize="13.5" Foreground="{StaticResource BrushText}" />
-                                <TextBlock x:Name="TxtActiveConnCount" Text="(0 חיבורים)" FontSize="12" Foreground="{StaticResource BrushTextMuted}" Margin="10,2,0,0" />
-                            </StackPanel>
+                            <!-- כותרת ראשית וסרגל כפתורי ניהול -->
+                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
 
-                            <ListView x:Name="LstLiveConnections" Grid.Row="1" Background="{StaticResource BrushSurface}" BorderBrush="{StaticResource BrushBorder}" Foreground="{StaticResource BrushText}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock x:Name="LblMonitorSharedTitle" Text="קישורים וקבצים משותפים פעילים" FontWeight="Bold" FontSize="13.5" Foreground="{DynamicResource BrushText}" />
+                                    <TextBlock x:Name="TxtMonitorSharedCount" Text="(0 קישורים פעילים)" FontSize="12" Foreground="{DynamicResource BrushAccentCyan}" Margin="10,2,0,0" FontWeight="SemiBold" />
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <!-- תיבת חיפוש וסינון -->
+                                    <TextBox x:Name="TxtSearchMonitorShares" Width="180" Height="26" Padding="6,2" VerticalContentAlignment="Center" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" TextChanged="TxtSearchMonitorShares_TextChanged" Margin="0,0,6,0" ToolTip="חפש לפי שם קובץ או טוקן שיתוף" />
+                                    <!-- כפתור רענון -->
+                                    <Button x:Name="BtnRefreshMonitorShares" Content="רענן 🔄" Padding="10,3" FontSize="11" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Cursor="Hand" Click="BtnRefreshMonitorShares_Click" Margin="0,0,6,0" />
+                                    <!-- כפתור השמדת כל הקישורים -->
+                                    <Button x:Name="BtnRevokeAllMonitorShares" Content="השמד את כל הקישורים ⚠️" Padding="10,3" FontSize="11" Background="{DynamicResource BrushDanger}" Foreground="White" BorderThickness="0" Cursor="Hand" FontWeight="Bold" Click="BtnRevokeAllMonitorShares_Click" ToolTip="משמיד את כל קישורי השיתוף הפעילים מיידית. הקבצים המקוריים במחשב לא יימחקו!" />
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- באנר ביטחון נתונים: הקבצים במחשב נשמרים בבטחה -->
+                            <Border Grid.Row="1" Background="#0C2518" BorderBrush="#059669" BorderThickness="1" CornerRadius="5" Padding="8,4" Margin="0,0,0,8">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="🛡️" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="LblMonitorSharedSafeNote" Text="השמדת קישור מבטלת את הגישה והקישור בלבד — הקובץ או התיקייה המקוריים במחשב נשמרים בבטחה ולעולם אינם נמחקים!" FontSize="11.5" Foreground="#6EE7B7" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Border>
+
+                            <!-- רשימת קישורים וקבצים משותפים -->
+                            <ListView x:Name="LstMonitorSharedLinks" Grid.Row="2" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" Foreground="{DynamicResource BrushText}">
                                 <ListView.View>
                                     <GridView>
-                                        <GridViewColumn x:Name="ColSource" Header="מקור" Width="55">
+                                        <GridViewColumn Header="סוג" Width="38">
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Text="{Binding CountryFlag}" FontSize="14" HorizontalAlignment="Center" />
+                                                    <TextBlock Text="{Binding FileIcon}" FontSize="14" HorizontalAlignment="Center" />
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>
-                                        <GridViewColumn x:Name="ColClientIp" Header="כתובת IP" DisplayMemberBinding="{Binding ClientIp}" Width="120" />
-                                        <GridViewColumn x:Name="ColTargetFile" Header="קובץ במשיכה" DisplayMemberBinding="{Binding TargetFileName}" Width="200" />
-                                        <GridViewColumn x:Name="ColProgress" Header="התקדמות" Width="140">
+                                        <GridViewColumn Header="קובץ / תיקייה" Width="180">
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <ProgressBar Value="{Binding ProgressPercentage}" Maximum="100" Height="8" Width="120" Foreground="{StaticResource BrushAccentCyan}" Background="{StaticResource BrushSurface}" />
+                                                    <StackPanel Orientation="Horizontal" ToolTip="{Binding FilePath}">
+                                                        <TextBlock Text="{Binding FileName}" FontWeight="Bold" Foreground="{DynamicResource BrushAccentCyan}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="120" />
+                                                        <TextBlock Text="{Binding FormattedSize, StringFormat=' ({0})'}" FontSize="10.5" Foreground="{DynamicResource BrushTextMuted}" VerticalAlignment="Center" Margin="4,0,0,0" />
+                                                    </StackPanel>
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>
-                                        <GridViewColumn x:Name="ColActions" Header="פעולות" Width="90">
+                                        <GridViewColumn Header="ערוץ שיתוף" DisplayMemberBinding="{Binding ChannelDisplay}" Width="135" />
+                                        <GridViewColumn Header="קישור שיתוף" Width="165">
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Button Content="נתק" Background="{StaticResource BrushDanger}" Foreground="White" FontWeight="Bold" Padding="8,3" BorderThickness="0" Cursor="Hand" Tag="{Binding ConnectionId}" Click="BtnTerminateConnection_Click" />
+                                                    <TextBlock Text="{Binding EffectiveUrl}" Foreground="{DynamicResource BrushTextMuted}" TextTrimming="CharacterEllipsis" ToolTip="{Binding EffectiveUrl}" />
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Header="אבטחה" DisplayMemberBinding="{Binding SecurityDisplay}" Width="95" />
+                                        <GridViewColumn Header="סטטוס / תפוגה" DisplayMemberBinding="{Binding StatusDescription}" Width="160" />
+                                        <GridViewColumn Header="נוצר" DisplayMemberBinding="{Binding FormattedCreatedAt}" Width="105" />
+                                        <GridViewColumn Header="פעולות" Width="180">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Button Content="העתק 📋" Background="{DynamicResource BrushSurface}" Foreground="{DynamicResource BrushText}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" FontWeight="SemiBold" Padding="7,2" FontSize="11" Cursor="Hand" Tag="{Binding EffectiveUrl}" Margin="0,0,5,0" Click="BtnCopyMonitorShare_Click" ToolTip="העתק את כתובת השיתוף ללוח" />
+                                                        <Button Content="השמד קישור 🗑️" Background="{DynamicResource BrushDanger}" Foreground="White" FontWeight="Bold" Padding="7,2" FontSize="11" BorderThickness="0" Cursor="Hand" Tag="{Binding Token}" Click="BtnRevokeShareLink_Click" ToolTip="משמיד את הקישור והגישה מרחוק בלבד; הקובץ המקורי במחשב לא יימחק!" />
+                                                    </StackPanel>
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>
@@ -1010,6 +1784,107 @@
                             </ListView>
                         </Grid>
                     </Border>
+
+                    <!-- שורה תחתונה מפוצלת: חיבורים בזמן אמת ורשימת IP חסומים -->
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.25*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- רשימת חיבורים פעילים -->
+                        <Border Grid.Column="0"
+                                Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12,10"
+                                Margin="0,0,6,0"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock x:Name="LblLiveConnectionsTitle" Text="חיבורים והורדות אקטיביים בזמן אמת" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource BrushText}" />
+                                    <TextBlock x:Name="TxtActiveConnCount" Text="(0 חיבורים)" FontSize="11.5" Foreground="{DynamicResource BrushTextMuted}" Margin="10,2,0,0" />
+                                </StackPanel>
+
+                                <ListView x:Name="LstLiveConnections" Grid.Row="1" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" Foreground="{DynamicResource BrushText}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn x:Name="ColSource" Header="מקור" Width="45">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <TextBlock Text="{Binding CountryFlag}" FontSize="13" HorizontalAlignment="Center" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn x:Name="ColClientIp" Header="כתובת IP" DisplayMemberBinding="{Binding ClientIp}" Width="105" />
+                                            <GridViewColumn x:Name="ColTargetFile" Header="קובץ במשיכה" DisplayMemberBinding="{Binding TargetFileName}" Width="130" />
+                                            <GridViewColumn x:Name="ColProgress" Header="התקדמות" Width="95">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <ProgressBar Value="{Binding ProgressPercentage}" Maximum="100" Height="7" Width="80" Foreground="{DynamicResource BrushAccentCyan}" Background="{DynamicResource BrushSurface}" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn x:Name="ColActions" Header="פעולות" Width="125">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Button Content="נתק" Background="{DynamicResource BrushDanger}" Foreground="White" FontWeight="Bold" Padding="6,2" FontSize="10.5" BorderThickness="0" Cursor="Hand" Tag="{Binding ConnectionId}" Margin="0,0,4,0" Click="BtnTerminateConnection_Click" ToolTip="נתק חיבור זה מיידית" />
+                                                            <Button Content="חסום IP" Background="#450A0A" Foreground="#FCA5A5" BorderBrush="#EF4444" BorderThickness="1" FontWeight="Bold" Padding="6,2" FontSize="10.5" Cursor="Hand" Tag="{Binding ClientIp}" Click="BtnBlockIp_Click" ToolTip="חסום כתובת IP זו מכל גישה לשרת" />
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </Grid>
+                        </Border>
+
+                        <!-- רשימת כתובות IP חסומות (Blacklist) -->
+                        <Border Grid.Column="1"
+                                Background="{DynamicResource BrushCard}"
+                                BorderBrush="{DynamicResource BrushBorder}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="12,10"
+                                Margin="6,0,0,0"
+                                SnapsToDevicePixels="True">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                </Grid.RowDefinitions>
+
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,8">
+                                    <TextBlock x:Name="LblBlockedIpsTitle" Text="רשימת כתובות IP חסומות (Blacklist)" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource BrushTextMuted}" />
+                                    <TextBlock x:Name="TxtBlockedIpsCount" Text="(0 חסומים)" FontSize="11.5" Foreground="{DynamicResource BrushTextSubtle}" Margin="10,1,0,0" />
+                                </StackPanel>
+
+                                <ListView x:Name="LstBlockedIps" Grid.Row="1" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" Foreground="{DynamicResource BrushText}">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn x:Name="ColBlockedIp" Header="כתובת IP" DisplayMemberBinding="{Binding Key}" Width="110" />
+                                            <GridViewColumn x:Name="ColBlockedReason" Header="סיבת חסימה" DisplayMemberBinding="{Binding Value}" Width="150" />
+                                            <GridViewColumn x:Name="ColBlockedAction" Header="פעולות" Width="85">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Button Content="הסר חסימה" Background="{DynamicResource BrushSurface}" BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Foreground="{DynamicResource BrushSuccess}" FontWeight="Bold" Padding="6,2" FontSize="10.5" Cursor="Hand" Tag="{Binding Key}" Click="BtnUnblockIp_Click" />
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </Grid>
             </TabItem>
         </TabControl>
@@ -1018,8 +1893,8 @@
              סרגל סטטוס תחתון נקי (Executive Status Bar)
              =================================================================== -->
         <Border Grid.Row="2"
-                Background="{StaticResource BrushSurface}"
-                BorderBrush="{StaticResource BrushBorder}"
+                Background="{DynamicResource BrushSurface}"
+                BorderBrush="{DynamicResource BrushBorder}"
                 BorderThickness="0,1,0,0"
                 Padding="16,8"
                 SnapsToDevicePixels="True">
@@ -1033,16 +1908,79 @@
                            x:Name="TxtFooterInfo"
                            Text="EasyShare PRO | פועל במצב משתמש (No Admin / UAC Required)"
                            FontSize="11.5"
-                           Foreground="{StaticResource BrushTextMuted}"
+                           Foreground="{DynamicResource BrushTextMuted}"
                            VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis" />
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="14,0,0,0">
-                    <Button x:Name="BtnBottomDropZone" Content="ווידג'ט צף" Background="Transparent" Foreground="{StaticResource BrushAccentCyan}" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="0,0,16,0" Click="BtnToggleDropZone_Click" />
-                    <Button x:Name="BtnBottomContextMenu" Content="תפריט סייר" Background="Transparent" Foreground="{StaticResource BrushSuccess}" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="0,0,16,0" Click="BtnToggleContextMenu_Click" />
-                    <Button x:Name="BtnBottomMinimize" Content="מזער למגש" Background="Transparent" Foreground="{StaticResource BrushTextMuted}" BorderThickness="0" Cursor="Hand" FontSize="12" Click="BtnMinimizeToTray_Click" />
+                    <Button x:Name="BtnBottomCheckUpdates" Content="בדוק עדכונים 🔄" Background="Transparent" Foreground="{DynamicResource BrushAccentCyan}" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="0,0,16,0" Click="BtnCheckUpdates_Click" ToolTip="בדוק האם קיימת גרסה חדשה ב-GitHub" />
+                    <Button x:Name="BtnBottomDropZone" Content="ווידג'ט צף" Background="Transparent" Foreground="{DynamicResource BrushAccentCyan}" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="0,0,16,0" Click="BtnToggleDropZone_Click" />
+                    <Button x:Name="BtnBottomContextMenu" Content="תפריט סייר" Background="Transparent" Foreground="{DynamicResource BrushSuccess}" BorderThickness="0" Cursor="Hand" FontSize="12" Margin="0,0,16,0" Click="BtnToggleContextMenu_Click" />
+                    <Button x:Name="BtnBottomMinimize" Content="מזער למגש" Background="Transparent" Foreground="{DynamicResource BrushTextMuted}" BorderThickness="0" Cursor="Hand" FontSize="12" Click="BtnMinimizeToTray_Click" />
                 </StackPanel>
             </Grid>
         </Border>
+
+        <!-- באנר התראת עדכון גרסה מ-GitHub -->
+        <Border x:Name="BorderUpdateBanner"
+                Grid.Row="1"
+                VerticalAlignment="Top"
+                Panel.ZIndex="500"
+                Visibility="Collapsed"
+                Background="#0D2538"
+                BorderBrush="{DynamicResource BrushAccentCyan}"
+                BorderThickness="0,0,0,1.5"
+                Padding="16,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="🚀 " FontSize="14" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtUpdateBannerMessage" Text="קיים עדכון חדש ל-EasyShare PRO!" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="12.5" VerticalAlignment="Center" />
+                </StackPanel>
+                <Button x:Name="BtnDownloadUpdateBanner" Grid.Column="1" Content="הורד עכשיו" Background="{DynamicResource BrushPrimary}" Foreground="#0B0F14" FontWeight="Bold" Padding="14,5" Margin="10,0" Cursor="Hand" Click="BtnDownloadUpdateBanner_Click" />
+                <Button x:Name="BtnDismissUpdateBanner" Grid.Column="2" Content="✕" Background="Transparent" Foreground="{DynamicResource BrushTextMuted}" BorderThickness="0" Cursor="Hand" FontSize="14" Padding="6,2" Click="BtnDismissUpdateBanner_Click" />
+            </Grid>
+        </Border>
+
+        <!-- שכבת חיווי שחרור קבצים (Drag & Drop Overlay) -->
+        <Grid x:Name="GridDropOverlay"
+              Grid.Row="0"
+              Grid.RowSpan="3"
+              Background="#D90B0F14"
+              Visibility="Collapsed"
+              IsHitTestVisible="True"
+              Panel.ZIndex="1000">
+            <Border Margin="40"
+                    Background="{DynamicResource BrushSurface}"
+                    BorderBrush="{DynamicResource BrushPrimary}"
+                    BorderThickness="2"
+                    CornerRadius="16"
+                    SnapsToDevicePixels="True">
+                <Border.Effect>
+                    <DropShadowEffect BlurRadius="32" ShadowDepth="0" Color="#00D2B4" Opacity="0.5" />
+                </Border.Effect>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Border Width="68" Height="68" CornerRadius="34" Background="{DynamicResource BrushCard}" BorderBrush="{DynamicResource BrushPrimary}" BorderThickness="1.5" Margin="0,0,0,16" HorizontalAlignment="Center">
+                        <TextBlock Text="📥" FontSize="32" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock x:Name="TxtDropOverlayTitle"
+                               Text="שחרר קבצים או תיקיות כאן"
+                               FontSize="20"
+                               FontWeight="Bold"
+                               Foreground="{DynamicResource BrushText}"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,6" />
+                    <TextBlock x:Name="TxtDropOverlaySubtitle"
+                               Text="הקובץ יועבר אוטומטית לשיתוף מאובטח עם קישור מוכן בלוח"
+                               FontSize="13"
+                               Foreground="{DynamicResource BrushPrimary}"
+                               HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

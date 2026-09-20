@@ -92,4 +92,31 @@ public static class NetworkHelper
 
         return virtualKeywords.Any(k => name.Contains(k) || description.Contains(k));
     }
+
+    /// <summary>
+    /// מחזיר את שם מתאם הרשת הפעיל של המחשב (כגון Wi-Fi 6, Ethernet).
+    /// </summary>
+    public static string GetActiveNetworkAdapterName()
+    {
+        try
+        {
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(nic => nic.OperationalStatus == OperationalStatus.Up &&
+                              nic.NetworkInterfaceType != NetworkInterfaceType.Loopback &&
+                              nic.NetworkInterfaceType != NetworkInterfaceType.Tunnel)
+                .OrderByDescending(nic => nic.GetIPProperties().GatewayAddresses.Count > 0)
+                .ThenByDescending(nic => nic.Speed);
+
+            foreach (var nic in interfaces)
+            {
+                if (!IsVirtualAdapter(nic.Name.ToLowerInvariant(), nic.Description.ToLowerInvariant()))
+                {
+                    string res = !string.IsNullOrWhiteSpace(nic.Name) ? nic.Name : nic.Description;
+                    return res;
+                }
+            }
+        }
+        catch { }
+        return "Wi-Fi / Ethernet";
+    }
 }

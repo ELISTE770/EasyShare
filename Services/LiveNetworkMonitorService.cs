@@ -40,9 +40,21 @@ public sealed class LiveNetworkMonitorService
 
     private readonly ConcurrentDictionary<string, ActiveClientConnection> _activeConnections = new();
     private long _bytesInLastSecond = 0;
+    private long _totalBytesTransferred = 0;
     private readonly System.Timers.Timer _speedTimer;
 
     public double CurrentUploadSpeedMbps { get; private set; }
+    public long TotalBytesTransferred => _totalBytesTransferred;
+
+    public string FormattedTotalTransferred
+    {
+        get
+        {
+            double mb = _totalBytesTransferred / (1024.0 * 1024.0);
+            if (mb >= 1024.0) return $"{mb / 1024.0:F2} GB";
+            return $"{mb:F1} MB";
+        }
+    }
 
     public event Action<double>? OnSpeedUpdated; // Mbps
     public event Action? OnConnectionsChanged;
@@ -65,6 +77,7 @@ public sealed class LiveNetworkMonitorService
     public void ReportBytesSent(long count)
     {
         Interlocked.Add(ref _bytesInLastSecond, count);
+        Interlocked.Add(ref _totalBytesTransferred, count);
     }
 
     /// <summary>

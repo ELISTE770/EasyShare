@@ -70,11 +70,18 @@ public static class MultipartParser
 
         while (!ct.IsCancellationRequested)
         {
+            if (bufferCount >= 2 && buffer[0] == '-' && buffer[1] == '-')
+            {
+                // סיום ה-Multipart (הגעה לסימון -- הסופי)
+                break;
+            }
+
             // קריאת כותרות החלק הנוכחי (עד \r\n\r\n)
-            var (partHeaders, consumed) = await ReadPartHeadersAsync(stream, buffer, bufferCount, ct);
+            var (partHeaders, consumed, updatedCount) = await ReadPartHeadersAsync(stream, buffer, bufferCount, ct);
+            bufferCount = updatedCount;
             if (partHeaders == null) break;
 
-            bufferCount -= consumed;
+            ShiftBuffer(buffer, ref bufferCount, consumed);
 
             string? disposition = partHeaders.TryGetValue("content-disposition", out var disp) ? disp : null;
             string? fileName = ExtractFileName(disposition);
@@ -206,7 +213,7 @@ public static class MultipartParser
         return null;
     }
 
-    private static async Task<(Dictionary<string, string>?, int)> ReadPartHeadersAsync(
+    private static async Task<(Dictionary<string, string>?, int, int)> ReadPartHeadersAsync(
         Stream stream,
         byte[] buffer,
         int bufferCount,
@@ -229,7 +236,7 @@ public static class MultipartParser
                             dict[line[..cIdx].Trim()] = line[(cIdx + 1)..].Trim();
                         }
                     }
-                    return (dict, i + 4);
+                    return (dict, i + 4, bufferCount);
                 }
             }
 
@@ -240,7 +247,7 @@ public static class MultipartParser
             bufferCount += read;
         }
 
-        return (null, 0);
+        return (null, 0, bufferCount);
     }
 
     private static int IndexOfSequence(byte[] buffer, int length, byte[] sequence)

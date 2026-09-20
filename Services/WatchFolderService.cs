@@ -86,6 +86,7 @@ public sealed class WatchFolderService : IDisposable
                         try { System.Windows.Clipboard.SetText(shareUrl); } catch { }
                     });
                     thread.SetApartmentState(ApartmentState.STA);
+                    thread.IsBackground = true;
                     thread.Start();
                     thread.Join(1000);
 

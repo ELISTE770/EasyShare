@@ -23,6 +23,11 @@ public static class SingleInstanceIpcService
     public static event Action<string, string>? OnShareRequested;
 
     /// <summary>
+    /// אירוע המופעל לקבלת בקשת שיתוף/הפעלה עם החזרת סטטוס הצלחה (bool).
+    /// </summary>
+    public static event Func<string, string, bool>? OnShareRequestedWithResult;
+
+    /// <summary>
     /// מתחיל האזנה במופע הראשי לפקודות שיתוף ממופעים משניים.
     /// </summary>
     public static void StartIpcServer()
@@ -38,23 +43,46 @@ public static class SingleInstanceIpcService
                 {
                     await using var server = new NamedPipeServerStream(
                         PipeName,
-                        PipeDirection.In,
+                        PipeDirection.InOut,
                         NamedPipeServerStream.MaxAllowedServerInstances,
                         PipeTransmissionMode.Byte,
                         PipeOptions.Asynchronous);
 
                     await server.WaitForConnectionAsync(_serverCts.Token);
-                    using var reader = new StreamReader(server, Encoding.UTF8);
+                    using var reader = new StreamReader(server, Encoding.UTF8, leaveOpen: true);
                     string? payload = await reader.ReadLineAsync(_serverCts.Token);
 
+                    bool success = false;
                     if (!string.IsNullOrEmpty(payload))
                     {
                         var parts = payload.Split('|', 2);
                         if (parts.Length == 2)
                         {
-                            OnShareRequested?.Invoke(parts[0], parts[1]);
+                            try
+                            {
+                                OnShareRequested?.Invoke(parts[0], parts[1]);
+                                success = true;
+                            }
+                            catch { }
+
+                            if (OnShareRequestedWithResult != null)
+                            {
+                                try
+                                {
+                                    success = OnShareRequestedWithResult.Invoke(parts[0], parts[1]);
+                                }
+                                catch { }
+                            }
                         }
                     }
+
+                    try
+                    {
+                        using var writer = new StreamWriter(server, Encoding.UTF8, leaveOpen: true) { AutoFlush = true };
+                        await writer.WriteLineAsync(success ? "OK" : "FAIL");
+                        await writer.FlushAsync();
+                    }
+                    catch { }
                 }
                 catch (OperationCanceledException) { break; }
                 catch { await Task.Delay(400); }
@@ -79,11 +107,17 @@ public static class SingleInstanceIpcService
     {
         try
         {
-            await using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.Out);
-            await client.ConnectAsync(900); // 900ms timeout
-            await using var writer = new StreamWriter(client, Encoding.UTF8) { AutoFlush = true };
+            using var cts = new CancellationTokenSource(1200);
+            await using var client = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut);
+            await client.ConnectAsync(cts.Token);
+
+            using var writer = new StreamWriter(client, Encoding.UTF8, leaveOpen: true) { AutoFlush = true };
             await writer.WriteLineAsync($"{channel}|{filePath}");
-            return true;
+            await writer.FlushAsync();
+
+            using var reader = new StreamReader(client, Encoding.UTF8, leaveOpen: true);
+            string? ack = await reader.ReadLineAsync(cts.Token);
+            return string.Equals(ack, "OK", StringComparison.OrdinalIgnoreCase);
         }
         catch
         {

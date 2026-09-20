@@ -165,6 +165,7 @@ public static class HttpResponse
 
                 await stream.WriteAsync(buffer.AsMemory(0, bytesRead), ct);
                 EasyShare.Services.LiveNetworkMonitorService.Instance.ReportBytesSent(bytesRead);
+                await EasyShare.Services.BandwidthThrottler.ThrottleAsync(bytesRead, ct);
                 bytesRemaining -= bytesRead;
             }
             await stream.FlushAsync(ct);
@@ -194,6 +195,7 @@ public static class HttpResponse
             {
                 await stream.WriteAsync(buffer.AsMemory(0, read), ct);
                 EasyShare.Services.LiveNetworkMonitorService.Instance.ReportBytesSent(read);
+                await EasyShare.Services.BandwidthThrottler.ThrottleAsync(read, ct);
             }
             await stream.FlushAsync(ct);
         }
@@ -225,7 +227,7 @@ public static class HttpResponse
         }
         sb.Append("Access-Control-Allow-Origin: *\r\n");
         sb.Append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
-        sb.Append("Access-Control-Allow-Headers: Range, Authorization, Content-Type\r\n");
+        sb.Append("Access-Control-Allow-Headers: Range, Authorization, Content-Type, X-Sender-PeerId, X-Sender-DeviceName\r\n");
 
         if (!string.IsNullOrEmpty(contentType))
         {

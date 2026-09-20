@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using EasyShare.Services;
+using EasyShare.Models;
 
 namespace EasyShare.Tests;
 
@@ -257,6 +258,7 @@ public static class SelfTestRunner
                         win.MainTabControl.SelectedIndex = 1;
                         win.MainTabControl.SelectedIndex = 2;
                         win.MainTabControl.SelectedIndex = 3;
+                        win.MainTabControl.SelectedIndex = 4;
                         win.Close();
                         tcs.SetResult(true);
                     }
@@ -416,6 +418,479 @@ public static class SelfTestRunner
                     settingsMgr.Current.CloudflareTunnelToken = prevToken;
                     settingsMgr.Save(settingsMgr.Current);
                 }
+            });
+
+            // Test 21: בדיקת יצירת חלון ראשי וטעינת עץ ה-XAML והמשאבים
+            await AssertTest("21. WPF MainWindow & XAML Resource Tree", () =>
+            {
+                var tcs = new TaskCompletionSource<bool>();
+                var thread = new System.Threading.Thread(() =>
+                {
+                    try
+                    {
+                        if (System.Windows.Application.Current == null)
+                        {
+                            new EasyShare.App();
+                        }
+                        var win = new MainWindow();
+                        tcs.SetResult(win != null && win.Title != null);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogLine($"[FAIL] MainWindow XAML error: {ex}");
+                        tcs.SetResult(false);
+                    }
+                });
+                thread.SetApartmentState(System.Threading.ApartmentState.STA);
+                thread.Start();
+                return tcs.Task;
+            });
+
+            // Test 22: בדיקת מעבר דינמי של ערכות נושא (Dark <-> Light) ועדכון משאבי WPF
+            await AssertTest("22. Dynamic Theme Switching (Dark <-> Light Palettes)", () =>
+            {
+                var tcs = new TaskCompletionSource<bool>();
+                var thread = new System.Threading.Thread(() =>
+                {
+                    try
+                    {
+                        if (System.Windows.Application.Current == null)
+                        {
+                            new EasyShare.App();
+                        }
+                        var themeSvc = EasyShare.Core.ThemeService.Instance;
+
+                        // בדיקת מצב בהיר
+                        themeSvc.SetTheme(EasyShare.Core.ThemeService.ThemeLight);
+                        var res = System.Windows.Application.Current?.Resources;
+                        if (res == null)
+                        {
+                            tcs.SetResult(false);
+                            return;
+                        }
+
+                        var bgLight = res["BrushBackground"] as System.Windows.Media.SolidColorBrush;
+                        var cardLight = res["BrushCard"] as System.Windows.Media.SolidColorBrush;
+                        var textLight = res["BrushText"] as System.Windows.Media.SolidColorBrush;
+
+                        bool lightOk = bgLight != null && bgLight.Color == (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F8FAFC") &&
+                                       cardLight != null && cardLight.Color == (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFFFFF") &&
+                                       textLight != null && textLight.Color == (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0F172A");
+
+                        // בדיקת חזרה למצב כהה
+                        themeSvc.SetTheme(EasyShare.Core.ThemeService.ThemeDark);
+                        var bgDark = res["BrushBackground"] as System.Windows.Media.SolidColorBrush;
+                        var cardDark = res["BrushCard"] as System.Windows.Media.SolidColorBrush;
+                        var textDark = res["BrushText"] as System.Windows.Media.SolidColorBrush;
+
+                        bool darkOk = bgDark != null && bgDark.Color == (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#0B0F14") &&
+                                      cardDark != null && cardDark.Color == (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#16202B") &&
+                                      textDark != null && textDark.Color == (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F1F5F9");
+
+                        tcs.SetResult(lightOk && darkOk);
+                    }
+                    catch (Exception ex)
+                    {
+                        LogLine($"[FAIL] Theme switching test error: {ex}");
+                        tcs.SetResult(false);
+                    }
+                });
+                thread.SetApartmentState(System.Threading.ApartmentState.STA);
+                thread.Start();
+                return tcs.Task;
+            });
+
+            // Test 23: בדיקת העלאת קבצים בחלקים (Chunked / Resumable Upload)
+            await AssertTest("23. Chunked Upload Assembly & Integrity", async () =>
+            {
+                string uploadId = "test_chunk_" + Guid.NewGuid().ToString("N")[..8];
+                byte[] part0 = "Hello ".Select(c => (byte)c).ToArray();
+                byte[] part1 = "World from Chunked Upload!".Select(c => (byte)c).ToArray();
+                string fileName = "chunked_test_file.txt";
+
+                var res0 = await client.PostAsync($"{baseUrl}/api/upload-chunk?uploadId={uploadId}&chunkIndex=0&totalChunks=2&fileName={fileName}", new ByteArrayContent(part0));
+                if (!res0.IsSuccessStatusCode) return false;
+
+                var res1 = await client.PostAsync($"{baseUrl}/api/upload-chunk?uploadId={uploadId}&chunkIndex=1&totalChunks=2&fileName={fileName}", new ByteArrayContent(part1));
+                if (!res1.IsSuccessStatusCode) return false;
+
+                string targetPath = Path.Combine(tempTestDir, fileName);
+                if (!File.Exists(targetPath)) return false;
+                string content = await File.ReadAllTextAsync(targetPath);
+                return content == "Hello World from Chunked Upload!";
+            });
+
+            // Test 24: בדיקת צ'אט ופתקים מהירים (Quick Text / Chat Drop)
+            await AssertTest("24. Quick Text / Chat Drop Feed", async () =>
+            {
+                string testMsg = "EasyShare Quick Note " + Guid.NewGuid().ToString("N")[..6];
+                var postContent = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(new { sender = "UnitTester", text = testMsg }),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var postRes = await client.PostAsync($"{baseUrl}/api/messages", postContent);
+                if (!postRes.IsSuccessStatusCode) return false;
+
+                var getRes = await client.GetAsync($"{baseUrl}/api/messages");
+                if (!getRes.IsSuccessStatusCode) return false;
+                string getJson = await getRes.Content.ReadAsStringAsync();
+                return getJson.Contains(testMsg) && getJson.Contains("UnitTester");
+            });
+
+            // Test 25: בדיקת חיפוש רקורסיבי עמוק (Instant Recursive Deep Search)
+            await AssertTest("25. Instant Recursive Deep Search", async () =>
+            {
+                string deepDir = Path.Combine(tempTestDir, "DeepSubFolder", "Level2");
+                Directory.CreateDirectory(deepDir);
+                string deepFileName = "DeepSecretFile9876.txt";
+                await File.WriteAllTextAsync(Path.Combine(deepDir, deepFileName), "Secret Content");
+
+                var searchRes = await client.GetAsync($"{baseUrl}/api/search?q=DeepSecret");
+                if (!searchRes.IsSuccessStatusCode) return false;
+                string json = await searchRes.Content.ReadAsStringAsync();
+                return json.Contains(deepFileName) && json.Contains("DeepSubFolder");
+            });
+
+            // Test 26: בדיקת חסימת IP ואכיפת גישה (IP Blacklisting & Enforcement)
+            await AssertTest("26. IP Blacklisting & Access Enforcement", () =>
+            {
+                string testIp = "192.168.99.99";
+                server.BlacklistIp(testIp);
+                bool isListed = server.IsIpBlacklisted(testIp);
+                if (!isListed) return Task.FromResult(false);
+
+                var ips = server.GetBlacklistedIps();
+                if (!ips.Contains(testIp)) return Task.FromResult(false);
+
+                server.UnblacklistIp(testIp);
+                bool unblocked = !server.IsIpBlacklisted(testIp);
+                return Task.FromResult(unblocked);
+            });
+
+            // Test 27: בדיקת סנכרון ערכת נושא של המערכת (System Theme Sync)
+            await AssertTest("27. System Theme Sync & Detection", () =>
+            {
+                var themeSvc = EasyShare.Core.ThemeService.Instance;
+                themeSvc.SetTheme(EasyShare.Core.ThemeService.ThemeSystem);
+                bool isSystem = themeSvc.ConfiguredTheme == EasyShare.Core.ThemeService.ThemeSystem;
+                bool validEffective = themeSvc.CurrentTheme == EasyShare.Core.ThemeService.ThemeLight ||
+                                      themeSvc.CurrentTheme == EasyShare.Core.ThemeService.ThemeDark;
+
+                themeSvc.SetTheme(EasyShare.Core.ThemeService.ThemeDark);
+                themeSvc.ToggleTheme();
+                bool isLight = themeSvc.ConfiguredTheme == EasyShare.Core.ThemeService.ThemeLight;
+                themeSvc.ToggleTheme();
+                bool isSysAgain = themeSvc.ConfiguredTheme == EasyShare.Core.ThemeService.ThemeSystem;
+                themeSvc.ToggleTheme();
+                bool isDarkAgain = themeSvc.ConfiguredTheme == EasyShare.Core.ThemeService.ThemeDark;
+
+                return Task.FromResult(isSystem && validEffective && isLight && isSysAgain && isDarkAgain);
+            });
+
+            // Test 28: בדיקת הגבלת קצב תעבורה (Bandwidth Throttling Engine)
+            await AssertTest("28. Bandwidth Throttler Engine & Clamping", () =>
+            {
+                EasyShare.Services.BandwidthThrottler.MaxKbps = 0;
+                bool isUnlimited = EasyShare.Services.BandwidthThrottler.IsUnlimited;
+                EasyShare.Services.BandwidthThrottler.MaxKbps = 5120; // 5 MB/s
+                bool isLimited = !EasyShare.Services.BandwidthThrottler.IsUnlimited && EasyShare.Services.BandwidthThrottler.MaxKbps == 5120;
+                EasyShare.Services.BandwidthThrottler.MaxKbps = 0; // החזרה למצב רגיל
+                return Task.FromResult(isUnlimited && isLimited);
+            });
+
+            // Test 29: בדיקת סנכרון לוח אוניברסלי (Universal Clipboard Synchronization)
+            await AssertTest("29. Universal Clipboard Sync API", () =>
+            {
+                string testClip = "TestClip_" + Guid.NewGuid().ToString("N");
+                server.AddClipboardItem(testClip);
+                var latest = server.GetLatestClipboardItem();
+                bool matches = latest != null && latest.Content == testClip;
+                return Task.FromResult(matches);
+            });
+
+            // Test 30: מזהה התקנה ייחודי בפורמט SB ושירות מידע (Peer ID Format & My-Info API)
+            await AssertTest("30. Peer ID Generation (SB Prefix) & My-Info API", async () =>
+            {
+                string peerId = server.PeerDiscovery.LocalPeerId;
+                bool validFormat = !string.IsNullOrWhiteSpace(peerId) && 
+                                   peerId.StartsWith("SB-", StringComparison.OrdinalIgnoreCase) && 
+                                   peerId.Length == 10;
+                
+                var res = await client.GetAsync($"{baseUrl}/api/peer/my-info");
+                if (!res.IsSuccessStatusCode) return false;
+                
+                string json = await res.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                string returnedId = doc.RootElement.GetProperty("peerId").GetString() ?? "";
+                string visibility = doc.RootElement.GetProperty("internetVisibility").GetString() ?? "";
+                
+                return validFormat && returnedId == peerId && !string.IsNullOrEmpty(visibility);
+            });
+
+            // Test 31: קבלת הודעות צ'אט ישירות מעמית (Peer Direct Messaging)
+            await AssertTest("31. Peer Direct Messaging API", async () =>
+            {
+                string testMsg = "Hello_Peer_" + Guid.NewGuid().ToString("N")[..6];
+                var payload = new
+                {
+                    senderPeerId = "SB-777-888",
+                    senderName = "PeerLaptop",
+                    text = testMsg,
+                    timestamp = DateTime.UtcNow
+                };
+
+                var content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+                var res = await client.PostAsync($"{baseUrl}/api/peer/message", content);
+                if (!res.IsSuccessStatusCode) return false;
+
+                var messages = server.GetRecentMessages();
+                bool found = messages.Any(m => m.Text.Contains(testMsg));
+                return found;
+            });
+
+            // Test 32: דרופ קבצים ישיר מעמית ושמירה בתיקיית Received_Drops
+            await AssertTest("32. Direct Peer File Drop & Save to Received_Drops", async () =>
+            {
+                string testFileName = "peer_drop_test_" + Guid.NewGuid().ToString("N")[..6] + ".txt";
+                byte[] testBytes = Encoding.UTF8.GetBytes("EasyShare Direct Peer Drop File Content Test!");
+
+                using var form = new MultipartFormDataContent();
+                var byteContent = new ByteArrayContent(testBytes);
+                byteContent.Headers.ContentType = new MediaTypeHeaderValue("text/plain");
+                form.Add(byteContent, "files", testFileName);
+
+                var reqMsg = new HttpRequestMessage(HttpMethod.Post, $"{baseUrl}/api/peer/drop")
+                {
+                    Content = form
+                };
+                reqMsg.Headers.Add("X-Sender-PeerId", "SB-777-888");
+                reqMsg.Headers.Add("X-Sender-DeviceName", Uri.EscapeDataString("PeerLaptop"));
+
+                var res = await client.SendAsync(reqMsg);
+                if (!res.IsSuccessStatusCode) return false;
+
+                string dropsDir = Path.Combine(server.RootDirectory, "Received_Drops");
+                string expectedFilePath = Path.Combine(dropsDir, testFileName);
+                if (File.Exists(expectedFilePath))
+                {
+                    string content = await File.ReadAllTextAsync(expectedFilePath);
+                    return content.Contains("EasyShare Direct Peer Drop");
+                }
+                return false;
+            });
+
+            // Test 33: עדכון מצב נראות באינטרנט (גלוי מול מוסתר)
+            await AssertTest("33. Internet Peer Visibility Mode (Hidden <-> Visible)", async () =>
+            {
+                // העברה למצב Visible
+                var contentVis = new StringContent(JsonSerializer.Serialize(new { visibility = "Visible" }), Encoding.UTF8, "application/json");
+                var resVis = await client.PostAsync($"{baseUrl}/api/peer/visibility", contentVis);
+                if (!resVis.IsSuccessStatusCode) return false;
+                if (server.PeerDiscovery.InternetDiscovery.VisibilityMode != "Visible") return false;
+
+                // העברה חזרה למצב Hidden
+                var contentHid = new StringContent(JsonSerializer.Serialize(new { visibility = "Hidden" }), Encoding.UTF8, "application/json");
+                var resHid = await client.PostAsync($"{baseUrl}/api/peer/visibility", contentHid);
+                if (!resHid.IsSuccessStatusCode) return false;
+                if (server.PeerDiscovery.InternetDiscovery.VisibilityMode != "Hidden") return false;
+
+                return true;
+            });
+
+            // Test 34: איתור עמית באינטרנט לפי מזהה מדויק (Exact Peer ID Internet Lookup)
+            await AssertTest("34. Exact Peer ID Internet Lookup & Hidden Discovery", async () =>
+            {
+                server.PeerDiscovery.InternetDiscovery.TestMode = true;
+                string remoteTargetId = "SB-999-111";
+                server.PeerDiscovery.InternetDiscovery.RegisterPeerForTesting(new PeerDevice
+                {
+                    PeerId = remoteTargetId,
+                    DeviceName = "RemoteDevPC",
+                    DiscoverySource = "Internet",
+                    InternetUrl = "https://remotedev.trycloudflare.com",
+                    IpAddress = "10.20.30.40",
+                    Port = 2121,
+                    IsOnline = true,
+                    LastSeen = DateTime.UtcNow
+                });
+
+                var lookupPayload = new { targetPeerId = remoteTargetId };
+                var content = new StringContent(JsonSerializer.Serialize(lookupPayload), Encoding.UTF8, "application/json");
+                var res = await client.PostAsync($"{baseUrl}/api/peer/search-internet", content);
+                if (!res.IsSuccessStatusCode) return false;
+
+                string json = await res.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                bool found = doc.RootElement.GetProperty("found").GetBoolean();
+                if (!found) return false;
+
+                var peerElem = doc.RootElement.GetProperty("peer");
+                string foundId = peerElem.GetProperty("peerId").GetString() ?? "";
+                string devName = peerElem.GetProperty("deviceName").GetString() ?? "";
+                string iUrl = peerElem.GetProperty("internetUrl").GetString() ?? "";
+
+                return foundId == remoteTargetId && devName == "RemoteDevPC" && iUrl.Contains("trycloudflare.com");
+            });
+
+            // Test 35: בדיקת רישום ושליפת היסטוריית צ'אט עמיתים (Peer Chat History Storage & Retrieval)
+            await AssertTest("35. Peer Chat History Engine & Attachments", () =>
+            {
+                string peerA = "SB-123-456";
+                var chatMsg1 = new EasyShare.Models.PeerChatMessage
+                {
+                    SenderPeerId = peerA,
+                    SenderName = "DeviceA",
+                    RecipientPeerId = server.PeerDiscovery.LocalPeerId,
+                    Text = "Hello from DeviceA!",
+                    Timestamp = DateTime.UtcNow,
+                    IsOutgoing = false
+                };
+
+                var chatMsg2 = new EasyShare.Models.PeerChatMessage
+                {
+                    SenderPeerId = server.PeerDiscovery.LocalPeerId,
+                    SenderName = server.PeerDiscovery.LocalDeviceName,
+                    RecipientPeerId = peerA,
+                    Text = "Replying with attachment",
+                    AttachedFileName = "photo.png",
+                    AttachedFilePath = @"C:\Fake\photo.png",
+                    AttachedFileSize = 1024 * 1024 * 2, // 2MB
+                    Timestamp = DateTime.UtcNow,
+                    IsOutgoing = true
+                };
+
+                server.PeerDiscovery.AddChatMessage(chatMsg1);
+                server.PeerDiscovery.AddChatMessage(chatMsg2);
+
+                var history = server.PeerDiscovery.GetChatHistory(peerA);
+                if (history.Count < 2) return Task.FromResult(false);
+
+                bool foundText = history.Any(m => m.Text == "Hello from DeviceA!" && !m.IsOutgoing);
+                bool foundAttachment = history.Any(m => m.AttachedFileName == "photo.png" && m.IsOutgoing && m.HasAttachment);
+
+                server.PeerDiscovery.ClearChatHistory(peerA);
+                var clearedHistory = server.PeerDiscovery.GetChatHistory(peerA);
+
+                return Task.FromResult(foundText && foundAttachment && clearedHistory.Count == 0);
+            });
+
+            // Test 36: בדיקת נקודות קצה REST API עבור היסטוריית צ'אט (Peer Chat REST API Endpoints)
+            await AssertTest("36. Peer Chat REST API (/api/peer/chat & /api/peer/chat/clear)", async () =>
+            {
+                string targetPeerId = "SB-888-999";
+                server.PeerDiscovery.AddChatMessage(new EasyShare.Models.PeerChatMessage
+                {
+                    SenderPeerId = targetPeerId,
+                    SenderName = "RemotePartner",
+                    RecipientPeerId = server.PeerDiscovery.LocalPeerId,
+                    Text = "Special Chat Message For API Test",
+                    Timestamp = DateTime.UtcNow,
+                    IsOutgoing = false
+                });
+
+                var getRes = await client.GetAsync($"{baseUrl}/api/peer/chat?targetPeerId={targetPeerId}");
+                if (!getRes.IsSuccessStatusCode) return false;
+
+                string json = await getRes.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(json);
+                int count = doc.RootElement.GetProperty("count").GetInt32();
+                if (count < 1) return false;
+
+                var clearPayload = new { targetPeerId };
+                var clearContent = new StringContent(JsonSerializer.Serialize(clearPayload), Encoding.UTF8, "application/json");
+                var postClearRes = await client.PostAsync($"{baseUrl}/api/peer/chat/clear", clearContent);
+                if (!postClearRes.IsSuccessStatusCode) return false;
+
+                var getResAfter = await client.GetAsync($"{baseUrl}/api/peer/chat?targetPeerId={targetPeerId}");
+                if (!getResAfter.IsSuccessStatusCode) return false;
+
+                string jsonAfter = await getResAfter.Content.ReadAsStringAsync();
+                using var docAfter = JsonDocument.Parse(jsonAfter);
+                int countAfter = docAfter.RootElement.GetProperty("count").GetInt32();
+
+                return countAfter == 0;
+            });
+
+            // Test 37: ניטור קישורים והשמדת קישור שיתוף (אימות ביטול קישור ושמירה מוחלטת על הקובץ במחשב)
+            await AssertTest("37. Monitoring Shared Links & Safe Link Revocation (/api/monitor/shares)", async () =>
+            {
+                // 1. יצירת קובץ מקורי בדיסק שהשמדת הקישור אסור שתפגע בו
+                string testProtectFilePath = Path.Combine(tempTestDir, "original_file_safe_keep.txt");
+                string fileOriginalContent = "Critical User Data: Must Never Be Deleted By Link Revocation!";
+                await File.WriteAllTextAsync(testProtectFilePath, fileOriginalContent);
+
+                // 2. יצירת שיתוף מאובטח
+                var shareItem = await server.SecurityService.CreateTransferAsync(
+                    targetPath: testProtectFilePath,
+                    pinCode: "88889999",
+                    expirationMinutes: 60,
+                    maxDownloads: 5,
+                    channel: "LAN",
+                    serverBaseUrl: baseUrl
+                );
+
+                if (shareItem == null || string.IsNullOrWhiteSpace(shareItem.Token)) return false;
+
+                // 3. אימות קריאת רשימת שיתופים פעילים דרך ה-REST API של הניטור
+                var getSharesRes = await client.GetAsync($"{baseUrl}/api/monitor/shares");
+                if (!getSharesRes.IsSuccessStatusCode) return false;
+
+                string sharesJson = await getSharesRes.Content.ReadAsStringAsync();
+                using var sharesDoc = JsonDocument.Parse(sharesJson);
+                var sharesArray = sharesDoc.RootElement.GetProperty("shares");
+                bool foundInShares = false;
+                foreach (var el in sharesArray.EnumerateArray())
+                {
+                    if (el.GetProperty("token").GetString() == shareItem.Token)
+                    {
+                        foundInShares = true;
+                        break;
+                    }
+                }
+                if (!foundInShares) return false;
+
+                // 4. אימות שהקישור עובד ונגיש כעת (HTTP 200)
+                var pageRes = await client.GetAsync($"{baseUrl}/secure?token={shareItem.Token}");
+                if (!pageRes.IsSuccessStatusCode) return false;
+
+                // 5. השמדת קישור השיתוף דרך נקודת הקצה /api/monitor/shares/revoke
+                var revokePayload = new { token = shareItem.Token };
+                var revokeContent = new StringContent(JsonSerializer.Serialize(revokePayload), Encoding.UTF8, "application/json");
+                var revokeRes = await client.PostAsync($"{baseUrl}/api/monitor/shares/revoke", revokeContent);
+                if (!revokeRes.IsSuccessStatusCode) return false;
+
+                // 6. אימות שהקישור אינו נגיש עוד (HTTP 404 או 410)
+                var pageResAfter = await client.GetAsync($"{baseUrl}/secure?token={shareItem.Token}");
+                if (pageResAfter.StatusCode != System.Net.HttpStatusCode.NotFound && pageResAfter.StatusCode != System.Net.HttpStatusCode.Gone)
+                {
+                    return false;
+                }
+
+                // 7. בדיקת הבטיחות הקריטית ביותר: הקובץ המקורי במחשב נשאר שלם וללא פגע!
+                if (!File.Exists(testProtectFilePath))
+                {
+                    return false; // שגיאה חמורה: הקובץ במחשב נמחק!
+                }
+                string textOnDisk = await File.ReadAllTextAsync(testProtectFilePath);
+                if (textOnDisk != fileOriginalContent)
+                {
+                    return false;
+                }
+
+                // 8. אימות שהשיתוף הוסר מרשימת הניטור הפעילה
+                var getSharesAfter = await client.GetAsync($"{baseUrl}/api/monitor/shares");
+                string sharesAfterJson = await getSharesAfter.Content.ReadAsStringAsync();
+                using var sharesAfterDoc = JsonDocument.Parse(sharesAfterJson);
+                foreach (var el in sharesAfterDoc.RootElement.GetProperty("shares").EnumerateArray())
+                {
+                    if (el.GetProperty("token").GetString() == shareItem.Token)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             });
         }
         finally

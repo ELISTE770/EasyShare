@@ -7,7 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using EasyShare.Core;
 using EasyShare.Services;
-using MessageBox = System.Windows.MessageBox;
+using MessageBox = EasyShare.Views.ModernDialog;
 using Clipboard = System.Windows.Clipboard;
 using DragEventArgs = System.Windows.DragEventArgs;
 using DataFormats = System.Windows.DataFormats;

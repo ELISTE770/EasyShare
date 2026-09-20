@@ -3,6 +3,8 @@ bin/
 obj/
 publish/
 publish_standalone/
+publish_inno/
+Output/
 
 # Local settings and secrets
 settings.json

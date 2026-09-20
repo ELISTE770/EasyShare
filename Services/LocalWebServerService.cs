@@ -34,6 +34,13 @@ public sealed class LocalWebServerService : IDisposable
     private static readonly List<ClipboardItem> _clipboardItems = new();
     private static readonly ConcurrentDictionary<string, string> _webrtcSignals = new(StringComparer.OrdinalIgnoreCase);
 
+    public record QuickChatMessage(string Id, string Sender, string Text, DateTime Timestamp);
+    private static readonly List<QuickChatMessage> _quickMessages = new();
+    public event Action<QuickChatMessage>? OnMessageReceived;
+
+    private readonly ConcurrentDictionary<string, byte> _blacklistedIps = new(StringComparer.OrdinalIgnoreCase);
+    public event Action<string>? OnIpBlacklistedChanged;
+
     public SettingsService SettingsManager { get; }
     public AppSettings Settings => SettingsManager.Current;
 
@@ -42,6 +49,7 @@ public sealed class LocalWebServerService : IDisposable
     public bool IsReadOnly { get => Settings.ServerReadOnly; set => Settings.ServerReadOnly = value; }
     public SecureTransferService SecurityService { get; }
     public CloudflareTunnelService TunnelService { get; }
+    public Core.PeerDiscoveryService PeerDiscovery { get; }
 
     public string LocalIpAddress { get; private set; } = "127.0.0.1";
     public string LocalUrl => $"http://{LocalIpAddress}:{Port}";
@@ -49,15 +57,103 @@ public sealed class LocalWebServerService : IDisposable
 
     public event Action<string>? OnLog;
 
+    public bool IsIpBlacklisted(string ip) => _blacklistedIps.ContainsKey(ip.Trim());
+
+    public void BlacklistIp(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip)) return;
+        string clean = ip.Trim();
+        _blacklistedIps[clean] = 1;
+        if (!Settings.BlacklistedIps.Contains(clean, StringComparer.OrdinalIgnoreCase))
+        {
+            Settings.BlacklistedIps.Add(clean);
+            SettingsManager.Save(Settings);
+        }
+        OnLog?.Invoke($"[SECURITY] IP {clean} נוסף לרשימת החסימות.");
+        OnIpBlacklistedChanged?.Invoke(clean);
+    }
+
+    public void UnblacklistIp(string ip)
+    {
+        if (string.IsNullOrWhiteSpace(ip)) return;
+        string clean = ip.Trim();
+        _blacklistedIps.TryRemove(clean, out _);
+        Settings.BlacklistedIps.RemoveAll(x => string.Equals(x, clean, StringComparison.OrdinalIgnoreCase));
+        SettingsManager.Save(Settings);
+        OnLog?.Invoke($"[SECURITY] IP {clean} הוסר מרשימת החסימות.");
+        OnIpBlacklistedChanged?.Invoke(clean);
+    }
+
+    public IReadOnlyCollection<string> GetBlacklistedIps() => _blacklistedIps.Keys.ToList();
+
+    public IReadOnlyList<QuickChatMessage> GetRecentMessages()
+    {
+        lock (_quickMessages)
+        {
+            return _quickMessages.TakeLast(50).ToList();
+        }
+    }
+
+    public void AddMessage(string sender, string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        var msg = new QuickChatMessage(Guid.NewGuid().ToString("N")[..8], sender.Trim(), text.Trim(), DateTime.Now);
+        lock (_quickMessages)
+        {
+            _quickMessages.Add(msg);
+            if (_quickMessages.Count > 100) _quickMessages.RemoveAt(0);
+        }
+        OnMessageReceived?.Invoke(msg);
+        OnLog?.Invoke($"[CHAT] {msg.Sender}: {msg.Text}");
+    }
+
+    public void AddClipboardItem(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return;
+        bool isUrl = Uri.TryCreate(text, UriKind.Absolute, out var uriResult) &&
+                     (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+        var item = new ClipboardItem(Guid.NewGuid().ToString("N")[..8], text.Trim(), isUrl, DateTime.Now);
+        lock (_clipboardItems)
+        {
+            _clipboardItems.Insert(0, item);
+            if (_clipboardItems.Count > 50) _clipboardItems.RemoveAt(_clipboardItems.Count - 1);
+        }
+        OnLog?.Invoke($"[CLIPBOARD] Added shared item: {(text.Length > 30 ? text[..30] + "..." : text)}");
+    }
+
+    public ClipboardItem? GetLatestClipboardItem()
+    {
+        lock (_clipboardItems)
+        {
+            return _clipboardItems.FirstOrDefault();
+        }
+    }
+
     public LocalWebServerService(SettingsService? settingsService = null)
     {
         SettingsManager = settingsService ?? new SettingsService();
         SecurityService = new SecureTransferService(Settings.SecurityPin);
         TunnelService = new CloudflareTunnelService();
+        PeerDiscovery = new Core.PeerDiscoveryService(SettingsManager, Port);
+
+        // טעינת רשימת כתובות IP חסומות
+        if (Settings.BlacklistedIps != null)
+        {
+            foreach (var bIp in Settings.BlacklistedIps)
+            {
+                if (!string.IsNullOrWhiteSpace(bIp)) _blacklistedIps[bIp.Trim()] = 1;
+            }
+        }
 
         SecurityService.OnIpBlocked += (ip, msg) => OnLog?.Invoke($"[SECURITY] {msg}");
         TunnelService.OnStateChanged += state => OnLog?.Invoke($"[TUNNEL] {state}");
         TunnelService.OnError += err => OnLog?.Invoke($"[TUNNEL ERROR] {err}");
+        TunnelService.OnUrlChanged += url =>
+        {
+            PeerDiscovery.InternetDiscovery.CurrentInternetUrl = url;
+            OnLog?.Invoke($"[PEER INTERNET URL] כתובת האינטרנט של העמית עודכנה אל: {url}");
+        };
+        PeerDiscovery.OnLog += msg => OnLog?.Invoke(msg);
     }
 
     public LocalWebServerService(
@@ -165,6 +261,20 @@ public sealed class LocalWebServerService : IDisposable
                     msg => OnLog?.Invoke($"[TUNNEL] {msg}"));
             });
         }
+
+        // הפעלת שירות איתור עמיתים ברשת (Peer Discovery)
+        if (Settings.EnablePeerDiscovery)
+        {
+            try
+            {
+                PeerDiscovery.Start();
+                OnLog?.Invoke($"[PEER DISCOVERY] שירות גילוי עמיתים פעיל. מזהה: {PeerDiscovery.LocalPeerId} ({PeerDiscovery.LocalDeviceName})");
+            }
+            catch (Exception ex)
+            {
+                OnLog?.Invoke($"[PEER DISCOVERY ERROR] שגיאה בהפעלת שירות גילוי עמיתים: {ex.Message}");
+            }
+        }
     }
 
     private async Task ListenLoopAsync(CancellationToken ct)
@@ -206,7 +316,14 @@ public sealed class LocalWebServerService : IDisposable
             var request = await HttpRequest.ReadAsync(stream, clientIp, ct);
             if (request == null) return;
 
-            // בדיקת כתובת IP חסומה
+            // בדיקת כתובת IP חסומה ברשימה שחורה (Blacklist מנהלי)
+            if (IsIpBlacklisted(clientIp))
+            {
+                await HttpResponse.WriteStatusAsync(stream, 403, "Forbidden", "Access denied: IP address is blacklisted by administrator.", ct);
+                return;
+            }
+
+            // בדיקת כתובת IP חסומה עקב ניסיונות כושלים
             if (SecurityService.IsIpBlocked(clientIp, out string blockReason))
             {
                 await HttpResponse.WriteStatusAsync(stream, 429, "Too Many Requests", blockReason, ct);
@@ -237,7 +354,7 @@ public sealed class LocalWebServerService : IDisposable
             }
 
             // אימות PIN ועוגיית סשן (Session Cookie)
-            if (SecurityService.IsPinRequired && request.Path != "/api/auth/pin" && request.Path != "/" && !request.Path.StartsWith("/assets") && !request.Path.StartsWith("/secure"))
+            if (SecurityService.IsPinRequired && request.Path != "/api/auth/pin" && request.Path != "/" && !request.Path.StartsWith("/assets") && !request.Path.StartsWith("/secure") && !request.Path.StartsWith("/api/peer/"))
             {
                 string? sessionToken = request.GetCookie("es_session");
                 bool sessionValid = SecurityService.IsValidSession(sessionToken);
@@ -514,6 +631,12 @@ public sealed class LocalWebServerService : IDisposable
                 rootDirectory = Settings.SharedFolderPath,
                 sendToRecycleBin = Settings.SendToRecycleBin,
                 theme = Settings.ThemeMode,
+                serverTheme = Core.ThemeService.Instance.CurrentTheme,
+                blacklistedCount = _blacklistedIps.Count,
+                peerId = PeerDiscovery.LocalPeerId,
+                deviceName = PeerDiscovery.LocalDeviceName,
+                peerDiscoveryEnabled = Settings.EnablePeerDiscovery,
+                version = "2.5.0",
                 language = Settings.Language
             };
             await HttpResponse.WriteJsonAsync(stream, status, 200, "OK", ct);
@@ -546,6 +669,10 @@ public sealed class LocalWebServerService : IDisposable
                 sharedFolderPath = Settings.SharedFolderPath,
                 serverAnonymous = Settings.ServerAnonymous,
                 serverUsername = Settings.ServerUsername,
+                peerId = PeerDiscovery.LocalPeerId,
+                deviceName = PeerDiscovery.LocalDeviceName,
+                enablePeerDiscovery = Settings.EnablePeerDiscovery,
+                autoAcceptPeerDrops = Settings.AutoAcceptPeerDrops,
                 enableCloudflareTunnel = Settings.EnableCloudflareTunnel,
                 tunnelMode = Settings.TunnelMode,
                 cloudflareCustomDomain = Settings.CloudflareCustomDomain
@@ -627,6 +754,52 @@ public sealed class LocalWebServerService : IDisposable
         }
 
 
+        // חיפוש רקורסיבי מהיר (Instant Recursive Search)
+        if (req.Method == "GET" && req.Path == "/api/search")
+        {
+            await HandleSearchAsync(req, stream, ct);
+            return;
+        }
+
+        // צ'אט ופתקים מהירים (Quick Text / Chat Drop)
+        if (req.Method == "GET" && req.Path == "/api/messages")
+        {
+            await HandleGetMessagesAsync(stream, ct);
+            return;
+        }
+
+        if (req.Method == "POST" && req.Path == "/api/messages")
+        {
+            await HandlePostMessageAsync(req, stream, ct);
+            return;
+        }
+
+        // העלאה בחלקים (Chunked / Resumable Upload)
+        if (req.Method == "POST" && req.Path == "/api/upload-chunk")
+        {
+            await HandleUploadChunkAsync(req, stream, ct);
+            return;
+        }
+
+        // ניהול רשימה שחורה (Blacklist API)
+        if (req.Method == "GET" && req.Path == "/api/blacklist")
+        {
+            await HttpResponse.WriteJsonAsync(stream, new { ips = GetBlacklistedIps() }, 200, "OK", ct);
+            return;
+        }
+
+        if (req.Method == "POST" && req.Path == "/api/blacklist/add")
+        {
+            await HandleBlacklistAddAsync(req, stream, ct);
+            return;
+        }
+
+        if (req.Method == "POST" && req.Path == "/api/blacklist/remove")
+        {
+            await HandleBlacklistRemoveAsync(req, stream, ct);
+            return;
+        }
+
         // העלאת קבצים
         if (req.Method == "POST" && req.Path == "/api/upload")
         {
@@ -666,6 +839,137 @@ public sealed class LocalWebServerService : IDisposable
         if (req.Method == "POST" && req.Path == "/api/file/save")
         {
             await HandleFileSaveAsync(req, stream, ct);
+            return;
+        }
+
+        // מידע על מזהה העמית המקומי (Local Peer Info)
+        if (req.Method == "GET" && req.Path == "/api/peer/my-info")
+        {
+            var myInfo = new
+            {
+                peerId = PeerDiscovery.LocalPeerId,
+                deviceName = PeerDiscovery.LocalDeviceName,
+                port = Port,
+                localIp = LocalIpAddress,
+                autoAccept = Settings.AutoAcceptPeerDrops,
+                discoveryEnabled = Settings.EnablePeerDiscovery,
+                internetDiscoveryEnabled = Settings.EnableInternetDiscovery,
+                internetVisibility = PeerDiscovery.InternetDiscovery.VisibilityMode,
+                internetUrl = PeerDiscovery.InternetDiscovery.CurrentInternetUrl ?? TunnelService.CurrentUrl
+            };
+            await HttpResponse.WriteJsonAsync(stream, myInfo, 200, "OK", ct);
+            return;
+        }
+
+        // שינוי מצב נראות באינטרנט (גלוי / מוסתר)
+        if (req.Method == "POST" && req.Path == "/api/peer/visibility")
+        {
+            string body = await req.ReadBodyAsStringAsync(ct);
+            string mode = "Hidden";
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("visibility", out var vElem))
+                {
+                    mode = vElem.GetString() ?? "Hidden";
+                }
+            }
+            catch { }
+
+            await PeerDiscovery.InternetDiscovery.SetVisibilityModeAsync(mode);
+            await HttpResponse.WriteJsonAsync(stream, new { success = true, visibility = PeerDiscovery.InternetDiscovery.VisibilityMode }, 200, "OK", ct);
+            return;
+        }
+
+        // חיפוש או איתור עמיתים באינטרנט (לפי מזהה מדויק או סריקה גלויה)
+        if (req.Method == "POST" && req.Path == "/api/peer/search-internet")
+        {
+            string body = await req.ReadBodyAsStringAsync(ct);
+            string targetPeerId = "";
+            string queryType = "exact";
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                if (doc.RootElement.TryGetProperty("targetPeerId", out var tElem)) targetPeerId = tElem.GetString() ?? "";
+                if (doc.RootElement.TryGetProperty("queryType", out var qElem)) queryType = qElem.GetString() ?? "exact";
+            }
+            catch { }
+
+            if (!string.IsNullOrWhiteSpace(targetPeerId))
+            {
+                var peer = await PeerDiscovery.InternetDiscovery.LookupPeerByIdAsync(targetPeerId);
+                await HttpResponse.WriteJsonAsync(stream, new { found = peer != null, peer }, 200, "OK", ct);
+                return;
+            }
+            else
+            {
+                var peers = await PeerDiscovery.SearchInternetPeersAsync();
+                await HttpResponse.WriteJsonAsync(stream, new { count = peers.Count, peers }, 200, "OK", ct);
+                return;
+            }
+        }
+
+        // רשימת עמיתים שזוהו ברשת (Discovered Peers)
+        if (req.Method == "GET" && req.Path == "/api/peer/discovered")
+        {
+            var peers = PeerDiscovery.GetDiscoveredPeers();
+            await HttpResponse.WriteJsonAsync(stream, new { count = peers.Count, peers }, 200, "OK", ct);
+            return;
+        }
+
+        // קבלת קבצים בדרופ ישיר מעמית ברשת (Direct Peer File Drop)
+        if (req.Method == "POST" && req.Path == "/api/peer/drop")
+        {
+            await HandlePeerDropAsync(req, stream, ct);
+            return;
+        }
+
+        // קבלת הודעת צ'אט ישירה מעמית ברשת (Direct Peer Message)
+        if (req.Method == "POST" && req.Path == "/api/peer/message")
+        {
+            await HandlePeerDirectMessageAsync(req, stream, ct);
+            return;
+        }
+
+        // שליחת קובץ או הודעה לעמית מרוחק מתוך הממשק (Direct Peer Send)
+        if (req.Method == "POST" && req.Path == "/api/peer/send")
+        {
+            await HandlePeerSendAsync(req, stream, ct);
+            return;
+        }
+
+        // שליפת היסטוריית צ'אט עם עמית
+        if (req.Method == "GET" && req.Path == "/api/peer/chat")
+        {
+            await HandlePeerChatHistoryAsync(req, stream, ct);
+            return;
+        }
+
+        // ניקוי היסטוריית צ'אט
+        if (req.Method == "POST" && req.Path == "/api/peer/chat/clear")
+        {
+            await HandlePeerChatClearAsync(req, stream, ct);
+            return;
+        }
+
+        // ניטור: שליפת רשימת כל הקישורים והקבצים המשותפים הפעילים
+        if (req.Method == "GET" && req.Path == "/api/monitor/shares")
+        {
+            await HandleMonitorGetSharesAsync(req, stream, ct);
+            return;
+        }
+
+        // ניטור: השמדת קישור שיתוף וטוקן גישה מיידית (ללא מחיקת הקובץ במחשב)
+        if (req.Method == "POST" && req.Path == "/api/monitor/shares/revoke")
+        {
+            await HandleMonitorRevokeShareAsync(req, stream, ct);
+            return;
+        }
+
+        // ניטור: השמדת כל קישורי השיתוף הפעילים בבת אחת (ללא מחיקת הקבצים במחשב)
+        if (req.Method == "POST" && req.Path == "/api/monitor/shares/revoke-all")
+        {
+            await HandleMonitorRevokeAllSharesAsync(req, stream, ct);
             return;
         }
 
@@ -717,6 +1021,89 @@ public sealed class LocalWebServerService : IDisposable
         await HttpResponse.WriteJsonAsync(stream, overview, 200, "OK", ct);
     }
 
+    private async Task HandleMonitorGetSharesAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        var transfers = SecureTransferService.GetAllActiveTransfers();
+        var list = transfers.Select(t => new
+        {
+            token = t.Token,
+            fileName = t.FileName,
+            filePath = t.FilePath,
+            fileSizeBytes = t.FileSizeBytes,
+            formattedSize = t.FormattedSize,
+            isFolder = t.IsFolder,
+            channel = t.Channel,
+            channelDisplay = t.ChannelDisplay,
+            shareUrl = t.EffectiveUrl,
+            pinCode = t.PinCode,
+            securityDisplay = t.SecurityDisplay,
+            createdAt = t.CreatedAt.ToString("o"),
+            formattedCreatedAt = t.FormattedCreatedAt,
+            expiresAt = t.ExpiresAt == DateTime.MaxValue ? null : t.ExpiresAt.ToString("o"),
+            formattedExpiresAt = t.FormattedExpiresAt,
+            maxDownloads = t.MaxDownloads,
+            downloadCount = t.DownloadCount,
+            isCancelled = t.IsCancelled,
+            isExpired = t.IsExpired,
+            statusDescription = t.StatusDescription
+        }).ToList();
+
+        await HttpResponse.WriteJsonAsync(stream, new { count = list.Count, shares = list }, 200, "OK", ct);
+    }
+
+    private async Task HandleMonitorRevokeShareAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string token = "";
+        if (req.Query.TryGetValue("token", out var qToken))
+        {
+            token = qToken;
+        }
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            string body = await req.ReadBodyAsStringAsync(ct);
+            if (!string.IsNullOrWhiteSpace(body))
+            {
+                try
+                {
+                    using var doc = JsonDocument.Parse(body);
+                    if (doc.RootElement.TryGetProperty("token", out var tProp))
+                    {
+                        token = tProp.GetString() ?? "";
+                    }
+                }
+                catch { }
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            await HttpResponse.WriteJsonAsync(stream, new { success = false, error = "Token is required." }, 400, "Bad Request", ct);
+            return;
+        }
+
+        bool revoked = SecureTransferService.RevokeTransfer(token, removeFromList: true);
+        await HttpResponse.WriteJsonAsync(stream, new
+        {
+            success = revoked,
+            token,
+            message = revoked
+                ? "קישור השיתוף הושמד בהצלחה. הקובץ המקורי במחשב נשמר בבטחה ללא שינוי."
+                : "הקישור לא נמצא או שכבר הושמד."
+        }, 200, "OK", ct);
+    }
+
+    private async Task HandleMonitorRevokeAllSharesAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        int count = SecureTransferService.RevokeAllTransfers(removeFromList: true);
+        await HttpResponse.WriteJsonAsync(stream, new
+        {
+            success = true,
+            revokedCount = count,
+            message = "כל קישורי השיתוף הושמדו בהצלחה. הקבצים המקוריים במחשב נשמרו בבטחה ללא שינוי."
+        }, 200, "OK", ct);
+    }
+
     private async Task HandleSaveSettingsAsync(HttpRequest req, Stream stream, CancellationToken ct)
     {
         string body = await req.ReadBodyAsStringAsync(ct);
@@ -761,6 +1148,25 @@ public sealed class LocalWebServerService : IDisposable
                     LocalizationService.Instance.SetLanguage(l);
                     changed = true;
                 }
+            }
+            if (root.TryGetProperty("deviceName", out var dn) && dn.ValueKind == JsonValueKind.String)
+            {
+                string? dname = dn.GetString();
+                if (!string.IsNullOrWhiteSpace(dname))
+                {
+                    Settings.DeviceName = dname.Trim();
+                    changed = true;
+                }
+            }
+            if (root.TryGetProperty("enablePeerDiscovery", out var epd) && (epd.ValueKind == JsonValueKind.True || epd.ValueKind == JsonValueKind.False))
+            {
+                Settings.EnablePeerDiscovery = epd.GetBoolean();
+                changed = true;
+            }
+            if (root.TryGetProperty("autoAcceptPeerDrops", out var aapd) && (aapd.ValueKind == JsonValueKind.True || aapd.ValueKind == JsonValueKind.False))
+            {
+                Settings.AutoAcceptPeerDrops = aapd.GetBoolean();
+                changed = true;
             }
 
             if (changed)
@@ -1503,6 +1909,233 @@ public sealed class LocalWebServerService : IDisposable
         }
     }
 
+    private async Task HandleSearchAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string query = req.Query.TryGetValue("q", out var q) ? q.Trim() : "";
+        string subPath = req.Query.TryGetValue("path", out var p) ? p.Trim() : "";
+
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            await HttpResponse.WriteJsonAsync(stream, new { query = "", total = 0, items = new List<object>() }, 200, "OK", ct);
+            return;
+        }
+
+        string targetDir = SafeResolvePath(subPath);
+        if (!Directory.Exists(targetDir))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 404, "Not Found", "Directory does not exist.", ct);
+            return;
+        }
+
+        var dirInfo = new DirectoryInfo(targetDir);
+        var items = new List<object>();
+
+        var options = new EnumerationOptions
+        {
+            IgnoreInaccessible = true,
+            RecurseSubdirectories = true,
+            AttributesToSkip = FileAttributes.ReparsePoint
+        };
+
+        try
+        {
+            foreach (var fsi in dirInfo.EnumerateFileSystemInfos("*", options))
+            {
+                if (ct.IsCancellationRequested) break;
+                if (!Settings.ShowHiddenFiles && (fsi.Attributes.HasFlag(FileAttributes.Hidden) || fsi.Name.StartsWith('.')))
+                {
+                    continue;
+                }
+
+                if (fsi.Name.Contains(query, StringComparison.OrdinalIgnoreCase))
+                {
+                    bool isDir = (fsi.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+                    long size = isDir ? 0L : ((FileInfo)fsi).Length;
+                    string mime = isDir ? "inode/directory" : MimeTypes.GetMimeType(fsi.FullName);
+
+                    items.Add(new
+                    {
+                        name = fsi.Name,
+                        path = fsi.FullName,
+                        relativePath = GetDisplayPath(fsi.FullName),
+                        isDirectory = isDir,
+                        size = size,
+                        modifiedDate = fsi.LastWriteTimeUtc.ToString("o"),
+                        mimeType = mime
+                    });
+
+                    if (items.Count >= 200) break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            OnLog?.Invoke($"[SEARCH ERROR] {ex.Message}");
+        }
+
+        var res = new
+        {
+            query = query,
+            total = items.Count,
+            items = items
+        };
+        await HttpResponse.WriteJsonAsync(stream, res, 200, "OK", ct);
+    }
+
+    private async Task HandleGetMessagesAsync(Stream stream, CancellationToken ct)
+    {
+        var list = GetRecentMessages();
+        await HttpResponse.WriteJsonAsync(stream, new { messages = list }, 200, "OK", ct);
+    }
+
+    private async Task HandlePostMessageAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string sender = "";
+        string text = "";
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("sender", out var sElem)) sender = sElem.GetString() ?? "";
+            if (doc.RootElement.TryGetProperty("text", out var tElem)) text = tElem.GetString() ?? "";
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(sender))
+        {
+            sender = $"Client ({req.ClientIp})";
+        }
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Message text is required.", ct);
+            return;
+        }
+
+        AddMessage(sender, text);
+        await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+    }
+
+    private async Task HandleUploadChunkAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        if (!req.Query.TryGetValue("uploadId", out var uploadId) || string.IsNullOrWhiteSpace(uploadId))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing 'uploadId' parameter.", ct);
+            return;
+        }
+
+        if (!req.Query.TryGetValue("chunkIndex", out var chunkIdxStr) || !int.TryParse(chunkIdxStr, out int chunkIndex))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing or invalid 'chunkIndex'.", ct);
+            return;
+        }
+
+        if (!req.Query.TryGetValue("totalChunks", out var totalChunksStr) || !int.TryParse(totalChunksStr, out int totalChunks) || totalChunks <= 0)
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing or invalid 'totalChunks'.", ct);
+            return;
+        }
+
+        string fileName = req.Query.TryGetValue("fileName", out var fn) && !string.IsNullOrWhiteSpace(fn) ? fn : "uploaded_file";
+        string targetSubPath = req.Query.TryGetValue("path", out var p) ? p : "";
+
+        string chunkDir = Path.Combine(Path.GetTempPath(), "EasyShareChunks", uploadId);
+        Directory.CreateDirectory(chunkDir);
+        string chunkFile = Path.Combine(chunkDir, $"chunk_{chunkIndex:D6}.part");
+
+        await using (var fs = new FileStream(chunkFile, FileMode.Create, FileAccess.Write, FileShare.None, 65536, useAsync: true))
+        {
+            await req.BodyStream.CopyToAsync(fs, ct);
+        }
+
+        bool isComplete = false;
+        string? finalPath = null;
+
+        lock (string.Intern(uploadId))
+        {
+            var chunkFiles = Directory.GetFiles(chunkDir, "chunk_*.part");
+            if (chunkFiles.Length >= totalChunks)
+            {
+                string baseDir = SafeResolvePath(targetSubPath);
+                string cleanRel = fileName.TrimStart('/', '\\').Replace('/', Path.DirectorySeparatorChar);
+                finalPath = Path.GetFullPath(Path.Combine(baseDir, cleanRel));
+                string? targetFolder = Path.GetDirectoryName(finalPath);
+                if (!string.IsNullOrEmpty(targetFolder)) Directory.CreateDirectory(targetFolder);
+
+                using (var destStream = new FileStream(finalPath, FileMode.Create, FileAccess.Write, FileShare.None, 65536, useAsync: false))
+                {
+                    for (int i = 0; i < totalChunks; i++)
+                    {
+                        string partPath = Path.Combine(chunkDir, $"chunk_{i:D6}.part");
+                        if (File.Exists(partPath))
+                        {
+                            using (var partStream = File.OpenRead(partPath))
+                            {
+                                partStream.CopyTo(destStream);
+                            }
+                        }
+                    }
+                }
+
+                try { Directory.Delete(chunkDir, true); } catch { }
+                isComplete = true;
+                OnLog?.Invoke($"[CHUNK UPLOAD] Completed file: {cleanRel} ({totalChunks} chunks)");
+            }
+        }
+
+        if (isComplete && finalPath != null)
+        {
+            await HttpResponse.WriteJsonAsync(stream, new { success = true, completed = true, fileName = Path.GetFileName(finalPath) }, 200, "OK", ct);
+        }
+        else
+        {
+            await HttpResponse.WriteJsonAsync(stream, new { success = true, completed = false, chunkIndex = chunkIndex, totalChunks = totalChunks }, 200, "OK", ct);
+        }
+    }
+
+    private async Task HandleBlacklistAddAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string? ip = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("ip", out var ipElem)) ip = ipElem.GetString();
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(ip))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "IP address is required.", ct);
+            return;
+        }
+
+        BlacklistIp(ip);
+        await HttpResponse.WriteJsonAsync(stream, new { success = true, ip = ip.Trim() }, 200, "OK", ct);
+    }
+
+    private async Task HandleBlacklistRemoveAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string? ip = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("ip", out var ipElem)) ip = ipElem.GetString();
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(ip))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "IP address is required.", ct);
+            return;
+        }
+
+        UnblacklistIp(ip);
+        await HttpResponse.WriteJsonAsync(stream, new { success = true, ip = ip.Trim() }, 200, "OK", ct);
+    }
+
     private string GetDisplayPath(string fullPath)
     {
         if (Settings.AccessMode == "FullComputer")
@@ -1512,12 +2145,159 @@ public sealed class LocalWebServerService : IDisposable
         return Path.GetRelativePath(RootDirectory, fullPath).Replace('\\', '/');
     }
 
+    private async Task HandlePeerDropAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string targetDir = Path.Combine(RootDirectory, "Received_Drops");
+        Directory.CreateDirectory(targetDir);
+
+        string senderPeerId = req.GetHeader("X-Sender-PeerId") ?? "Unknown";
+        string senderDeviceName = req.GetHeader("X-Sender-DeviceName") ?? senderPeerId;
+        try
+        {
+            senderDeviceName = Uri.UnescapeDataString(senderDeviceName);
+        }
+        catch { }
+
+        var savedFiles = await MultipartParser.ParseAndSaveFilesAsync(req, targetDir, ct);
+        foreach (var file in savedFiles)
+        {
+            PeerDiscovery.NotifyDirectFileReceived(senderPeerId, senderDeviceName, file.FileName, file.SavedPath);
+        }
+
+        OnLog?.Invoke($"[PEER DROP] נתקבלו {savedFiles.Count} קבצים מעמית {senderDeviceName} ({senderPeerId}) ונשמרו בתיקיית Received_Drops");
+        await HttpResponse.WriteJsonAsync(stream, new { success = true, count = savedFiles.Count, files = savedFiles, targetDir = "Received_Drops" }, 200, "OK", ct);
+    }
+
+    private async Task HandlePeerDirectMessageAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string senderPeerId = "";
+        string senderName = "";
+        string text = "";
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("senderPeerId", out var spElem)) senderPeerId = spElem.GetString() ?? "";
+            if (doc.RootElement.TryGetProperty("senderName", out var snElem)) senderName = snElem.GetString() ?? "";
+            if (doc.RootElement.TryGetProperty("text", out var tElem)) text = tElem.GetString() ?? "";
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing text", ct);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(senderName)) senderName = senderPeerId;
+        if (string.IsNullOrWhiteSpace(senderName)) senderName = "עמית ברשת";
+
+        AddMessage($"{senderName} ({senderPeerId})", text);
+        PeerDiscovery.NotifyDirectMessageReceived(senderPeerId, senderName, text);
+
+        await HttpResponse.WriteJsonAsync(stream, new { success = true }, 200, "OK", ct);
+    }
+
+    private async Task HandlePeerSendAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string targetPeerId = "";
+        string message = "";
+        List<string>? files = null;
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("targetPeerId", out var tpElem)) targetPeerId = tpElem.GetString() ?? "";
+            if (doc.RootElement.TryGetProperty("message", out var mElem)) message = mElem.GetString() ?? "";
+            if (doc.RootElement.TryGetProperty("files", out var fElem) && fElem.ValueKind == JsonValueKind.Array)
+            {
+                files = fElem.EnumerateArray().Select(x => x.GetString()).Where(x => !string.IsNullOrEmpty(x)).ToList()!;
+            }
+        }
+        catch { }
+
+        if (string.IsNullOrWhiteSpace(targetPeerId))
+        {
+            await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing targetPeerId", ct);
+            return;
+        }
+
+        var peer = PeerDiscovery.FindPeer(targetPeerId);
+        if (peer == null)
+        {
+            await PeerDiscovery.QueryPeerAsync(targetPeerId);
+            await HttpResponse.WriteJsonAsync(stream, new { success = false, message = $"העמית {targetPeerId} אינו מקוון כעת." }, 404, "Not Found", ct);
+            return;
+        }
+
+        if (files != null && files.Count > 0)
+        {
+            var resolvedFiles = files.Select(f => SafeResolvePath(f)).Where(File.Exists).ToList();
+            var (dropOk, dropMsg) = await PeerDiscovery.DropFilesToPeerAsync(peer, resolvedFiles, ct);
+            await HttpResponse.WriteJsonAsync(stream, new { success = dropOk, message = dropMsg }, dropOk ? 200 : 500, dropOk ? "OK" : "Error", ct);
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            var (msgOk, msgResult) = await PeerDiscovery.SendDirectMessageAsync(peer, message, ct);
+            await HttpResponse.WriteJsonAsync(stream, new { success = msgOk, message = msgResult }, msgOk ? 200 : 500, msgOk ? "OK" : "Error", ct);
+            return;
+        }
+
+        await HttpResponse.WriteStatusAsync(stream, 400, "Bad Request", "Missing message or files to send.", ct);
+    }
+
+    private async Task HandlePeerChatHistoryAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string peerId = "";
+        if (req.Query.TryGetValue("targetPeerId", out var t1)) peerId = t1;
+        else if (req.Query.TryGetValue("peerId", out var t2)) peerId = t2;
+
+        if (string.IsNullOrWhiteSpace(peerId))
+        {
+            await HttpResponse.WriteJsonAsync(stream, new { error = "targetPeerId is required." }, 400, "Bad Request", ct);
+            return;
+        }
+
+        var messages = PeerDiscovery.GetChatHistory(peerId);
+        await HttpResponse.WriteJsonAsync(stream, new { peerId, count = messages.Count, messages }, 200, "OK", ct);
+    }
+
+    private async Task HandlePeerChatClearAsync(HttpRequest req, Stream stream, CancellationToken ct)
+    {
+        string body = await req.ReadBodyAsStringAsync(ct);
+        string targetPeerId = "";
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("targetPeerId", out var tElem)) targetPeerId = tElem.GetString() ?? "";
+            else if (doc.RootElement.TryGetProperty("peerId", out var pElem)) targetPeerId = pElem.GetString() ?? "";
+        }
+        catch { }
+
+        if (!string.IsNullOrWhiteSpace(targetPeerId))
+        {
+            PeerDiscovery.ClearChatHistory(targetPeerId);
+        }
+
+        await HttpResponse.WriteJsonAsync(stream, new { success = true, peerId = targetPeerId }, 200, "OK", ct);
+    }
+
     public void Stop()
     {
         _cts?.Cancel();
         _listener?.Stop();
         _listener = null;
         TunnelService.Stop();
+
+        try
+        {
+            PeerDiscovery.Stop();
+        }
+        catch { }
 
         try
         {
@@ -1535,5 +2315,6 @@ public sealed class LocalWebServerService : IDisposable
         Stop();
         _cts?.Dispose();
         TunnelService.Dispose();
+        PeerDiscovery.Dispose();
     }
 }

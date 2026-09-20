@@ -10,47 +10,52 @@
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
-  <meta name="theme-color" content="#1F1F1F">
+  <meta name="theme-color" content="#0B0F14">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="שיתוף קל">
 
   <style>
-    :root {
-      --bg-main: #1F1F1F;
-      --bg-card: #2B2B2B;
-      --bg-card-hover: #323232;
-      --bg-card-selected: rgba(0, 120, 212, 0.18);
-      --border: #383838;
-      --text-main: #FFFFFF;
-      --text-muted: #B0B0B0;
-      --accent: #0078D4;
-      --accent-hover: #0067C0;
-      --accent-light: #388BE8;
-      --accent-indigo: #5B64E6;
-      --success: #22C55E;
+    :root, [data-theme="dark"] {
+      --bg-main: #0B0F14;
+      --bg-surface: #111720;
+      --bg-card: #16202B;
+      --bg-card-hover: #1C2937;
+      --bg-card-selected: rgba(0, 210, 180, 0.16);
+      --border: #223142;
+      --border-highlight: #00D2B4;
+      --text-main: #F1F5F9;
+      --text-muted: #94A3B8;
+      --accent: #00D2B4;
+      --accent-hover: #00B89D;
+      --accent-light: #22D3EE;
+      --accent-indigo: #38BDF8;
+      --success: #00D2B4;
       --warning: #F59E0B;
-      --danger: #E11D48;
+      --danger: #EF4444;
       --radius: 12px;
-      --shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
     }
 
     [data-theme="light"] {
       --bg-main: #F8FAFC;
+      --bg-surface: #F1F5F9;
       --bg-card: #FFFFFF;
-      --bg-card-hover: #F1F5F9;
-      --bg-card-selected: rgba(37, 99, 235, 0.12);
+      --bg-card-hover: #F8FAFC;
+      --bg-card-selected: rgba(0, 210, 180, 0.14);
       --border: #CBD5E1;
+      --border-highlight: #00D2B4;
       --text-main: #0F172A;
       --text-muted: #475569;
-      --accent: #2563EB;
-      --accent-hover: #1D4ED8;
-      --accent-light: #0284C7;
-      --accent-indigo: #4F46E5;
-      --success: #10B981;
+      --accent: #00D2B4;
+      --accent-hover: #00B89D;
+      --accent-light: #22D3EE;
+      --accent-indigo: #38BDF8;
+      --success: #00D2B4;
       --warning: #F59E0B;
       --danger: #EF4444;
+      --radius: 12px;
       --shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
     }
 
@@ -70,7 +75,7 @@
     :focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
-      box-shadow: 0 0 0 4px rgba(0, 120, 212, 0.28) !important;
+      box-shadow: 0 0 0 4px rgba(0, 210, 180, 0.28) !important;
     }
 
     button:focus:not(:focus-visible),
@@ -107,7 +112,7 @@
 
     /* Header עם אפקט זכוכית יוקרתי Frosted Glass */
     header {
-      background-color: rgba(19, 27, 43, 0.82);
+      background-color: rgba(17, 23, 32, 0.85);
       border-bottom: 1px solid var(--border);
       position: sticky;
       top: 0;
@@ -153,7 +158,7 @@
       align-items: center;
       justify-content: center;
       color: white;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+      box-shadow: 0 4px 14px rgba(0, 210, 180, 0.35);
       flex-shrink: 0;
     }
 
@@ -1105,9 +1110,15 @@
 
         <button class="btn btn-primary" id="btnUpload" onclick="document.getElementById('fileUploadInput').click()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-left:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-          <span>העלאה</span>
+          <span id="btnUploadText">העלאה</span>
         </button>
         <input type="file" id="fileUploadInput" multiple style="display:none" onchange="uploadFiles(this.files)">
+
+        <button class="btn" id="btnUploadFolder" onclick="document.getElementById('folderUploadInput').click()" title="העלאת תיקייה שלמה על כל קבציה ותיקיות המשנה">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-left:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><polyline points="12 11 12 17 15 14"></polyline><polyline points="12 11 9 14"></polyline></svg>
+          <span class="hide-sm" id="btnUploadFolderText">העלאת תיקייה</span>
+        </button>
+        <input type="file" id="folderUploadInput" webkitdirectory directory multiple style="display:none" onchange="uploadFiles(this.files)">
 
         <button class="btn" id="btnNewFolder" onclick="openNewFolderPrompt()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; margin-left:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
@@ -1120,6 +1131,12 @@
 
         <button class="btn btn-icon" id="btnQr" onclick="openQrModal()" title="קוד QR ושיתוף">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        </button>
+
+        <button class="btn" id="btnPeerDrop" onclick="openPeerDropModal()" title="משתמשים ברשת ודרופ קבצים ישיר" style="display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:0.8rem; padding:0 10px; border:1px solid var(--border); color:var(--text-main);">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <span class="hide-sm">דרופ משתמשים</span>
+          <span id="headerPeerBadge" style="font-size:0.7rem; color:var(--accent); font-family:monospace; font-weight:bold;"></span>
         </button>
 
         <button class="btn btn-icon" id="btnClipboard" onclick="openClipboardModal()" title="לוח שיתוף מהיר (Quick Drop)">
@@ -1169,7 +1186,12 @@
         </div>
 
         <div class="toolbar-tools">
-          <input type="text" class="search-input" id="searchFilter" placeholder="סינון קבצים..." oninput="filterFiles()">
+          <div style="position:relative; display:inline-flex; align-items:center;">
+            <input type="text" class="search-input" id="searchFilter" placeholder="חיפוש קבצים (Enter לעמוק)..." oninput="filterFiles()" onkeydown="if(event.key==='Enter') executeDeepSearch();">
+            <button class="btn btn-icon" id="btnDeepSearch" onclick="executeDeepSearch()" title="חיפוש רקורסיבי עמוק בכל התיקיות (Enter)" style="position:absolute; left:4px; width:26px; height:26px; padding:0; background:transparent; border:none; color:var(--text-muted); cursor:pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+          </div>
 
           <select class="form-control" id="sortSelect" onchange="applySorting()" style="padding:0.4rem; font-size:0.8rem;">
             <option value="name_asc" id="optSortNameAsc">שם (א-ת)</option>
@@ -1184,6 +1206,12 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
           </button>
         </div>
+      </div>
+
+      <!-- באנר תוצאות חיפוש עמוק -->
+      <div id="searchResultsBanner" style="display:none; background:var(--bg-card); border:1px solid var(--accent); border-radius:8px; padding:0.6rem 1rem; align-items:center; justify-content:space-between; margin-bottom:0.25rem;">
+        <span id="searchResultsText" style="font-weight:600; font-size:0.875rem; color:var(--text-main);"></span>
+        <button class="btn btn-sm" onclick="clearDeepSearch()" style="padding:4px 10px; font-size:0.8rem;">חזור לתיקייה הנוכחית</button>
       </div>
 
       <!-- לשוניות סינון מהיר לפי קטגוריה -->
@@ -1391,73 +1419,149 @@
     </div>
   </div>
 
-  <!-- גלריית תמונות מתקדמת עם החלקה ומצגת (Advanced Gallery) -->
+  <!-- גלריית תמונות ומדיה מתקדמת עם וידאו, החלקה ומצגת (Advanced Media Lightbox) -->
   <div class="modal-overlay" id="advancedGalleryModal">
-    <div class="modal-card" style="max-width:96vw; width:1100px; height:90vh; background:rgba(19,27,43,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--border); display:flex; flex-direction:column; padding:0; overflow:hidden;">
-      <div class="modal-header" style="background:rgba(11,15,23,0.6); padding:0.75rem 1.25rem;">
+    <div class="modal-card" style="max-width:96vw; width:1100px; height:90vh; background:rgba(19,27,43,0.95); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border:1px solid var(--border); display:flex; flex-direction:column; padding:0; overflow:hidden;">
+      <div class="modal-header" style="background:rgba(11,15,23,0.7); padding:0.75rem 1.25rem;">
         <div style="display:flex; align-items:center; gap:0.75rem;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-          <span id="galleryImageTitle" style="font-weight:600; font-size:0.95rem;">גלריית מדיה</span>
+          <span id="galleryImageTitle" style="font-weight:600; font-size:0.95rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:400px;">גלריית מדיה</span>
           <span id="galleryCounter" style="font-size:0.8rem; color:var(--text-muted);">(1 / 1)</span>
         </div>
         <div style="display:flex; gap:0.5rem; align-items:center;">
-          <button class="btn btn-icon" id="btnSlideshow" onclick="toggleSlideshow()" title="הפעל / עצור מצגת">
+          <button class="btn btn-icon" id="btnSlideshow" onclick="toggleSlideshow()" title="הפעל / עצור מצגת אוטומטית (Space)">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           </button>
-          <a id="btnGalleryDownload" href="#" class="btn btn-icon" download title="הורד תמונה זו">
+          <a id="btnGalleryDownload" href="#" class="btn btn-icon" download title="הורד קובץ מדיה זה">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           </a>
-          <button class="btn btn-icon" onclick="closeAdvancedGallery()">✕</button>
+          <button class="btn btn-icon" onclick="closeAdvancedGallery()" title="סגור (Esc)">✕</button>
         </div>
       </div>
       <div class="modal-body" id="galleryContainer" style="flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; user-select:none; padding:1rem;">
-        <button class="gallery-nav-btn prev" id="btnGalleryPrev" onclick="prevGalleryImage()" title="תמונה קודמת">❮</button>
+        <button class="gallery-nav-btn prev" id="btnGalleryPrev" onclick="prevGalleryImage()" title="קודם (מקש חץ שמאלה)">❮</button>
         <img id="galleryCurrentImg" src="" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); transition:transform 0.2s ease;">
-        <button class="gallery-nav-btn next" id="btnGalleryNext" onclick="nextGalleryImage()" title="תמונה הבאה">❯</button>
+        <video id="galleryCurrentVideo" controls playsinline style="display:none; max-width:100%; max-height:100%; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5);"></video>
+        <button class="gallery-nav-btn next" id="btnGalleryNext" onclick="nextGalleryImage()" title="הבא (מקש חץ ימינה)">❯</button>
       </div>
     </div>
   </div>
 
-  <!-- מודל לוח שיתוף מהיר (Quick Drop / Clipboard Sync) -->
+  <!-- מודל צ'אט, פתקים וסנכרון לוח מהיר (Quick Drop / Real-Time Feed) -->
   <div class="modal-overlay" id="clipboardModal">
-    <div class="modal-card" style="max-width:540px;">
+    <div class="modal-card" style="max-width:540px; max-height:90vh; display:flex; flex-direction:column;">
       <div class="modal-header">
         <div style="display:flex; align-items:center; gap:0.5rem;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-          <h3 id="clipboardModalTitle">לוח סנכרון מהיר (Quick Drop)</h3>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+          <h3 id="clipboardModalTitle">צ'אט, פתקים ולוח מהיר (Quick Drop)</h3>
         </div>
         <button class="btn btn-icon" onclick="closeClipboardModal()">✕</button>
       </div>
-      <div class="modal-body" style="display:flex; flex-direction:column; gap:1rem;">
-        <p id="clipboardModalDesc" style="font-size:0.875rem; color:var(--text-muted); margin:0;">
-          שתף טקסטים, פתקים וקישורים בין המחשב לסמארטפון בזמן אמת.
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:0.75rem; flex:1; overflow-y:auto;">
+        <p id="clipboardModalDesc" style="font-size:0.85rem; color:var(--text-muted); margin:0;">
+          שתף הודעות, טקסטים, פתקים וקישורים בין המחשב למכשיר הנייד בזמן אמת.
         </p>
 
-        <div>
-          <label id="lblClipboardCurrentHost" style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.4rem;">
-            תוכן נוכחי מהמחשב:
-          </label>
-          <div id="clipboardCurrentHostText" style="background:var(--bg-main); border:1px solid var(--border); border-radius:8px; padding:0.75rem; font-family:monospace; font-size:0.875rem; min-height:60px; max-height:150px; overflow-y:auto; word-break:break-all; color:var(--text-main);">
-            (טוען מהמחשב...)
+        <!-- היסטוריית צ'אט ופתקים -->
+        <div id="quickChatFeed" style="background:var(--bg-main); border:1px solid var(--border); border-radius:8px; padding:0.75rem; min-height:180px; max-height:260px; overflow-y:auto; display:flex; flex-direction:column; gap:0.5rem;">
+          <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin:auto;">טוען הודעות...</div>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-top:0.25rem;">
+          <textarea id="clipboardInputText" class="form-control" rows="2" placeholder="הקלד הודעה, פתק או הדבק קישור (Enter לשליחה)..." style="flex:1; resize:none; font-size:0.875rem;" onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendQuickChatMessage(); }"></textarea>
+          <button class="btn btn-primary" id="btnSendHostClipboard" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0.5rem 1.1rem;" onclick="sendQuickChatMessage()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            <span style="font-size:0.75rem; margin-top:2px;">שלח</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- מודל עמיתים ודרופ קבצים ישיר (Peer Drop & Discovery Modal) -->
+  <div class="modal-overlay" id="peerDropModal">
+    <div class="modal-card" style="max-width:580px; max-height:92vh; display:flex; flex-direction:column;">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          <h3 id="peerDropModalTitle">משתמשים ברשת ודרופ ישיר (P2P Drop)</h3>
+        </div>
+        <button class="btn btn-icon" onclick="closePeerDropModal()">✕</button>
+      </div>
+      <div class="modal-body" style="display:flex; flex-direction:column; gap:1rem; flex:1; overflow-y:auto;">
+        <!-- כרטיס המזהה של המחשב הנוכחי -->
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:12px 14px; display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">מזהה ההתקנה של שרת זה (Host Peer ID):</div>
+            <div id="modalHostPeerId" style="font-size:1.15rem; font-weight:bold; color:var(--accent); letter-spacing:1px;">SB-...</div>
+            <div id="modalHostDeviceName" style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;"></div>
           </div>
-          <button class="btn btn-primary" id="btnCopyHostClipboard" style="margin-top:0.5rem; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="copyHostClipboard()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-            <span>העתק תוכן זה למכשיר שלי</span>
-          </button>
+          <button class="btn btn-sm" onclick="copyHostPeerId()" style="padding:6px 12px; font-size:0.8rem;">העתק מזהה</button>
         </div>
 
-        <hr style="border:none; border-top:1px solid var(--border); margin:0.25rem 0;">
+        <!-- בורר נראות באינטרנט (גלוי מול מוסתר) -->
+        <div style="display:flex; align-items:center; justify-content:space-between; background:var(--bg-main); border:1px solid var(--border); border-radius:6px; padding:6px 12px; font-size:0.8rem;">
+          <span style="color:var(--text-muted);">נראות באינטרנט:</span>
+          <div style="display:flex; gap:12px;">
+            <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="לא מופיע בחיפוש כללי. ניתן להתחבר רק בהזנת מזהה מדויק">
+              <input type="radio" name="webPeerVisibility" id="webVisHidden" value="Hidden" onchange="updateWebPeerVisibility('Hidden')">
+              <span>מוסתר 🔒 (מזהה מדויק בלבד)</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:4px; cursor:pointer;" title="גלוי לכל המחפשים משתמשים באינטרנט">
+              <input type="radio" name="webPeerVisibility" id="webVisVisible" value="Visible" onchange="updateWebPeerVisibility('Visible')">
+              <span>גלוי 🌐</span>
+            </label>
+          </div>
+        </div>
 
+        <!-- משתמשים שזוהו ברשת המקומית ובאינטרנט -->
         <div>
-          <label id="lblClipboardSend" style="font-size:0.8rem; font-weight:600; color:var(--text-muted); display:block; margin-bottom:0.4rem;">
-            שלח טקסט או קישור מהמכשיר שלך למחשב:
-          </label>
-          <textarea id="clipboardInputText" class="form-control" rows="3" placeholder="הקלד או הדבק כאן טקסט, הודעה או קישור..." style="width:100%; resize:vertical; font-size:0.875rem;"></textarea>
-          <button class="btn btn-primary" id="btnSendHostClipboard" style="margin-top:0.5rem; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:6px;" onclick="sendTextToHostClipboard()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-            <span>שלח ללוח המחשב</span>
-          </button>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="font-weight:700; font-size:0.9rem; color:var(--text-main);">מכשירים ומשתמשים שזוהו (LAN ואינטרנט)</div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-sm" onclick="searchInternetPeersWeb()" style="padding:4px 10px; font-size:0.75rem; background:var(--bg-surface); color:var(--accent);">חפש באינטרנט 🌐</button>
+              <button class="btn btn-sm" onclick="fetchDiscoveredPeers()" style="padding:4px 10px; font-size:0.75rem;">רענן</button>
+            </div>
+          </div>
+          <div id="discoveredPeersList" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;">
+            <div style="text-align:center; color:var(--text-muted); font-size:0.85rem; padding:1.5rem;">סורק את הרשת...</div>
+          </div>
         </div>
+
+        <!-- חדר צ'אט והעברת קבצים אינטראקטיבי -->
+        <div id="peerChatSection" style="background:var(--bg-main); border:1px solid var(--border); border-radius:8px; padding:12px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:1.1rem;">💬</span>
+              <div>
+                <span id="activeChatPeerTitle" style="font-weight:700; font-size:0.9rem; color:var(--text-main);">צ'אט משתמשים ישיר</span>
+                <span id="activeChatPeerBadge" style="font-size:0.75rem; color:var(--accent); font-family:monospace; background:var(--bg-card); padding:1px 5px; border-radius:4px; margin-right:4px;"></span>
+              </div>
+            </div>
+            <button class="btn btn-sm" onclick="clearActivePeerChat()" style="padding:2px 8px; font-size:0.75rem; color:var(--text-muted);">נקה שיחה 🗑️</button>
+          </div>
+
+          <!-- הזנת מזהה משתמש -->
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="targetPeerIdInput" class="form-control" placeholder="מזהה משתמש (למשל: SB-482-910)" style="font-family:monospace; font-weight:bold; font-size:0.9rem; flex:1;" onchange="onTargetPeerChanged()">
+            <button class="btn btn-sm" onclick="lookupExactPeerWeb()" style="padding:6px 12px; font-size:0.8rem; background:var(--bg-surface); color:var(--accent); border:1px solid var(--border);">אתר משתמש 🔍</button>
+          </div>
+
+          <!-- זרם הודעות השיחה -->
+          <div id="peerChatFeed" style="display:flex; flex-direction:column; gap:8px; height:180px; overflow-y:auto; padding:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:6px;">
+            <div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin:auto;">בחר משתמש או הזן מזהה לצפייה בשיחה ולהתכתבות</div>
+          </div>
+
+          <!-- שורת שליחה ודרופ קבצים -->
+          <div style="display:flex; gap:6px;">
+            <input type="file" id="peerDropFileInput" multiple style="display:none;" onchange="executePeerDropUpload(this.files)">
+            <button class="btn btn-sm" onclick="document.getElementById('peerDropFileInput').click()" title="צרף ושלח קובץ" style="padding:0 10px; font-size:1rem;">📎</button>
+            <input type="text" id="targetPeerMessageInput" class="form-control" placeholder="הקלד הודעה... (Enter לשליחה)" style="flex:1; font-size:0.85rem;" onkeydown="if(event.key==='Enter') sendDirectMessageToPeer();">
+            <button class="btn btn-primary btn-sm" onclick="sendDirectMessageToPeer()" style="padding:6px 14px; font-size:0.85rem; font-weight:bold;">שלח 🚀</button>
+          </div>
+        </div>
+
+        <div id="peerDropStatusMsg" style="font-size:0.825rem; color:var(--accent); text-align:center; min-height:1.2rem;"></div>
       </div>
     </div>
   </div>
@@ -2086,8 +2190,22 @@
             document.getElementById('pinBadge').style.display = 'inline-block';
           }
         }
+
+        const statusRes = await fetch('/api/status');
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          if (statusData.peerId) {
+            hostPeerId = statusData.peerId;
+            hostDeviceName = statusData.deviceName || '';
+            const badge = document.getElementById('headerPeerBadge');
+            if (badge) badge.textContent = statusData.peerId;
+          }
+          if (statusData.serverTheme && (!localStorage.getItem('easyshare_theme') || localStorage.getItem('easyshare_theme') === 'system')) {
+            document.body.setAttribute('data-theme', statusData.serverTheme);
+          }
+        }
       } catch (err) {
-        console.error('Settings error:', err);
+        console.error('Settings/Status error:', err);
       }
     }
 
@@ -2659,6 +2777,41 @@
       }
     }
 
+    async function uploadFileChunked(file, fileIndex, relPath, onChunkProgress) {
+      const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB
+      const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+      const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+      const rowBar = document.getElementById(`rowBar_${fileIndex}`);
+
+      for (let chunkIdx = 0; chunkIdx < totalChunks; chunkIdx++) {
+        const start = chunkIdx * CHUNK_SIZE;
+        const end = Math.min(file.size, start + CHUNK_SIZE);
+        const chunkBlob = file.slice(start, end);
+        const chunkUrl = `/api/upload-chunk?uploadId=${encodeURIComponent(uploadId)}&chunkIndex=${chunkIdx}&totalChunks=${totalChunks}&fileName=${encodeURIComponent(relPath)}&path=${encodeURIComponent(currentPath)}`;
+
+        let chunkPrev = 0;
+        await new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', chunkUrl, true);
+          xhr.upload.addEventListener('progress', (e) => {
+            if (e.lengthComputable && onChunkProgress) {
+              const diff = e.loaded - chunkPrev;
+              chunkPrev = e.loaded;
+              onChunkProgress(diff);
+              const filePct = Math.round(((start + e.loaded) / file.size) * 100);
+              if (rowBar) rowBar.style.width = filePct + '%';
+            }
+          });
+          xhr.addEventListener('load', () => {
+            if (xhr.status === 200) resolve();
+            else reject(new Error(`Status ${xhr.status}`));
+          });
+          xhr.addEventListener('error', () => reject(new Error('Network error')));
+          xhr.send(chunkBlob);
+        });
+      }
+    }
+
     async function uploadFiles(files) {
       if (!files || files.length === 0) return;
       const fileList = Array.from(files);
@@ -2702,27 +2855,13 @@
         const rowBar = document.getElementById(`rowBar_${i}`);
         if (rowStatus) rowStatus.textContent = t('statusUploading');
 
-        const formData = new FormData();
-        if (file.relativePath) {
-          formData.append('files', file, file.relativePath);
-        } else {
-          formData.append('files', file);
-        }
+        const relPath = file.webkitRelativePath || file.relativePath || file.name;
 
-        let filePrevLoaded = 0;
-        await new Promise((resolve) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open('POST', `/api/upload?path=${encodeURIComponent(currentPath)}`, true);
-
-          xhr.upload.addEventListener('progress', (e) => {
-            if (e.lengthComputable) {
-              const filePct = Math.round((e.loaded / e.total) * 100);
-              if (rowBar) rowBar.style.width = filePct + '%';
-              
-              const diff = e.loaded - filePrevLoaded;
-              filePrevLoaded = e.loaded;
+        if (file.size > 15 * 1024 * 1024) {
+          // העלאה בחלקים (Chunked Upload) לקבצים גדולים
+          try {
+            await uploadFileChunked(file, i, relPath, (diff) => {
               uploadedBytes += diff;
-
               const totalPct = Math.min(100, Math.round((uploadedBytes / (totalBytes || 1)) * 100));
               pFill.style.width = totalPct + '%';
               if (overallPct) overallPct.textContent = totalPct + '%';
@@ -2731,37 +2870,78 @@
               const bps = elapsedSec > 0 ? (uploadedBytes / elapsedSec) : 0;
               const remainingBytes = Math.max(0, totalBytes - uploadedBytes);
               const etaSec = bps > 0 ? Math.round(remainingBytes / bps) : 0;
-              
               if (rowStatus) rowStatus.textContent = `${formatBytes(bps)}/s | ETA: ${etaSec}s`;
-            }
-          });
-
-          xhr.addEventListener('load', () => {
-            if (xhr.status === 200) {
-              if (rowBar) rowBar.style.width = '100%';
-              if (rowStatus) {
-                rowStatus.textContent = t('statusDone');
-                rowStatus.style.color = 'var(--success)';
-              }
-            } else {
-              if (rowStatus) {
-                rowStatus.textContent = t('statusFailed');
-                rowStatus.style.color = 'var(--danger)';
-              }
-            }
-            resolve();
-          });
-
-          xhr.addEventListener('error', () => {
+            });
+            if (rowBar) rowBar.style.width = '100%';
             if (rowStatus) {
-              rowStatus.textContent = currentLang === 'en' ? 'Network error' : 'שגיאת רשת';
+              rowStatus.textContent = t('statusDone');
+              rowStatus.style.color = 'var(--success)';
+            }
+          } catch (err) {
+            if (rowStatus) {
+              rowStatus.textContent = t('statusFailed');
               rowStatus.style.color = 'var(--danger)';
             }
-            resolve();
-          });
+          }
+        } else {
+          // העלאה סטנדרטית
+          const formData = new FormData();
+          formData.append('files', file, relPath);
 
-          xhr.send(formData);
-        });
+          let filePrevLoaded = 0;
+          await new Promise((resolve) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `/api/upload?path=${encodeURIComponent(currentPath)}`, true);
+
+            xhr.upload.addEventListener('progress', (e) => {
+              if (e.lengthComputable) {
+                const filePct = Math.round((e.loaded / e.total) * 100);
+                if (rowBar) rowBar.style.width = filePct + '%';
+                
+                const diff = e.loaded - filePrevLoaded;
+                filePrevLoaded = e.loaded;
+                uploadedBytes += diff;
+
+                const totalPct = Math.min(100, Math.round((uploadedBytes / (totalBytes || 1)) * 100));
+                pFill.style.width = totalPct + '%';
+                if (overallPct) overallPct.textContent = totalPct + '%';
+
+                const elapsedSec = (Date.now() - startTime) / 1000;
+                const bps = elapsedSec > 0 ? (uploadedBytes / elapsedSec) : 0;
+                const remainingBytes = Math.max(0, totalBytes - uploadedBytes);
+                const etaSec = bps > 0 ? Math.round(remainingBytes / bps) : 0;
+                
+                if (rowStatus) rowStatus.textContent = `${formatBytes(bps)}/s | ETA: ${etaSec}s`;
+              }
+            });
+
+            xhr.addEventListener('load', () => {
+              if (xhr.status === 200) {
+                if (rowBar) rowBar.style.width = '100%';
+                if (rowStatus) {
+                  rowStatus.textContent = t('statusDone');
+                  rowStatus.style.color = 'var(--success)';
+                }
+              } else {
+                if (rowStatus) {
+                  rowStatus.textContent = t('statusFailed');
+                  rowStatus.style.color = 'var(--danger)';
+                }
+              }
+              resolve();
+            });
+
+            xhr.addEventListener('error', () => {
+              if (rowStatus) {
+                rowStatus.textContent = currentLang === 'en' ? 'Network error' : 'שגיאת רשת';
+                rowStatus.style.color = 'var(--danger)';
+              }
+              resolve();
+            });
+
+            xhr.send(formData);
+          });
+        }
       }
 
       summary.textContent = t('uploadComplete', { count: fileList.length });
@@ -2848,7 +3028,51 @@
     }
 
     function filterFiles() {
+      if (searchActiveQuery) {
+        clearDeepSearch();
+        return;
+      }
       renderFilesList();
+    }
+
+    let searchActiveQuery = '';
+
+    async function executeDeepSearch() {
+      const q = document.getElementById('searchFilter').value.trim();
+      if (!q) {
+        clearDeepSearch();
+        return;
+      }
+      searchActiveQuery = q;
+      const banner = document.getElementById('searchResultsBanner');
+      const bannerText = document.getElementById('searchResultsText');
+      if (banner) banner.style.display = 'flex';
+      if (bannerText) bannerText.textContent = `מחפש עמוק "${q}" בכל התיקיות...`;
+
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&path=${encodeURIComponent(currentPath)}`);
+        if (res.ok) {
+          const data = await res.json();
+          currentFiles = data.items || [];
+          if (bannerText) {
+            bannerText.textContent = `נמצאו ${currentFiles.length} תוצאות עבור "${q}" בכל התיקיות`;
+          }
+          renderFilesList();
+        } else {
+          if (bannerText) bannerText.textContent = `שגיאה בביצוע חיפוש עמוק.`;
+        }
+      } catch {
+        if (bannerText) bannerText.textContent = `שגיאת תקשורת בחיפוש.`;
+      }
+    }
+
+    function clearDeepSearch() {
+      searchActiveQuery = '';
+      const banner = document.getElementById('searchResultsBanner');
+      if (banner) banner.style.display = 'none';
+      const input = document.getElementById('searchFilter');
+      if (input) input.value = '';
+      loadDirectory(currentPath);
     }
 
     function setCategoryFilter(cat, btn) {
@@ -2861,7 +3085,7 @@
     function getFilteredFiles() {
       const q = document.getElementById('searchFilter').value.toLowerCase().trim();
       return currentFiles.filter(f => {
-        if (q && !f.name.toLowerCase().includes(q)) return false;
+        if (!searchActiveQuery && q && !f.name.toLowerCase().includes(q)) return false;
         if (activeCategory === 'all') return true;
         if (f.isDirectory) return false;
 
@@ -2897,9 +3121,9 @@
       document.getElementById('pdfViewerFrame').src = 'about:blank';
     }
 
-    // גלריית תמונות מתקדמת עם מחוות החלקה ומצגת
+    // גלריית מדיה מתקדמת (תמונות + וידאו) עם מחוות, מקלדת ומצגת
     function openAdvancedGallery(startPath) {
-      galleryImages = currentFiles.filter(f => !f.isDirectory && f.mimeType && f.mimeType.startsWith('image/'));
+      galleryImages = currentFiles.filter(f => !f.isDirectory && f.mimeType && (f.mimeType.startsWith('image/') || f.mimeType.startsWith('video/')));
       if (galleryImages.length === 0) {
         openLightbox(startPath);
         return;
@@ -2915,10 +3139,26 @@
       const cur = galleryImages[galleryCurrentIndex];
       const dlUrl = `/api/download?path=${encodeURIComponent(cur.path)}`;
       const img = document.getElementById('galleryCurrentImg');
-      img.src = dlUrl;
+      const vid = document.getElementById('galleryCurrentVideo');
+
       document.getElementById('galleryImageTitle').textContent = cur.name;
       document.getElementById('galleryCounter').textContent = `(${galleryCurrentIndex + 1} / ${galleryImages.length})`;
       document.getElementById('btnGalleryDownload').href = dlUrl;
+
+      if (cur.mimeType && cur.mimeType.startsWith('video/')) {
+        img.style.display = 'none';
+        vid.style.display = 'block';
+        vid.src = dlUrl;
+        vid.play().catch(() => {});
+      } else {
+        if (vid) {
+          vid.pause();
+          vid.style.display = 'none';
+          vid.src = '';
+        }
+        img.style.display = 'block';
+        img.src = dlUrl;
+      }
     }
 
     function nextGalleryImage() {
@@ -2947,6 +3187,11 @@
 
     function closeAdvancedGallery() {
       if (slideshowInterval) toggleSlideshow();
+      const vid = document.getElementById('galleryCurrentVideo');
+      if (vid) {
+        vid.pause();
+        vid.src = '';
+      }
       document.getElementById('advancedGalleryModal').classList.remove('active');
       document.getElementById('galleryCurrentImg').src = '';
     }
@@ -2965,58 +3210,100 @@
         if (diff > 50) prevGalleryImage();
         else if (diff < -50) nextGalleryImage();
       }, { passive: true });
+
+      // ניווט מקלדת בגלריה
+      window.addEventListener('keydown', (e) => {
+        const galModal = document.getElementById('advancedGalleryModal');
+        if (galModal && galModal.classList.contains('active')) {
+          if (e.key === 'Escape') closeAdvancedGallery();
+          else if (e.key === 'ArrowRight') (document.dir === 'rtl' ? prevGalleryImage() : nextGalleryImage());
+          else if (e.key === 'ArrowLeft') (document.dir === 'rtl' ? nextGalleryImage() : prevGalleryImage());
+          else if (e.key === ' ' && e.target === document.body) {
+            e.preventDefault();
+            toggleSlideshow();
+          }
+        }
+      });
     }
 
-    // לוח שיתוף מהיר (Quick Drop / Clipboard Sync)
+    // צ'אט, פתקים ולוח מהיר דו-כיווני בזמן אמת (Real-Time Quick Drop)
+    let quickChatPollTimer = null;
+
     async function openClipboardModal() {
       document.getElementById('clipboardModal').classList.add('active');
-      document.getElementById('clipboardCurrentHostText').textContent = t('clipboardLoading');
-      try {
-        const res = await fetch('/api/clipboard');
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById('clipboardCurrentHostText').textContent = data.text || t('clipboardEmpty');
-        } else {
-          document.getElementById('clipboardCurrentHostText').textContent = t('clipboardLoadError');
-        }
-      } catch {
-        document.getElementById('clipboardCurrentHostText').textContent = t('clipboardCommError');
-      }
+      loadQuickMessages();
+      if (quickChatPollTimer) clearInterval(quickChatPollTimer);
+      quickChatPollTimer = setInterval(loadQuickMessages, 3000);
+      document.getElementById('clipboardInputText')?.focus();
     }
 
     function closeClipboardModal() {
       document.getElementById('clipboardModal').classList.remove('active');
-    }
-
-    async function copyHostClipboard() {
-      const text = document.getElementById('clipboardCurrentHostText').textContent;
-      if (text && text !== t('clipboardEmpty') && text !== t('clipboardCommError') && text !== t('clipboardLoadError') && text !== '(לוח המחשב ריק)' && text !== '(שגיאת תקשורת)') {
-        await navigator.clipboard.writeText(text);
-        alert(t('clipboardCopiedAlert'));
+      if (quickChatPollTimer) {
+        clearInterval(quickChatPollTimer);
+        quickChatPollTimer = null;
       }
     }
 
-    async function sendTextToHostClipboard() {
-      const text = document.getElementById('clipboardInputText').value.trim();
-      if (!text) {
-        alert(t('clipboardEnterTextAlert'));
-        return;
-      }
+    async function loadQuickMessages() {
+      const feed = document.getElementById('quickChatFeed');
+      if (!feed) return;
       try {
-        const res = await fetch('/api/clipboard', {
+        const res = await fetch('/api/messages');
+        if (res.ok) {
+          const data = await res.json();
+          const msgs = data.messages || [];
+          if (msgs.length === 0) {
+            feed.innerHTML = `<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin:auto;">אין הודעות או פתקים עדיין. שלח משהו!</div>`;
+            return;
+          }
+          feed.innerHTML = msgs.map(m => {
+            const isMe = m.sender && (m.sender.includes('סמארטפון') || m.sender.includes('Client') || m.sender.includes('Mobile') || m.sender.includes('דפדפן'));
+            const bg = isMe ? 'rgba(0, 210, 180, 0.12)' : 'var(--bg-card)';
+            const border = isMe ? 'var(--accent)' : 'var(--border)';
+            const time = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            return `
+              <div style="background:${bg}; border:1px solid ${border}; border-radius:8px; padding:0.5rem 0.75rem; display:flex; flex-direction:column; gap:0.25rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:var(--text-muted);">
+                  <strong style="color:var(--text-main);">${escapeHtml(m.sender || 'Anonymous')}</strong>
+                  <div style="display:flex; align-items:center; gap:0.5rem;">
+                    <span>${time}</span>
+                    <button class="btn btn-sm" onclick="copyChatMessage('${escapeJsString(m.text)}')" style="padding:1px 6px; font-size:0.7rem; background:transparent; border:1px solid var(--border);">העתק</button>
+                  </div>
+                </div>
+                <div style="font-size:0.85rem; color:var(--text-main); word-break:break-word; white-space:pre-wrap;">${escapeHtml(m.text)}</div>
+              </div>
+            `;
+          }).join('');
+          feed.scrollTop = feed.scrollHeight;
+        }
+      } catch {}
+    }
+
+    async function sendQuickChatMessage() {
+      const input = document.getElementById('clipboardInputText');
+      const text = input ? input.value.trim() : '';
+      if (!text) return;
+      try {
+        const sender = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? 'סמארטפון' : 'דפדפן';
+        const res = await fetch('/api/messages', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
+          body: JSON.stringify({ sender, text })
         });
         if (res.ok) {
-          document.getElementById('clipboardInputText').value = '';
-          alert(t('clipboardSentSuccessAlert'));
-          openClipboardModal();
-        } else {
-          alert(t('clipboardSendErrorAlert'));
+          input.value = '';
+          loadQuickMessages();
         }
       } catch {
-        alert(t('clipboardCommErrorAlert'));
+        alert('שגיאה בשליחת הפתק.');
+      }
+    }
+
+    async function copyChatMessage(text) {
+      if (text) {
+        await navigator.clipboard.writeText(text);
+        alert(t('clipboardCopiedAlert') || 'הועתק בהצלחה!');
       }
     }
 
@@ -3160,6 +3447,390 @@
               .replace(/"/g, '&quot;')
               .replace(/</g, '&lt;')
               .replace(/>/g, '&gt;');
+    }
+
+    // ==========================================
+    // עמיתים ודרופ ישיר (Peer Discovery & P2P Drop)
+    let hostPeerId = '';
+    let hostDeviceName = '';
+    let cachedDiscoveredPeers = [];
+    let peerChatPollTimer = null;
+
+    async function openPeerDropModal() {
+      const modal = document.getElementById('peerDropModal');
+      if (modal) modal.classList.add('active');
+
+      try {
+        const res = await fetch('/api/peer/my-info');
+        if (res.ok) {
+          const info = await res.json();
+          hostPeerId = info.peerId || '';
+          hostDeviceName = info.deviceName || '';
+          const mHostId = document.getElementById('modalHostPeerId');
+          if (mHostId) mHostId.textContent = info.peerId;
+          const mDevName = document.getElementById('modalHostDeviceName');
+          if (mDevName) mDevName.textContent = info.deviceName;
+          const badge = document.getElementById('headerPeerBadge');
+          if (badge) badge.textContent = info.peerId;
+
+          if (info.internetVisibility === 'Visible') {
+            const vVis = document.getElementById('webVisVisible');
+            if (vVis) vVis.checked = true;
+          } else {
+            const vHid = document.getElementById('webVisHidden');
+            if (vHid) vHid.checked = true;
+          }
+        }
+      } catch { }
+
+      await fetchDiscoveredPeers();
+      startPeerChatPolling();
+    }
+
+    function closePeerDropModal() {
+      document.getElementById('peerDropModal')?.classList.remove('active');
+      const statusMsg = document.getElementById('peerDropStatusMsg');
+      if (statusMsg) statusMsg.textContent = '';
+      stopPeerChatPolling();
+    }
+
+    function startPeerChatPolling() {
+      stopPeerChatPolling();
+      loadPeerChatHistory();
+      peerChatPollTimer = setInterval(() => {
+        loadPeerChatHistory();
+      }, 2500);
+    }
+
+    function stopPeerChatPolling() {
+      if (peerChatPollTimer) {
+        clearInterval(peerChatPollTimer);
+        peerChatPollTimer = null;
+      }
+    }
+
+    function copyHostPeerId() {
+      if (hostPeerId) {
+        navigator.clipboard.writeText(hostPeerId).then(() => {
+          const status = document.getElementById('peerDropStatusMsg');
+          if (status) status.textContent = `המזהה ${hostPeerId} הועתק בהצלחה ללוח!`;
+        });
+      }
+    }
+
+    async function updateWebPeerVisibility(mode) {
+      try {
+        await fetch('/api/peer/visibility', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ visibility: mode })
+        });
+        const status = document.getElementById('peerDropStatusMsg');
+        if (status) status.textContent = `מצב נראות עודכן ל: ${mode === 'Visible' ? 'גלוי 🌐' : 'מוסתר 🔒'}`;
+      } catch { }
+    }
+
+    function renderPeersList() {
+      const container = document.getElementById('discoveredPeersList');
+      if (!container) return;
+
+      if (cachedDiscoveredPeers.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.85rem; padding:1.25rem;">לא זוהו משתמשים נוספים ברשת או באינטרנט כעת.<br><span style="font-size:0.75rem;">ניתן לבצע חיפוש באינטרנט או להזין מזהה מדויק למטה.</span></div>';
+        return;
+      }
+
+      container.innerHTML = cachedDiscoveredPeers.map(p => {
+        const badge = p.discoverySource === 'Internet' ? 'אינטרנט 🌐' : 'רשת מקומית 🏠';
+        const addr = p.internetUrl || p.addressText || (p.ipAddress + ':' + p.port);
+        return `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:6px; padding:8px 12px; display:flex; align-items:center; justify-content:space-between;">
+          <div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success);"></span>
+              <span style="font-weight:bold; font-size:0.9rem; color:var(--text-main);">${escapeHtml(p.deviceName)}</span>
+              <span style="font-size:0.75rem; color:var(--accent); font-family:monospace; background:var(--bg-surface); padding:1px 5px; border-radius:3px;">${escapeHtml(p.peerId)}</span>
+              <span style="font-size:0.7rem; color:var(--text-muted); background:var(--bg-main); padding:1px 4px; border-radius:3px; border:1px solid var(--border);">${badge}</span>
+            </div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${escapeHtml(addr)}</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm" onclick="selectPeerForDrop('${escapeJsString(p.peerId)}')" style="padding:4px 8px; font-size:0.75rem;">בחר</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    async function fetchDiscoveredPeers() {
+      const container = document.getElementById('discoveredPeersList');
+      if (!container) return;
+      container.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.85rem; padding:1rem;">מרענן רשימת משתמשים...</div>';
+
+      try {
+        const res = await fetch('/api/peer/discovered');
+        if (res.ok) {
+          const data = await res.json();
+          cachedDiscoveredPeers = data.peers || [];
+          renderPeersList();
+        }
+      } catch (err) {
+        container.innerHTML = '<div style="text-align:center; color:var(--danger); font-size:0.85rem; padding:1rem;">שגיאה בטעינת משתמשים.</div>';
+      }
+    }
+
+    async function searchInternetPeersWeb() {
+      const status = document.getElementById('peerDropStatusMsg');
+      if (status) status.textContent = 'סורק משתמשים גלויים באינטרנט...';
+      try {
+        const res = await fetch('/api/peer/search-internet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ queryType: 'visible' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.peers && data.peers.length > 0) {
+            for (const p of data.peers) {
+              if (!cachedDiscoveredPeers.some(x => x.peerId.toLowerCase() === p.peerId.toLowerCase())) {
+                cachedDiscoveredPeers.push(p);
+              }
+            }
+            renderPeersList();
+            if (status) status.textContent = `נמצאו ${data.peers.length} משתמשים גלויים באינטרנט.`;
+          } else {
+            if (status) status.textContent = 'לא נמצאו משתמשים גלויים נוספים באינטרנט כעת.';
+          }
+        }
+      } catch (err) {
+        if (status) status.textContent = 'שגיאה בחיפוש באינטרנט.';
+      }
+    }
+
+    async function lookupExactPeerWeb() {
+      const input = document.getElementById('targetPeerIdInput');
+      const targetId = input ? input.value.trim() : '';
+      const status = document.getElementById('peerDropStatusMsg');
+      if (!targetId) {
+        alert('נא להזין מזהה משתמש מדויק (למשל: SB-482-910)');
+        return;
+      }
+
+      if (status) status.textContent = `מחפש משתמש ${targetId} ברשת ובאינטרנט...`;
+      try {
+        const res = await fetch('/api/peer/search-internet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetPeerId: targetId })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.found && data.peer) {
+            if (!cachedDiscoveredPeers.some(x => x.peerId.toLowerCase() === data.peer.peerId.toLowerCase())) {
+              cachedDiscoveredPeers.push(data.peer);
+            }
+            renderPeersList();
+            selectPeerForDrop(data.peer.peerId);
+            if (status) status.textContent = `משתמש אותר בהצלחה: ${data.peer.deviceName} (${data.peer.peerId})`;
+          } else {
+            if (status) status.textContent = `משתמש ${targetId} לא נמצא (ודא שהתוכנה מופעלת והמזהה מדויק).`;
+          }
+        }
+      } catch (err) {
+        if (status) status.textContent = 'שגיאת תקשורת באיתור משתמש.';
+      }
+    }
+
+    function selectPeerForDrop(peerId) {
+      const input = document.getElementById('targetPeerIdInput');
+      if (input) {
+        input.value = peerId;
+      }
+      onTargetPeerChanged();
+      document.getElementById('targetPeerMessageInput')?.focus();
+      const status = document.getElementById('peerDropStatusMsg');
+      if (status) status.textContent = `נבחר משתמש ${peerId}`;
+    }
+
+    function onTargetPeerChanged() {
+      const targetPeerId = document.getElementById('targetPeerIdInput')?.value.trim() || '';
+      const titleElem = document.getElementById('activeChatPeerTitle');
+      const badgeElem = document.getElementById('activeChatPeerBadge');
+      if (!targetPeerId) {
+        if (titleElem) titleElem.textContent = "צ'אט משתמשים ישיר";
+        if (badgeElem) badgeElem.textContent = '';
+        return;
+      }
+
+      const peer = cachedDiscoveredPeers.find(p => p.peerId.toLowerCase() === targetPeerId.toLowerCase());
+      if (titleElem) titleElem.textContent = peer ? peer.deviceName : `משתמש ${targetPeerId}`;
+      if (badgeElem) badgeElem.textContent = targetPeerId;
+      loadPeerChatHistory();
+    }
+
+    async function loadPeerChatHistory() {
+      const targetPeerId = document.getElementById('targetPeerIdInput')?.value.trim();
+      const feed = document.getElementById('peerChatFeed');
+      if (!feed) return;
+
+      if (!targetPeerId) {
+        feed.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin:auto;">בחר משתמש או הזן מזהה לצפייה בשיחה ולהתכתבות</div>';
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/peer/chat?targetPeerId=' + encodeURIComponent(targetPeerId));
+        if (res.ok) {
+          const data = await res.json();
+          const messages = data.messages || [];
+          if (messages.length === 0) {
+            feed.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:0.8rem; margin:auto;">אין עדיין הודעות בשיחה זו. שלח הודעה או קובץ להתחלה!</div>';
+            return;
+          }
+
+          const wasScrolledToBottom = feed.scrollHeight - feed.clientHeight <= feed.scrollTop + 30;
+
+          feed.innerHTML = messages.map(m => {
+            const isMe = m.isOutgoing;
+            const align = isMe ? 'flex-end' : 'flex-start';
+            const bg = isMe ? 'rgba(0, 210, 180, 0.12)' : 'var(--bg-surface)';
+            const border = isMe ? 'var(--accent)' : 'var(--border)';
+            const senderColor = isMe ? 'var(--accent)' : 'var(--text-main)';
+            const time = m.timeFormatted || (new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+
+            let attachmentHtml = '';
+            if (m.hasAttachment && m.attachedFileName) {
+              attachmentHtml = `
+                <div style="background:var(--bg-main); border:1px solid var(--border); border-radius:6px; padding:6px 8px; margin-top:4px; display:flex; align-items:center; justify-content:space-between; gap:6px;">
+                  <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+                    <span>📎</span>
+                    <span style="font-weight:bold; font-size:0.8rem; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(m.attachedFileName)}</span>
+                    <span style="font-size:0.7rem; color:var(--text-muted);">(${escapeHtml(m.attachedFileSizeFormatted || '')})</span>
+                  </div>
+                </div>`;
+            }
+
+            let textHtml = '';
+            if (m.text) {
+              textHtml = `<div style="font-size:0.85rem; color:var(--text-main); word-break:break-word; white-space:pre-wrap;">${escapeHtml(m.text)}</div>`;
+            }
+
+            return `
+              <div style="align-self:${align}; max-width:85%; background:${bg}; border:1px solid ${border}; border-radius:10px; padding:6px 10px; display:flex; flex-direction:column; gap:3px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; font-size:0.75rem;">
+                  <strong style="color:${senderColor}; font-size:0.75rem;">${escapeHtml(m.displaySender || (isMe ? 'אני' : 'משתמש'))}</strong>
+                  <span style="color:var(--text-muted); font-size:0.7rem;">${time}</span>
+                </div>
+                ${textHtml}
+                ${attachmentHtml}
+              </div>
+            `;
+          }).join('');
+
+          if (wasScrolledToBottom || feed.childElementCount <= 2) {
+            feed.scrollTop = feed.scrollHeight;
+          }
+        }
+      } catch { }
+    }
+
+    async function clearActivePeerChat() {
+      const targetPeerId = document.getElementById('targetPeerIdInput')?.value.trim();
+      if (!targetPeerId) return;
+
+      if (confirm(`האם אתה בטוח שברצונך לנקות את היסטוריית השיחה עם משתמש ${targetPeerId}?`)) {
+        try {
+          await fetch('/api/peer/chat/clear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetPeerId })
+          });
+          loadPeerChatHistory();
+        } catch { }
+      }
+    }
+
+    async function sendDirectMessageToPeer() {
+      const targetPeerId = document.getElementById('targetPeerIdInput')?.value.trim();
+      const message = document.getElementById('targetPeerMessageInput')?.value.trim();
+      const status = document.getElementById('peerDropStatusMsg');
+
+      if (!targetPeerId) {
+        alert('נא להזין או לבחור מזהה משתמש.');
+        return;
+      }
+      if (!message) {
+        alert('נא להקליד הודעה לשליחה.');
+        return;
+      }
+
+      if (status) status.textContent = 'שולח הודעה...';
+
+      try {
+        const res = await fetch('/api/peer/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetPeerId, message })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (status) status.textContent = 'ההודעה נמסרה בהצלחה!';
+          const msgInput = document.getElementById('targetPeerMessageInput');
+          if (msgInput) msgInput.value = '';
+          loadPeerChatHistory();
+        } else {
+          if (status) status.textContent = data.message || 'שגיאה במסירת הודעה.';
+        }
+      } catch (err) {
+        if (status) status.textContent = 'שגיאת תקשורת במסירת הודעה.';
+      }
+    }
+
+    async function executePeerDropUpload(files) {
+      if (!files || files.length === 0) return;
+      const targetPeerId = document.getElementById('targetPeerIdInput')?.value.trim();
+      const status = document.getElementById('peerDropStatusMsg');
+
+      if (!targetPeerId) {
+        alert('נא להזין או לבחור מזהה משתמש לפני שליחת קבצים.');
+        return;
+      }
+
+      const peer = cachedDiscoveredPeers.find(p => p.peerId.toLowerCase() === targetPeerId.toLowerCase());
+      if (!peer) {
+        alert(`המשתמש ${targetPeerId} אינו מקוון או טרם זוהה. לחץ על 'אתר מזהה' לאיתורו באינטרנט.`);
+        return;
+      }
+
+      if (status) status.textContent = `שולח ${files.length} קבצים אל ${peer.deviceName}...`;
+
+      try {
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+          formData.append('files', files[i]);
+        }
+
+        const baseUrl = peer.internetUrl ? peer.internetUrl.replace(/\/+$/, '') : `http://${peer.ipAddress}:${peer.port}`;
+        const dropUrl = `${baseUrl}/api/peer/drop`;
+        const res = await fetch(dropUrl, {
+          method: 'POST',
+          headers: {
+            'X-Sender-PeerId': hostPeerId || 'WebClient',
+            'X-Sender-DeviceName': encodeURIComponent(hostDeviceName || 'Web Client')
+          },
+          body: formData
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          if (status) status.textContent = `נשלחו בהצלחה ${result.count || files.length} קבצים אל ${peer.deviceName}!`;
+          loadPeerChatHistory();
+        } else {
+          if (status) status.textContent = `המשתמש החזיר שגיאה: ${res.status}`;
+          alert(`שגיאה בהעברת קבצים למשתמש: סטטוס ${res.status}`);
+        }
+      } catch (err) {
+        if (status) status.textContent = `שגיאת תקשורת: ${err.message}`;
+        alert(`שגיאת תקשורת בהעברת הקבצים: ${err.message}`);
+      }
     }
   </script>
 </body>
