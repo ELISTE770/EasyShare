@@ -15,6 +15,7 @@ settings.json
 *.pdb
 *.deps.json
 *.runtimeconfig.json
+*.pdf
 
 # Test outputs and logs
 *.log
